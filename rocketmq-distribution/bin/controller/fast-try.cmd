@@ -20,7 +20,7 @@ if not exist "%ROCKETMQ_HOME%\conf\controller\quick-start\broker-n0.conf" echo M
 if not exist "%ROCKETMQ_HOME%\conf\controller\quick-start\broker-n1.conf" echo Make sure the %ROCKETMQ_HOME%\conf\controller\quick-start\broker-n1.conf exists & EXIT /B 1
 
 set "JAVA_OPT_EXT= -server -Xms512m -Xmx512m"
-start call "%ROCKETMQ_HOME%\bin\runserver.cmd" org.apache.rocketmq.namesrv.NamesrvStartup -c %ROCKETMQ_HOME%\conf\controller\quick-start\namesrv.conf
+start call "%ROCKETMQ_HOME%\bin\runserver.cmd" org.apache.rocketmq.namesrv.NameSrvStartup -c %ROCKETMQ_HOME%\conf\controller\quick-start\namesrv.conf
 IF %ERRORLEVEL% EQU 0 (
    ECHO "Namesrv start OK"
 )

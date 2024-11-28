@@ -35,7 +35,7 @@ import org.apache.rocketmq.container.BrokerContainerConfig;
 import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.namesrv.NamesrvController;
+import org.apache.rocketmq.namesrv.NameSrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyRequestProcessor;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
@@ -78,7 +78,7 @@ public class ContainerIntegrationTestBase {
     protected static final String THREE_REPLICAS_TOPIC = "SEND_MESSAGE_TEST_TOPIC_THREE_REPLICAS";
 
     protected static List<BrokerContainer> brokerContainerList = new ArrayList<>();
-    protected static List<NamesrvController> namesrvControllers = new ArrayList<>();
+    protected static List<NameSrvController> nameSrvControllers = new ArrayList<>();
 
     protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
     protected static final int COMMIT_LOG_SIZE = 128 * 1024;
@@ -91,7 +91,7 @@ public class ContainerIntegrationTestBase {
     protected static BrokerController master1With3Replicas;
     protected static BrokerController master2With3Replicas;
     protected static BrokerController master3With3Replicas;
-    protected static NamesrvController namesrvController;
+    protected static NameSrvController namesrvController;
 
     protected static DefaultMQAdminExt defaultMQAdminExt;
 
@@ -217,7 +217,7 @@ public class ContainerIntegrationTestBase {
                     }
                 }
 
-                for (final NamesrvController namesrvController : namesrvControllers) {
+                for (final NameSrvController namesrvController : nameSrvControllers) {
                     namesrvController.shutdown();
                 }
 
@@ -240,7 +240,7 @@ public class ContainerIntegrationTestBase {
         }
     }
 
-    public static NamesrvController createAndStartNamesrv() {
+    public static NameSrvController createAndStartNamesrv() {
         String baseDir = createBaseDir("test-cluster-namesrv").getAbsolutePath();
         NamesrvConfig namesrvConfig = new NamesrvConfig();
         NettyServerConfig nameServerNettyServerConfig = new NettyServerConfig();
@@ -250,7 +250,7 @@ public class ContainerIntegrationTestBase {
         namesrvConfig.setScanNotActiveBrokerInterval(1000);
 
         nameServerNettyServerConfig.setListenPort(generatePort(10000, 10000));
-        NamesrvController namesrvController = new NamesrvController(namesrvConfig, nameServerNettyServerConfig);
+        NameSrvController namesrvController = new NameSrvController(namesrvConfig, nameServerNettyServerConfig);
         try {
             Assert.assertTrue(namesrvController.initialize());
             LOG.info("Name Server Start:{}", nameServerNettyServerConfig.getListenPort());
@@ -283,7 +283,7 @@ public class ContainerIntegrationTestBase {
             }
         }, null);
 
-        namesrvControllers.add(namesrvController);
+        nameSrvControllers.add(namesrvController);
         return namesrvController;
 
     }

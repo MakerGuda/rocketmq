@@ -1,39 +1,40 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * $Id: TopicRouteData.java 1835 2013-05-16 02:00:50Z vintagewang@apache.org $
- */
 package org.apache.rocketmq.remoting.protocol.route;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingInfo;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
+@Getter
+@Setter
 public class TopicRouteData extends RemotingSerializable {
+
+    /**
+     * 顺序主题配置
+     */
     private String orderTopicConf;
+
+    /**
+     * 当前主题下的队列数据列表
+     */
     private List<QueueData> queueDatas;
+
+    /**
+     * 当前主题所在的broker信息列表
+     */
     private List<BrokerData> brokerDatas;
-    private HashMap<String/* brokerAddr */, List<String>/* Filter Server */> filterServerTable;
-    //It could be null or empty
-    private Map<String/*brokerName*/, TopicQueueMappingInfo> topicQueueMappingByBroker;
+
+    /**
+     * key: brokerAddr value: 过滤器服务列表
+     */
+    private HashMap<String, List<String>> filterServerTable;
+
+    /**
+     * key: brokerName  当前broker上主题下队列关系
+     */
+    private Map<String, TopicQueueMappingInfo> topicQueueMappingByBroker;
 
     public TopicRouteData() {
         queueDatas = new ArrayList<>();
@@ -46,74 +47,23 @@ public class TopicRouteData extends RemotingSerializable {
         this.brokerDatas = new ArrayList<>();
         this.filterServerTable = new HashMap<>();
         this.orderTopicConf = topicRouteData.orderTopicConf;
-
         if (topicRouteData.queueDatas != null) {
             this.queueDatas.addAll(topicRouteData.queueDatas);
         }
-
         if (topicRouteData.brokerDatas != null) {
             this.brokerDatas.addAll(topicRouteData.brokerDatas);
         }
-
         if (topicRouteData.filterServerTable != null) {
             this.filterServerTable.putAll(topicRouteData.filterServerTable);
         }
-
         if (topicRouteData.topicQueueMappingByBroker != null) {
             this.topicQueueMappingByBroker = new HashMap<>(topicRouteData.topicQueueMappingByBroker);
         }
     }
 
-    public TopicRouteData cloneTopicRouteData() {
-        TopicRouteData topicRouteData = new TopicRouteData();
-        topicRouteData.setQueueDatas(new ArrayList<>());
-        topicRouteData.setBrokerDatas(new ArrayList<>());
-        topicRouteData.setFilterServerTable(new HashMap<>());
-        topicRouteData.setOrderTopicConf(this.orderTopicConf);
-
-        topicRouteData.getQueueDatas().addAll(this.queueDatas);
-        topicRouteData.getBrokerDatas().addAll(this.brokerDatas);
-        topicRouteData.getFilterServerTable().putAll(this.filterServerTable);
-        if (this.topicQueueMappingByBroker != null) {
-            Map<String, TopicQueueMappingInfo> cloneMap = new HashMap<>(this.topicQueueMappingByBroker);
-            topicRouteData.setTopicQueueMappingByBroker(cloneMap);
-        }
-        return topicRouteData;
-    }
-
-    public TopicRouteData deepCloneTopicRouteData() {
-        TopicRouteData topicRouteData = new TopicRouteData();
-
-        topicRouteData.setOrderTopicConf(this.orderTopicConf);
-
-        for (final QueueData queueData : this.queueDatas) {
-            topicRouteData.getQueueDatas().add(new QueueData(queueData));
-        }
-
-        for (final BrokerData brokerData : this.brokerDatas) {
-            topicRouteData.getBrokerDatas().add(new BrokerData(brokerData));
-        }
-
-        for (final Map.Entry<String, List<String>> listEntry : this.filterServerTable.entrySet()) {
-            topicRouteData.getFilterServerTable().put(listEntry.getKey(),
-                new ArrayList<>(listEntry.getValue()));
-        }
-        if (this.topicQueueMappingByBroker != null) {
-            Map<String, TopicQueueMappingInfo> cloneMap = new HashMap<>(this.topicQueueMappingByBroker.size());
-            for (final Map.Entry<String, TopicQueueMappingInfo> entry : this.getTopicQueueMappingByBroker().entrySet()) {
-                TopicQueueMappingInfo topicQueueMappingInfo = new TopicQueueMappingInfo(entry.getValue().getTopic(), entry.getValue().getTotalQueues(), entry.getValue().getBname(), entry.getValue().getEpoch());
-                topicQueueMappingInfo.setDirty(entry.getValue().isDirty());
-                topicQueueMappingInfo.setScope(entry.getValue().getScope());
-                ConcurrentMap<Integer, Integer> concurrentMap = new ConcurrentHashMap<>(entry.getValue().getCurrIdMap());
-                topicQueueMappingInfo.setCurrIdMap(concurrentMap);
-                cloneMap.put(entry.getKey(), topicQueueMappingInfo);
-            }
-            topicRouteData.setTopicQueueMappingByBroker(cloneMap);
-        }
-
-        return topicRouteData;
-    }
-
+    /**
+     * 判断当前主题路由数据是否发生改变
+     */
     public boolean topicRouteDataChanged(TopicRouteData oldData) {
         if (oldData == null)
             return true;
@@ -124,46 +74,6 @@ public class TopicRouteData extends RemotingSerializable {
         Collections.sort(now.getQueueDatas());
         Collections.sort(now.getBrokerDatas());
         return !old.equals(now);
-    }
-
-    public List<QueueData> getQueueDatas() {
-        return queueDatas;
-    }
-
-    public void setQueueDatas(List<QueueData> queueDatas) {
-        this.queueDatas = queueDatas;
-    }
-
-    public List<BrokerData> getBrokerDatas() {
-        return brokerDatas;
-    }
-
-    public void setBrokerDatas(List<BrokerData> brokerDatas) {
-        this.brokerDatas = brokerDatas;
-    }
-
-    public HashMap<String, List<String>> getFilterServerTable() {
-        return filterServerTable;
-    }
-
-    public void setFilterServerTable(HashMap<String, List<String>> filterServerTable) {
-        this.filterServerTable = filterServerTable;
-    }
-
-    public String getOrderTopicConf() {
-        return orderTopicConf;
-    }
-
-    public void setOrderTopicConf(String orderTopicConf) {
-        this.orderTopicConf = orderTopicConf;
-    }
-
-    public Map<String, TopicQueueMappingInfo> getTopicQueueMappingByBroker() {
-        return topicQueueMappingByBroker;
-    }
-
-    public void setTopicQueueMappingByBroker(Map<String, TopicQueueMappingInfo> topicQueueMappingByBroker) {
-        this.topicQueueMappingByBroker = topicQueueMappingByBroker;
     }
 
     @Override
@@ -178,6 +88,9 @@ public class TopicRouteData extends RemotingSerializable {
         return result;
     }
 
+    /**
+     * 比较两个主题路由数据时，充血equals方法
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -208,16 +121,8 @@ public class TopicRouteData extends RemotingSerializable {
         } else if (!filterServerTable.equals(other.filterServerTable))
             return false;
         if (topicQueueMappingByBroker == null) {
-            if (other.topicQueueMappingByBroker != null)
-                return false;
-        } else if (!topicQueueMappingByBroker.equals(other.topicQueueMappingByBroker))
-            return false;
-        return true;
+            return other.topicQueueMappingByBroker == null;
+        } else return topicQueueMappingByBroker.equals(other.topicQueueMappingByBroker);
     }
 
-    @Override
-    public String toString() {
-        return "TopicRouteData [orderTopicConf=" + orderTopicConf + ", queueDatas=" + queueDatas
-            + ", brokerDatas=" + brokerDatas + ", filterServerTable=" + filterServerTable + ", topicQueueMappingInfoTable=" + topicQueueMappingByBroker + "]";
-    }
 }

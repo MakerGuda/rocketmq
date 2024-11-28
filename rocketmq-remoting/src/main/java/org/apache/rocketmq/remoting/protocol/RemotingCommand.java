@@ -257,8 +257,7 @@ public class RemotingCommand {
         this.customHeader = customHeader;
     }
 
-    public <T extends CommandCustomHeader> T decodeCommandCustomHeader(
-        Class<T> classHeader) throws RemotingCommandException {
+    public <T extends CommandCustomHeader> T decodeCommandCustomHeader(Class<T> classHeader) throws RemotingCommandException {
         return decodeCommandCustomHeader(classHeader, false);
     }
 

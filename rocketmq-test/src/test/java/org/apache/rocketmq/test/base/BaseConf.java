@@ -28,7 +28,7 @@ import org.apache.rocketmq.common.attribute.CQType;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.namesrv.NamesrvController;
+import org.apache.rocketmq.namesrv.NameSrvController;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.test.client.rmq.RMQAsyncSendProducer;
@@ -72,7 +72,7 @@ public class BaseConf {
     protected final static int CONSUME_TIME = 2 * 60 * 1000;
     protected final static int QUEUE_NUMBERS = 8;
 
-    protected static NamesrvController namesrvController;
+    protected static NameSrvController namesrvController;
     protected static BrokerController brokerController1;
     protected static BrokerController brokerController2;
     protected static BrokerController brokerController3;

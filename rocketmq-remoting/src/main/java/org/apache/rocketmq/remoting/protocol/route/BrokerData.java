@@ -1,22 +1,9 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.remoting.protocol.route;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 
@@ -25,30 +12,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-/**
- * The class describes that a typical broker cluster's (in replication) details: the cluster (in sharding) name
- * that it belongs to, and all the single instance information for this cluster.
- */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class BrokerData implements Comparable<BrokerData> {
+
+    /**
+     * broker所在的集群名称
+     */
     private String cluster;
+
+    /**
+     * broker名称
+     */
     private String brokerName;
 
     /**
-     * The container that store the all single instances for the current broker replication cluster.
-     * The key is the brokerId, and the value is the address of the single broker instance.
+     * key: brokerId value: brokerAddr
+     * brokerId = 0表示master
      */
     private HashMap<Long, String> brokerAddrs;
+
     private String zoneName;
+
     private final Random random = new Random();
 
     /**
      * Enable acting master or not, used for old version HA adaption,
      */
     private boolean enableActingMaster = false;
-
-    public BrokerData() {
-
-    }
 
     public BrokerData(BrokerData brokerData) {
         this.cluster = brokerData.cluster;
@@ -84,52 +77,15 @@ public class BrokerData implements Comparable<BrokerData> {
     }
 
     /**
-     * Selects a (preferably master) broker address from the registered list. If the master's address cannot be found, a
-     * slave broker address is selected in a random manner.
-     *
-     * @return Broker address.
+     * 有限获取master broker地址，master找不到时，随机获取slave
      */
     public String selectBrokerAddr() {
         String masterAddress = this.brokerAddrs.get(MixAll.MASTER_ID);
-
         if (masterAddress == null) {
             List<String> addrs = new ArrayList<>(brokerAddrs.values());
             return addrs.get(random.nextInt(addrs.size()));
         }
-
         return masterAddress;
-    }
-
-    public HashMap<Long, String> getBrokerAddrs() {
-        return brokerAddrs;
-    }
-
-    public void setBrokerAddrs(HashMap<Long, String> brokerAddrs) {
-        this.brokerAddrs = brokerAddrs;
-    }
-
-    public String getCluster() {
-        return cluster;
-    }
-
-    public void setCluster(String cluster) {
-        this.cluster = cluster;
-    }
-
-    public boolean isEnableActingMaster() {
-        return enableActingMaster;
-    }
-
-    public void setEnableActingMaster(boolean enableActingMaster) {
-        this.enableActingMaster = enableActingMaster;
-    }
-
-    public String getZoneName() {
-        return zoneName;
-    }
-
-    public void setZoneName(String zoneName) {
-        this.zoneName = zoneName;
     }
 
     @Override
@@ -164,20 +120,8 @@ public class BrokerData implements Comparable<BrokerData> {
     }
 
     @Override
-    public String toString() {
-        return "BrokerData [brokerName=" + brokerName + ", brokerAddrs=" + brokerAddrs + ", enableActingMaster=" + enableActingMaster + "]";
-    }
-
-    @Override
     public int compareTo(BrokerData o) {
         return this.brokerName.compareTo(o.getBrokerName());
     }
 
-    public String getBrokerName() {
-        return brokerName;
-    }
-
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;
-    }
 }

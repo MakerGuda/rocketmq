@@ -5,7 +5,7 @@
 2. 确保本地能够编译通过
 
 ### Step1: 启动NameServer
-1. NamerServer的启动类在`org.apache.rocketmq.namesrv.NamesrvStartup`
+1. NamerServer的启动类在`org.apache.rocketmq.namesrv.NameSrvStartup`
 2. `Idea-Edit Configurations`中添加环境变量 `ROCKETMQ_HOME=<rocketmq仓库目录>`
 ![Idea_config_nameserver.png](image/Idea_config_nameserver.png)
 3. 运行NameServer，观察到如下日志输出则启动成功

@@ -23,7 +23,7 @@ import org.apache.rocketmq.common.ControllerConfig;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.namesrv.NamesrvConfig;
 import org.apache.rocketmq.controller.ControllerManager;
-import org.apache.rocketmq.namesrv.NamesrvController;
+import org.apache.rocketmq.namesrv.NameSrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
@@ -54,7 +54,7 @@ import static org.junit.Assert.*;
 public class AutoSwitchRoleIntegrationTest extends AutoSwitchRoleBase {
 
     private static final int DEFAULT_FILE_SIZE = 1024 * 1024;
-    private static NamesrvController namesrvController;
+    private static NameSrvController namesrvController;
     private static ControllerManager controllerManager;
     private static String nameserverAddress;
     private static String controllerAddress;
@@ -77,7 +77,7 @@ public class AutoSwitchRoleIntegrationTest extends AutoSwitchRoleBase {
         serverConfig.setListenPort(namesrvPort);
 
         controllerConfig = buildControllerConfig("n0", peers);
-        namesrvController = new NamesrvController(new NamesrvConfig(), serverConfig, new NettyClientConfig());
+        namesrvController = new NameSrvController(new NamesrvConfig(), serverConfig, new NettyClientConfig());
         assertTrue(namesrvController.initialize());
         namesrvController.start();
 
