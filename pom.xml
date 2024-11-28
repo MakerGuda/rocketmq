@@ -27,7 +27,7 @@
 
     <inceptionYear>2012</inceptionYear>
     <groupId>org.apache.rocketmq</groupId>
-    <artifactId>rocketmq-all</artifactId>
+    <artifactId>rocketmq</artifactId>
     <version>5.3.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Apache RocketMQ ${project.version}</name>
@@ -181,25 +181,25 @@
     </properties>
 
     <modules>
-        <module>client</module>
-        <module>common</module>
-        <module>broker</module>
-        <module>tools</module>
-        <module>store</module>
-        <module>namesrv</module>
-        <module>remoting</module>
-        <module>srvutil</module>
-        <module>filter</module>
-        <module>test</module>
-        <module>distribution</module>
-        <module>openmessaging</module>
-        <module>acl</module>
-        <module>auth</module>
-        <module>example</module>
-        <module>container</module>
-        <module>controller</module>
-        <module>proxy</module>
-        <module>tieredstore</module>
+        <module>rocketmq-client</module>
+        <module>rocketmq-common</module>
+        <module>rocketmq-broker</module>
+        <module>rocketmq-tools</module>
+        <module>rocketmq-store</module>
+        <module>rocketmq-namesrv</module>
+        <module>rocketmq-remoting</module>
+        <module>rocketmq-srvutil</module>
+        <module>rocketmq-filter</module>
+        <module>rocketmq-test</module>
+        <module>rocketmq-distribution</module>
+        <module>rocketmq-openmessaging</module>
+        <module>rocketmq-acl</module>
+        <module>rocketmq-auth</module>
+        <module>rocketmq-example</module>
+        <module>rocketmq-container</module>
+        <module>rocketmq-controller</module>
+        <module>rocketmq-proxy</module>
+        <module>rocketmq-tiered-store</module>
     </modules>
 
     <build>
