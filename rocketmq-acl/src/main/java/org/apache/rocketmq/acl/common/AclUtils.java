@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.acl.common;
 
 import com.alibaba.fastjson.JSONObject;
@@ -46,7 +30,6 @@ public class AclUtils {
                     sb.append(entry.getValue());
                 }
             }
-
             return AclUtils.combineBytes(sb.toString().getBytes(CHARSET), request.getBody());
         } catch (Exception e) {
             throw new RuntimeException("Incompatible exception.", e);
@@ -70,12 +53,9 @@ public class AclUtils {
         if (isAsterisk(netAddress) || isMinus(netAddress)) {
             int asterisk = netAddress.indexOf("*");
             int minus = netAddress.indexOf("-");
-            // '*' must be the end of netAddress if it exists
             if (asterisk > -1 && asterisk != netAddress.length() - 1) {
                 throw new AclException(String.format("NetAddress examine scope Exception netAddress is %s", netAddress));
             }
-
-            // format like "2::ac5:78:1-200:*" or "2::ac5:78:1-200" is legal
             if (minus > -1) {
                 if (asterisk == -1) {
                     if (minus <= netAddress.lastIndexOf(":")) {
@@ -127,19 +107,16 @@ public class AclUtils {
     }
 
     public static boolean isScope(String netAddress, int index) {
-        // IPv6 Address
         if (isColon(netAddress)) {
             netAddress = expandIP(netAddress, 8);
             String[] strArray = StringUtils.split(netAddress, ":");
             return isIPv6Scope(strArray, index);
         }
-
         String[] strArray = StringUtils.split(netAddress, ".");
         if (strArray.length != 4) {
             return false;
         }
         return isScope(strArray, index);
-
     }
 
     public static boolean isScope(String[] num, int index) {
@@ -173,7 +150,6 @@ public class AclUtils {
 
     public static boolean isMinus(String minus) {
         return minus.indexOf('-') > -1;
-
     }
 
     public static boolean isIPv6Scope(String[] num, int index) {
@@ -199,7 +175,6 @@ public class AclUtils {
 
     public static String expandIP(String netAddress, int part) {
         netAddress = netAddress.toUpperCase();
-        // expand netAddress
         int separatorCount = StringUtils.countMatches(netAddress, ":");
         int padCount = part - separatorCount;
         if (padCount > 0) {
@@ -209,16 +184,12 @@ public class AclUtils {
             }
             netAddress = StringUtils.replace(netAddress, "::", padStr.toString());
         }
-
-        // pad netAddress
         String[] strArray = StringUtils.splitPreserveAllTokens(netAddress, ":");
         for (int i = 0; i < strArray.length; i++) {
             if (strArray[i].length() < 4) {
                 strArray[i] = StringUtils.leftPad(strArray[i], 4, '0');
             }
         }
-
-        // output
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < strArray.length; i++) {
             sb.append(strArray[i]);
@@ -263,19 +234,7 @@ public class AclUtils {
     public static RPCHook getAclRPCHook(String fileName) {
         JSONObject yamlDataObject;
         try {
-            yamlDataObject = AclUtils.getYamlDataObject(fileName,
-                JSONObject.class);
-        } catch (Exception e) {
-            log.error("Convert yaml file to data object error, ", e);
-            return null;
-        }
-        return buildRpcHook(yamlDataObject);
-    }
-
-    public static RPCHook getAclRPCHook(InputStream inputStream) {
-        JSONObject yamlDataObject = null;
-        try {
-            yamlDataObject = AclUtils.getYamlDataObject(inputStream, JSONObject.class);
+            yamlDataObject = AclUtils.getYamlDataObject(fileName, JSONObject.class);
         } catch (Exception e) {
             log.error("Convert yaml file to data object error, ", e);
             return null;
@@ -288,10 +247,8 @@ public class AclUtils {
             log.warn("Failed to parse configuration to enable ACL.");
             return null;
         }
-
         String accessKey = yamlDataObject.getString(AclConstants.CONFIG_ACCESS_KEY);
         String secretKey = yamlDataObject.getString(AclConstants.CONFIG_SECRET_KEY);
-
         if (StringUtils.isBlank(accessKey) || StringUtils.isBlank(secretKey)) {
             log.warn("Failed to enable ACL. Either AccessKey or secretKey is blank");
             return null;

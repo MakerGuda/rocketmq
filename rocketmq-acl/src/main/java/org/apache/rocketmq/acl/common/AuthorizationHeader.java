@@ -1,45 +1,35 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.acl.common;
 
-import com.google.common.base.MoreObjects;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
+@Getter
+@Setter
 public class AuthorizationHeader {
+
     private static final String HEADER_SEPARATOR = " ";
+
     private static final String CREDENTIALS_SEPARATOR = "/";
+
     private static final int AUTH_HEADER_KV_LENGTH = 2;
+
     private static final String CREDENTIAL = "Credential";
+
     private static final String SIGNED_HEADERS = "SignedHeaders";
+
     private static final String SIGNATURE = "Signature";
+
     private String method;
+
     private String accessKey;
+
     private String[] signedHeaders;
+
     private String signature;
 
-    /**
-     * Parse authorization from gRPC header.
-     *
-     * @param header gRPC header string.
-     * @throws Exception exception.
-     */
     public AuthorizationHeader(String header) throws DecoderException {
         String[] result = header.split(HEADER_SEPARATOR, 2);
         if (result.length != 2) {
@@ -78,45 +68,4 @@ public class AuthorizationHeader {
         return Base64.encodeBase64String(bytes);
     }
 
-    public String getMethod() {
-        return this.method;
-    }
-
-    public String getAccessKey() {
-        return this.accessKey;
-    }
-
-    public String[] getSignedHeaders() {
-        return this.signedHeaders;
-    }
-
-    public String getSignature() {
-        return this.signature;
-    }
-
-    public void setMethod(final String method) {
-        this.method = method;
-    }
-
-    public void setAccessKey(final String accessKey) {
-        this.accessKey = accessKey;
-    }
-
-    public void setSignedHeaders(final String[] signedHeaders) {
-        this.signedHeaders = signedHeaders;
-    }
-
-    public void setSignature(final String signature) {
-        this.signature = signature;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("method", method)
-            .add("accessKey", accessKey)
-            .add("signedHeaders", signedHeaders)
-            .add("signature", signature)
-            .toString();
-    }
 }

@@ -1,23 +1,9 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.acl.plain;
 
 import apache.rocketmq.v2.*;
 import com.google.protobuf.GeneratedMessageV3;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -43,9 +29,10 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@Getter
+@Setter
 public class PlainAccessResource implements AccessResource {
 
-    // Identify the user
     private String accessKey;
 
     private String secretKey;
@@ -64,7 +51,6 @@ public class PlainAccessResource implements AccessResource {
 
     private int requestCode;
 
-    // The content to calculate the content
     private byte[] content;
 
     private String signature;
@@ -83,18 +69,13 @@ public class PlainAccessResource implements AccessResource {
         } else {
             accessResource.setWhiteRemoteAddress(remoteAddr);
         }
-
         accessResource.setRequestCode(request.getCode());
-
         if (request.getExtFields() == null) {
-            // If request's extFields is null,then return accessResource directly(users can use whiteAddress pattern)
-            // The following logic codes depend on the request's extFields not to be null.
             return accessResource;
         }
         accessResource.setAccessKey(request.getExtFields().get(SessionCredentials.ACCESS_KEY));
         accessResource.setSignature(request.getExtFields().get(SessionCredentials.SIGNATURE));
         accessResource.setSecretToken(request.getExtFields().get(SessionCredentials.SECURITY_TOKEN));
-
         try {
             switch (request.getCode()) {
                 case RequestCode.SEND_MESSAGE:
@@ -126,21 +107,15 @@ public class PlainAccessResource implements AccessResource {
                     }
                     break;
                 case RequestCode.UNREGISTER_CLIENT:
-                    final UnregisterClientRequestHeader unregisterClientRequestHeader =
-                        (UnregisterClientRequestHeader) request
-                            .decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
+                    final UnregisterClientRequestHeader unregisterClientRequestHeader = request.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
                     accessResource.addResourceAndPerm(getRetryTopic(unregisterClientRequestHeader.getConsumerGroup()), Permission.SUB);
                     break;
                 case RequestCode.GET_CONSUMER_LIST_BY_GROUP:
-                    final GetConsumerListByGroupRequestHeader getConsumerListByGroupRequestHeader =
-                        (GetConsumerListByGroupRequestHeader) request
-                            .decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
+                    final GetConsumerListByGroupRequestHeader getConsumerListByGroupRequestHeader = request.decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
                     accessResource.addResourceAndPerm(getRetryTopic(getConsumerListByGroupRequestHeader.getConsumerGroup()), Permission.SUB);
                     break;
                 case RequestCode.UPDATE_CONSUMER_OFFSET:
-                    final UpdateConsumerOffsetRequestHeader updateConsumerOffsetRequestHeader =
-                        (UpdateConsumerOffsetRequestHeader) request
-                            .decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
+                    final UpdateConsumerOffsetRequestHeader updateConsumerOffsetRequestHeader = request.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
                     accessResource.addResourceAndPerm(getRetryTopic(updateConsumerOffsetRequestHeader.getConsumerGroup()), Permission.SUB);
                     accessResource.addResourceAndPerm(updateConsumerOffsetRequestHeader.getTopic(), Permission.SUB);
                     break;
@@ -152,11 +127,9 @@ public class PlainAccessResource implements AccessResource {
             throw new AclException(t.getMessage(), t);
         }
 
-        // Content
         SortedMap<String, String> map = new TreeMap<>();
         for (Map.Entry<String, String> entry : request.getExtFields().entrySet()) {
-            if (request.getVersion() <= MQVersion.Version.V4_9_3.ordinal() &&
-                    MixAll.UNIQUE_MSG_QUERY_FLAG.equals(entry.getKey())) {
+            if (request.getVersion() <= MQVersion.Version.V4_9_3.ordinal() && MixAll.UNIQUE_MSG_QUERY_FLAG.equals(entry.getKey())) {
                 continue;
             }
             if (!SessionCredentials.SIGNATURE.equals(entry.getKey())) {
@@ -185,17 +158,15 @@ public class PlainAccessResource implements AccessResource {
         accessResource.setSecretToken(header.getSessionToken());
         accessResource.setRequestCode(header.getRequestCode());
         accessResource.setContent(header.getDatetime().getBytes(StandardCharsets.UTF_8));
-
         try {
             String rpcFullName = messageV3.getDescriptorForType().getFullName();
             if (HeartbeatRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 HeartbeatRequest request = (HeartbeatRequest) messageV3;
-                if (ClientType.PUSH_CONSUMER.equals(request.getClientType())
-                    || ClientType.SIMPLE_CONSUMER.equals(request.getClientType())) {
+                if (ClientType.PUSH_CONSUMER.equals(request.getClientType()) || ClientType.SIMPLE_CONSUMER.equals(request.getClientType())) {
                     if (!request.hasGroup()) {
                         throw new AclException("Consumer heartbeat doesn't have group");
                     } else {
-                        accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                        accessResource.addGroupResourceAndPerm(request.getGroup());
                     }
                 }
             } else if (SendMessageRequest.getDescriptor().getFullName().equals(rpcFullName)) {
@@ -212,15 +183,15 @@ public class PlainAccessResource implements AccessResource {
                 accessResource.addResourceAndPerm(topic, Permission.PUB);
             } else if (ReceiveMessageRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 ReceiveMessageRequest request = (ReceiveMessageRequest) messageV3;
-                accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                accessResource.addGroupResourceAndPerm(request.getGroup());
                 accessResource.addResourceAndPerm(request.getMessageQueue().getTopic(), Permission.SUB);
             } else if (AckMessageRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 AckMessageRequest request = (AckMessageRequest) messageV3;
-                accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                accessResource.addGroupResourceAndPerm(request.getGroup());
                 accessResource.addResourceAndPerm(request.getTopic(), Permission.SUB);
             } else if (ForwardMessageToDeadLetterQueueRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 ForwardMessageToDeadLetterQueueRequest request = (ForwardMessageToDeadLetterQueueRequest) messageV3;
-                accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                accessResource.addGroupResourceAndPerm(request.getGroup());
                 accessResource.addResourceAndPerm(request.getTopic(), Permission.SUB);
             } else if (EndTransactionRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 EndTransactionRequest request = (EndTransactionRequest) messageV3;
@@ -236,7 +207,7 @@ public class PlainAccessResource implements AccessResource {
                     }
                     if (command.getSettings().hasSubscription()) {
                         Subscription subscription = command.getSettings().getSubscription();
-                        accessResource.addGroupResourceAndPerm(subscription.getGroup(), Permission.SUB);
+                        accessResource.addGroupResourceAndPerm(subscription.getGroup());
                         for (SubscriptionEntry entry : subscription.getSubscriptionsList()) {
                             accessResource.addResourceAndPerm(entry.getTopic(), Permission.SUB);
                         }
@@ -248,18 +219,18 @@ public class PlainAccessResource implements AccessResource {
             } else if (NotifyClientTerminationRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 NotifyClientTerminationRequest request = (NotifyClientTerminationRequest) messageV3;
                 if (StringUtils.isNotBlank(request.getGroup().getName())) {
-                    accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                    accessResource.addGroupResourceAndPerm(request.getGroup());
                 }
             } else if (QueryRouteRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 QueryRouteRequest request = (QueryRouteRequest) messageV3;
                 accessResource.addResourceAndPerm(request.getTopic(), Permission.ANY);
             } else if (QueryAssignmentRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 QueryAssignmentRequest request = (QueryAssignmentRequest) messageV3;
-                accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                accessResource.addGroupResourceAndPerm(request.getGroup());
                 accessResource.addResourceAndPerm(request.getTopic(), Permission.SUB);
             } else if (ChangeInvisibleDurationRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 ChangeInvisibleDurationRequest request = (ChangeInvisibleDurationRequest) messageV3;
-                accessResource.addGroupResourceAndPerm(request.getGroup(), Permission.SUB);
+                accessResource.addGroupResourceAndPerm(request.getGroup());
                 accessResource.addResourceAndPerm(request.getTopic(), Permission.SUB);
             }
         } catch (Throwable t) {
@@ -273,9 +244,9 @@ public class PlainAccessResource implements AccessResource {
         addResourceAndPerm(resourceName, permission);
     }
 
-    private void addGroupResourceAndPerm(Resource resource, byte permission) {
+    private void addGroupResourceAndPerm(Resource resource) {
         String resourceName = NamespaceUtil.wrapNamespace(resource.getResourceNamespace(), resource.getName());
-        addResourceAndPerm(getRetryTopic(resourceName), permission);
+        addResourceAndPerm(getRetryTopic(resourceName), Permission.SUB);
     }
 
     public static PlainAccessResource build(PlainAccessConfig plainAccessConfig, RemoteAddressStrategy remoteAddressStrategy) {
@@ -283,15 +254,11 @@ public class PlainAccessResource implements AccessResource {
         plainAccessResource.setAccessKey(plainAccessConfig.getAccessKey());
         plainAccessResource.setSecretKey(plainAccessConfig.getSecretKey());
         plainAccessResource.setWhiteRemoteAddress(plainAccessConfig.getWhiteRemoteAddress());
-
         plainAccessResource.setAdmin(plainAccessConfig.isAdmin());
-
         plainAccessResource.setDefaultGroupPerm(Permission.parsePermFromString(plainAccessConfig.getDefaultGroupPerm()));
         plainAccessResource.setDefaultTopicPerm(Permission.parsePermFromString(plainAccessConfig.getDefaultTopicPerm()));
-
         Permission.parseResourcePerms(plainAccessResource, false, plainAccessConfig.getGroupPerms());
         Permission.parseResourcePerms(plainAccessResource, true, plainAccessConfig.getTopicPerms());
-
         plainAccessResource.setRemoteAddressStrategy(remoteAddressStrategy);
         return plainAccessResource;
     }
@@ -335,108 +302,9 @@ public class PlainAccessResource implements AccessResource {
         resourcePermMap.put(resource, perm);
     }
 
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
-    }
-
-    public String getSecretKey() {
-        return secretKey;
-    }
-
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
-    }
-
-    public String getWhiteRemoteAddress() {
-        return whiteRemoteAddress;
-    }
-
-    public void setWhiteRemoteAddress(String whiteRemoteAddress) {
-        this.whiteRemoteAddress = whiteRemoteAddress;
-    }
-
-    public boolean isAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
-    }
-
-    public byte getDefaultTopicPerm() {
-        return defaultTopicPerm;
-    }
-
-    public void setDefaultTopicPerm(byte defaultTopicPerm) {
-        this.defaultTopicPerm = defaultTopicPerm;
-    }
-
-    public byte getDefaultGroupPerm() {
-        return defaultGroupPerm;
-    }
-
-    public void setDefaultGroupPerm(byte defaultGroupPerm) {
-        this.defaultGroupPerm = defaultGroupPerm;
-    }
-
-    public Map<String, Byte> getResourcePermMap() {
-        return resourcePermMap;
-    }
-
-    public String getRecognition() {
-        return recognition;
-    }
-
-    public void setRecognition(String recognition) {
-        this.recognition = recognition;
-    }
-
-    public int getRequestCode() {
-        return requestCode;
-    }
-
-    public void setRequestCode(int requestCode) {
-        this.requestCode = requestCode;
-    }
-
-    public String getSecretToken() {
-        return secretToken;
-    }
-
-    public void setSecretToken(String secretToken) {
-        this.secretToken = secretToken;
-    }
-
-    public RemoteAddressStrategy getRemoteAddressStrategy() {
-        return remoteAddressStrategy;
-    }
-
-    public void setRemoteAddressStrategy(RemoteAddressStrategy remoteAddressStrategy) {
-        this.remoteAddressStrategy = remoteAddressStrategy;
-    }
-
-    public String getSignature() {
-        return signature;
-    }
-
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
-
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
 
-    public byte[] getContent() {
-        return content;
-    }
-
-    public void setContent(byte[] content) {
-        this.content = content;
-    }
 }

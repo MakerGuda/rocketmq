@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.acl.common;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.MixAll;
 
 import java.io.File;
@@ -24,19 +10,28 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
+@Getter
+@Setter
 public class SessionCredentials {
+
     public static final Charset CHARSET = StandardCharsets.UTF_8;
+
     public static final String ACCESS_KEY = "AccessKey";
+
     public static final String SECRET_KEY = "SecretKey";
+
     public static final String SIGNATURE = "Signature";
+
     public static final String SECURITY_TOKEN = "SecurityToken";
 
-    public static final String KEY_FILE = System.getProperty("rocketmq.client.keyFile",
-        System.getProperty("user.home") + File.separator + "key");
+    public static final String KEY_FILE = System.getProperty("rocketmq.client.keyFile", System.getProperty("user.home") + File.separator + "key");
 
     private String accessKey;
+
     private String secretKey;
+
     private String securityToken;
+
     private String signature;
 
     public SessionCredentials() {
@@ -84,38 +79,6 @@ public class SessionCredentials {
         }
     }
 
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
-    }
-
-    public String getSecretKey() {
-        return secretKey;
-    }
-
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
-    }
-
-    public String getSignature() {
-        return signature;
-    }
-
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
-
-    public String getSecurityToken() {
-        return securityToken;
-    }
-
-    public void setSecurityToken(final String securityToken) {
-        this.securityToken = securityToken;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -134,28 +97,20 @@ public class SessionCredentials {
             return false;
         if (getClass() != obj.getClass())
             return false;
-
         SessionCredentials other = (SessionCredentials) obj;
         if (accessKey == null) {
             if (other.accessKey != null)
                 return false;
         } else if (!accessKey.equals(other.accessKey))
             return false;
-
         if (secretKey == null) {
             if (other.secretKey != null)
                 return false;
         } else if (!secretKey.equals(other.secretKey))
             return false;
-
         if (signature == null) {
             return other.signature == null;
         } else return signature.equals(other.signature);
     }
 
-    @Override
-    public String toString() {
-        return "SessionCredentials [accessKey=" + accessKey + ", secretKey=" + secretKey + ", signature="
-            + signature + ", SecurityToken=" + securityToken + "]";
-    }
 }

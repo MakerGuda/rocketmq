@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.acl.common;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,30 +11,24 @@ import java.util.Set;
 public class Permission {
 
     public static final byte DENY = 1;
+
     public static final byte ANY = 1 << 1;
+
     public static final byte PUB = 1 << 2;
+
     public static final byte SUB = 1 << 3;
 
     public static final Set<Integer> ADMIN_CODE = new HashSet<>();
 
     static {
-        // UPDATE_AND_CREATE_TOPIC
         ADMIN_CODE.add(RequestCode.UPDATE_AND_CREATE_TOPIC);
-        // UPDATE_BROKER_CONFIG
         ADMIN_CODE.add(RequestCode.UPDATE_BROKER_CONFIG);
-        // DELETE_TOPIC_IN_BROKER
         ADMIN_CODE.add(RequestCode.DELETE_TOPIC_IN_BROKER);
-        // UPDATE_AND_CREATE_SUBSCRIPTIONGROUP
         ADMIN_CODE.add(RequestCode.UPDATE_AND_CREATE_SUBSCRIPTIONGROUP);
-        // DELETE_SUBSCRIPTIONGROUP
         ADMIN_CODE.add(RequestCode.DELETE_SUBSCRIPTIONGROUP);
-        // UPDATE_AND_CREATE_STATIC_TOPIC
         ADMIN_CODE.add(RequestCode.UPDATE_AND_CREATE_STATIC_TOPIC);
-        // UPDATE_AND_CREATE_ACL_CONFIG
         ADMIN_CODE.add(RequestCode.UPDATE_AND_CREATE_ACL_CONFIG);
-        // DELETE_ACL_CONFIG
         ADMIN_CODE.add(RequestCode.DELETE_ACL_CONFIG);
-        // GET_BROKER_CLUSTER_ACL_INFO
         ADMIN_CODE.add(RequestCode.GET_BROKER_CLUSTER_ACL_INFO);
     }
 
@@ -76,8 +54,6 @@ public class Permission {
             case AclConstants.PUB_SUB:
             case AclConstants.SUB_PUB:
                 return Permission.PUB | Permission.SUB;
-            case AclConstants.DENY:
-                return Permission.DENY;
             default:
                 return Permission.DENY;
         }
@@ -102,17 +78,13 @@ public class Permission {
         if (resources == null || resources.isEmpty()) {
             return;
         }
-
         for (String resource : resources) {
             String[] items = StringUtils.split(resource, "=");
             if (items.length != 2) {
-                throw new AclException(String.format("Parse Resource format error for %s.\n" +
-                    "The expected resource format is 'Res=Perm'. For example: topicA=SUB", resource));
+                throw new AclException(String.format("Parse Resource format error for %s.\n" + "The expected resource format is 'Res=Perm'. For example: topicA=SUB", resource));
             }
-
             if (!AclConstants.DENY.equals(items[1].trim()) && Permission.DENY == Permission.parsePermFromString(items[1].trim())) {
-                throw new AclException(String.format("Parse resource permission error for %s.\n" +
-                    "The expected permissions are 'SUB' or 'PUB' or 'SUB|PUB' or 'PUB|SUB'.", resource));
+                throw new AclException(String.format("Parse resource permission error for %s.\n" + "The expected permissions are 'SUB' or 'PUB' or 'SUB|PUB' or 'PUB|SUB'.", resource));
             }
         }
     }
@@ -120,4 +92,5 @@ public class Permission {
     public static boolean needAdminPerm(Integer code) {
         return ADMIN_CODE.contains(code);
     }
+
 }
