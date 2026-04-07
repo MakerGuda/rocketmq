@@ -46,6 +46,11 @@ import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
 @SuppressWarnings("Duplicates")
+/**
+ * <b>SubscriptionGroupManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>ConfigManager</code>。
+ */
 public class SubscriptionGroupManager extends ConfigManager {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

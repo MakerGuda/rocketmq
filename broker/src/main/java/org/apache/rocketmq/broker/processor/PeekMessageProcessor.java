@@ -60,6 +60,11 @@ import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_RESPONSE_CODE;
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_RESULT;
 
+/**
+ * Netty 请求处理器：处理与「Peek Message」相关的 Remoting 请求。
+ * 
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
+ */
 public class PeekMessageProcessor implements NettyRequestProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

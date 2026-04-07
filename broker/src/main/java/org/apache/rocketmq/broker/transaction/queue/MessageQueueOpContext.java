@@ -19,6 +19,9 @@ package org.apache.rocketmq.broker.transaction.queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 上下文对象 <b>MessageQueueOpContext</b>，在一次 RPC 或处理链路中携带请求/响应相关数据。
+ */
 public class MessageQueueOpContext {
     private AtomicInteger totalSize = new AtomicInteger(0);
     private volatile long lastWriteTimestamp;

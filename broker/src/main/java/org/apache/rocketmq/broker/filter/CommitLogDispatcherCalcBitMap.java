@@ -31,6 +31,8 @@ import java.util.Iterator;
 
 /**
  * Calculate bit map of filter.
+ *
+ * Broker 子系统组件 <b>CommitLogDispatcherCalcBitMap</b>（Commit Log Dispatcher Calc Bit Map）。
  */
 public class CommitLogDispatcherCalcBitMap implements CommitLogDispatcher {
 

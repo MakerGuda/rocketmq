@@ -28,6 +28,11 @@ import org.apache.rocketmq.broker.BrokerPathConfigHelper;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+/**
+ * <b>LmqConsumerOffsetManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ * 
+ * 继承关系：<code>ConsumerOffsetManager</code>。
+ */
 public class LmqConsumerOffsetManager extends ConsumerOffsetManager {
     private ConcurrentHashMap<String, Long> lmqOffsetTable = new ConcurrentHashMap<>(512);
 

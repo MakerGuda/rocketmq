@@ -17,6 +17,9 @@
 
 package org.apache.rocketmq.broker.metrics;
 
+/**
+ * 枚举 <b>InvocationStatus</b>，表示一组离散状态或事件类型。
+ */
 public enum InvocationStatus {
     SUCCESS("success"),
     FAILURE("failure");

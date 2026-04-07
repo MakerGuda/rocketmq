@@ -29,6 +29,11 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 
+/**
+ * Broker 子系统组件 <b>SubscriptionGroupManagerV2</b>（Subscription Group Manager V2）。
+ * 
+ * 继承关系：<code>SubscriptionGroupManager</code>。
+ */
 public class SubscriptionGroupManagerV2 extends SubscriptionGroupManager {
 
     private final ConfigStorage configStorage;

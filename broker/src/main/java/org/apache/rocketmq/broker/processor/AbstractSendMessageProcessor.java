@@ -70,6 +70,14 @@ import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_CON
 import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_IS_SYSTEM;
 import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_TOPIC;
 
+/**
+ * 发送消息处理器的抽象基类：抽取构建 {@link org.apache.rocketmq.remoting.protocol.RemotingCommand}、
+ * 解析请求头、执行发送钩子、权限与 Topic 校验等通用逻辑，供 {@link SendMessageProcessor}、
+ * {@link ReplyMessageProcessor} 等具体实现复用。
+ * <p>
+ * 实现 {@link org.apache.rocketmq.remoting.netty.NettyRequestProcessor}，与 Broker 侧消息 trace、
+ * 批量/顺序/事务等变体紧密耦合。
+ */
 public abstract class AbstractSendMessageProcessor implements NettyRequestProcessor {
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     protected static final Logger DLQ_LOG = LoggerFactory.getLogger(LoggerName.DLQ_LOGGER_NAME);

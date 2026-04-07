@@ -40,6 +40,11 @@ import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.header.ExtraInfoUtil;
 import org.apache.rocketmq.store.GetMessageResult;
 
+/**
+ * <b>QueueLevelConsumerManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>ConfigManager</code>。
+ */
 public class QueueLevelConsumerManager extends ConfigManager implements ConsumerOrderInfoManager {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);

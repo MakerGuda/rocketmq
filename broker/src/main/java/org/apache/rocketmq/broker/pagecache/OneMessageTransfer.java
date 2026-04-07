@@ -23,6 +23,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
 
+/**
+ * 传输对象 <b>OneMessageTransfer</b>，实现 Netty FileRegion 等接口以零拷贝或高效方式写出消息体。
+ * 
+ * 继承关系：<code>AbstractReferenceCounted</code>。
+ */
 public class OneMessageTransfer extends AbstractReferenceCounted implements FileRegion {
     private final ByteBuffer byteBufferHeader;
     private final SelectMappedBufferResult selectMappedBufferResult;

@@ -22,6 +22,9 @@ import org.apache.rocketmq.broker.processor.NotificationProcessor;
 import org.apache.rocketmq.broker.processor.PopMessageProcessor;
 import org.apache.rocketmq.store.MessageArrivingListener;
 
+/**
+ * 监听器 <b>NotifyMessageArrivingListener</b>，在注册点被触发时接收事件并执行回调逻辑。
+ */
 public class NotifyMessageArrivingListener implements MessageArrivingListener {
     private final PullRequestHoldService pullRequestHoldService;
     private final PopMessageProcessor popMessageProcessor;

@@ -39,6 +39,11 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+/**
+ * <b>ConsumerOffsetManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>ConfigManager</code>。
+ */
 public class ConsumerOffsetManager extends ConfigManager {
     protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     public static final String TOPIC_GROUP_SEPARATOR = "@";

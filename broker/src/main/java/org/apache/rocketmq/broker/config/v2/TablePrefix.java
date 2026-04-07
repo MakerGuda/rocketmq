@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.config.v2;
 
+/**
+ * 枚举 <b>TablePrefix</b>，表示一组离散状态或事件类型。
+ */
 public enum TablePrefix {
     UNSPECIFIED((byte) 0),
     TABLE((byte) 1);

@@ -40,6 +40,13 @@ import org.apache.rocketmq.store.PutMessageStatus;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.timer.TimerMessageStore;
 
+/**
+ * 消息写入路径上的通用校验与变换工具：在真正调用 {@link org.apache.rocketmq.store.MessageStore} 落盘前，
+ * 检查 Broker 角色、存储可写性、Topic/Body 合法性，并处理定时消息、延迟等级（Schedule）等语义。
+ * <p>
+ * 各静态方法多由发送处理器或存储 Hook 调用；返回非 null 的 {@link org.apache.rocketmq.store.PutMessageResult}
+ * 表示应短路后续写入并携带具体失败原因。
+ */
 public class HookUtils {
 
     protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
@@ -55,8 +62,14 @@ public class HookUtils {
      * The actual limitation is the number of bytes in the path and file components,
      * which might correspond to an equal number of characters.
      */
+    /** Topic 名称最大长度（字节级约束与常见文件系统文件名上限对齐，见上方英文说明）。 */
     private static final Integer MAX_TOPIC_LENGTH = 255;
 
+    /**
+     * 在写入存储前做通用校验：存储是否关闭、从节点是否禁止写入、PageCache 是否繁忙、Topic/Body 是否合法等。
+     *
+     * @return 若校验失败返回非 null 的 {@link PutMessageResult}；通过则返回 {@code null} 表示继续后续流程
+     */
     public static PutMessageResult checkBeforePutMessage(BrokerController brokerController, final MessageExt msg) {
         if (brokerController.getMessageStore().isShutdown()) {
             LOG.warn("message store has shutdown, so putMessage is forbidden");
@@ -108,6 +121,9 @@ public class HookUtils {
         return null;
     }
 
+    /**
+     * 校验「内部批量」消息标志与 Topic 队列类型是否一致，防止错误设置 INNER_BATCH 标志。
+     */
     public static PutMessageResult checkInnerBatch(BrokerController brokerController, final MessageExt msg) {
         if (msg.getProperties().containsKey(MessageConst.PROPERTY_INNER_NUM)
             && !MessageSysFlag.check(msg.getSysFlag(), MessageSysFlag.INNER_BATCH_FLAG)) {
@@ -126,6 +142,9 @@ public class HookUtils {
         return null;
     }
 
+    /**
+     * 处理定时轮、延迟等级（schedule topic）等与时间相关的消息变换；在事务未提交类消息上也会按规则分支。
+     */
     public static PutMessageResult handleScheduleMessage(BrokerController brokerController,
         final MessageExtBrokerInner msg) {
         final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());

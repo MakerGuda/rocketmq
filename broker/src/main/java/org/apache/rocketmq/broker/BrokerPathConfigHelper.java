@@ -19,6 +19,12 @@ package org.apache.rocketmq.broker;
 
 import java.io.File;
 
+/**
+ * Broker 本地配置文件路径工具：在 {@code storeRoot/config/} 下拼接 Topic、订阅组、消费位点、过滤器等 JSON/目录路径。
+ * <p>
+ * {@link #getBrokerConfigPath()} 表示进程级「主配置文件」路径（可通过 {@link #setBrokerConfigPath(String)} 覆盖），
+ * 其余方法均在给定存储根目录 {@code rootDir} 下生成与运行时元数据落盘位置一致的绝对路径片段。
+ */
 public class BrokerPathConfigHelper {
     private static String brokerConfigPath = System.getProperty("user.home") + File.separator + "store"
         + File.separator + "config" + File.separator + "broker.properties";

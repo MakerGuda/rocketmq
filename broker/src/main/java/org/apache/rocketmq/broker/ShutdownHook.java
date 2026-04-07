@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker;
 
+/**
+ * 接口 <b>ShutdownHook</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface ShutdownHook {
     /**
      * Code to execute before broker shutdown.

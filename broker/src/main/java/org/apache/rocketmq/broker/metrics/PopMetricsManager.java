@@ -59,6 +59,9 @@ import static org.apache.rocketmq.broker.metrics.PopMetricsConstant.LABEL_PUT_ST
 import static org.apache.rocketmq.broker.metrics.PopMetricsConstant.LABEL_QUEUE_ID;
 import static org.apache.rocketmq.broker.metrics.PopMetricsConstant.LABEL_REVIVE_MESSAGE_TYPE;
 
+/**
+ * <b>PopMetricsManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ */
 public class PopMetricsManager {
     private static final Logger log = LoggerFactory.getLogger(PopMetricsManager.class);
     

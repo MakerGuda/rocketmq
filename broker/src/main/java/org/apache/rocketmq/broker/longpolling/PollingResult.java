@@ -17,6 +17,9 @@
 
 package org.apache.rocketmq.broker.longpolling;
 
+/**
+ * 枚举 <b>PollingResult</b>，表示一组离散状态或事件类型。
+ */
 public enum PollingResult {
     POLLING_SUC,
     POLLING_FULL,

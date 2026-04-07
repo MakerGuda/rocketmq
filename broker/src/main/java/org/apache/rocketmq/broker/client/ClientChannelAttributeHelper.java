@@ -23,6 +23,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 工具类 <b>ClientChannelAttributeHelper</b>，提供静态方法以简化 Broker 内部重复逻辑。
+ */
 public class ClientChannelAttributeHelper {
     private static final AttributeKey<String> ATTR_CG = AttributeKey.valueOf("CHANNEL_CONSUMER_GROUP");
     private static final AttributeKey<String> ATTR_PG = AttributeKey.valueOf("CHANNEL_PRODUCER_GROUP");

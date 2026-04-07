@@ -54,6 +54,9 @@ import org.apache.rocketmq.store.PutMessageResult;
 import org.apache.rocketmq.store.PutMessageStatus;
 import org.apache.rocketmq.tieredstore.TieredMessageStore;
 
+/**
+ * 桥接组件 <b>EscapeBridge</b>，在事务消息、存储或跨模块调用之间搬运与转换数据。
+ */
 public class EscapeBridge {
     protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private static final long SEND_TIMEOUT = 3000L;

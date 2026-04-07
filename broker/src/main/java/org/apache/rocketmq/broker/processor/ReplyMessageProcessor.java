@@ -54,6 +54,11 @@ import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_IS_
 import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_MESSAGE_TYPE;
 import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_TOPIC;
 
+/**
+ * Netty 请求处理器：处理与「Reply Message」相关的 Remoting 请求。
+ * 
+ * 继承关系：<code>AbstractSendMessageProcessor</code>。
+ */
 public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

@@ -42,6 +42,9 @@ import org.apache.rocketmq.store.config.StorePathConfigHelper;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
 import org.apache.rocketmq.store.timer.TimerMetrics;
 
+/**
+ * 从节点同步组件 <b>SlaveSynchronize</b>，在主从架构下从 Master 拉取定时、消费位点等数据。
+ */
 public class SlaveSynchronize {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

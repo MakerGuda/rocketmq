@@ -49,6 +49,11 @@ import org.apache.rocketmq.store.exception.ConsumeQueueException;
 import org.apache.rocketmq.store.pop.AckMsg;
 import org.apache.rocketmq.store.pop.PopCheckPoint;
 
+/**
+ * Netty 请求处理器：处理与「Change Invisible Time」相关的 Remoting 请求。
+ * 
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
+ */
 public class ChangeInvisibleTimeProcessor implements NettyRequestProcessor {
     private static final Logger POP_LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
     private final BrokerController brokerController;

@@ -57,6 +57,9 @@ import org.apache.rocketmq.store.DefaultMessageFilter;
 import org.apache.rocketmq.store.MessageStore;
 import org.apache.rocketmq.store.exception.ConsumeQueueException;
 
+/**
+ * 指标/统计组件 <b>ConsumerLagCalculator</b>，为可观测性采集或计算 Broker 运行数据。
+ */
 public class ConsumerLagCalculator {
 
     private final BrokerConfig brokerConfig;

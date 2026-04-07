@@ -21,6 +21,9 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.store.MessageFilter;
 
+/**
+ * Broker 子系统组件 <b>PullRequest</b>（Pull Request）。
+ */
 public class PullRequest {
     private final RemotingCommand requestCommand;
     private final Channel clientChannel;

@@ -19,6 +19,9 @@ package org.apache.rocketmq.broker.client;
 import io.netty.channel.Channel;
 import org.apache.rocketmq.remoting.protocol.LanguageCode;
 
+/**
+ * 数据载体 <b>ClientChannelInfo</b>，描述某一客户端、分组或运行态的快照信息。
+ */
 public class ClientChannelInfo {
     private final Channel channel;
     private final String clientId;

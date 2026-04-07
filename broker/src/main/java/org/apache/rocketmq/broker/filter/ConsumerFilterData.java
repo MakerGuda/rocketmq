@@ -28,6 +28,8 @@ import java.util.Collections;
 
 /**
  * Filter data of consumer.
+ *
+ * Broker 子系统组件 <b>ConsumerFilterData</b>（Consumer Filter Data）。
  */
 public class ConsumerFilterData {
 

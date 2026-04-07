@@ -46,6 +46,9 @@ import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_TOP
 
 /**
  * EndTransaction processor: process commit and rollback message
+ *
+ * Netty 请求处理器：处理与「End Transaction」相关的 Remoting 请求。
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
  */
 public class EndTransactionProcessor implements NettyRequestProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);

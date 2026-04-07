@@ -60,6 +60,11 @@ import org.apache.rocketmq.tieredstore.metadata.entity.TopicMetadata;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * <b>TopicConfigManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>ConfigManager</code>。
+ */
 public class TopicConfigManager extends ConfigManager {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private static final long LOCK_TIMEOUT_MILLIS = 3000;

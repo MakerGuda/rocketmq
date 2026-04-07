@@ -33,6 +33,11 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * <b>RocksDBTopicConfigManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>TopicConfigManager</code>。
+ */
 public class RocksDBTopicConfigManager extends TopicConfigManager {
     private static final String VERSION_COLUMN_FAMILY = "topicVersion";
     private static final String TOPIC_COLUMN_FAMILY = "topic";

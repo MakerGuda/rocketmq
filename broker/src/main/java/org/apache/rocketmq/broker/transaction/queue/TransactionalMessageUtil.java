@@ -28,6 +28,9 @@ import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.common.topic.TopicValidator;
 
+/**
+ * 工具类 <b>TransactionalMessageUtil</b>，提供静态方法以简化 Broker 内部重复逻辑。
+ */
 public class TransactionalMessageUtil {
     public static final String REMOVE_TAG = "d";
     public static final Charset CHARSET = StandardCharsets.UTF_8;

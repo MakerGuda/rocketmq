@@ -49,6 +49,9 @@ import org.rocksdb.WriteOptions;
 
 /**
  * https://book.tidb.io/session1/chapter3/tidb-kv-to-relation.html
+ *
+ * Broker 子系统组件 <b>ConfigStorage</b>（Config Storage）。
+ * 继承关系：<code>AbstractRocksDBStorage</code>。
  */
 public class ConfigStorage extends AbstractRocksDBStorage {
 

@@ -47,6 +47,11 @@ import org.apache.rocketmq.remoting.rpc.RpcResponse;
 
 import static org.apache.rocketmq.remoting.protocol.RemotingCommand.buildErrorResponse;
 
+/**
+ * Netty 请求处理器：处理与「Consumer Manage」相关的 Remoting 请求。
+ * 
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
+ */
 public class ConsumerManageProcessor implements NettyRequestProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

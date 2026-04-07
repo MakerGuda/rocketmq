@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.client;
 
+/**
+ * 枚举 <b>ConsumerGroupEvent</b>，表示一组离散状态或事件类型。
+ */
 public enum ConsumerGroupEvent {
 
     /**

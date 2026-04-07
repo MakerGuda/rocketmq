@@ -42,14 +42,33 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.srvutil.ServerUtil;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+/**
+ * Broker 进程入口：解析命令行与配置文件，构建并启动 {@link BrokerController}。
+ * <p>
+ * 启动链路一般为：{@link #parseCmdLine(String[])} 或 {@link #configFileToConfigContext(String)} 得到
+ * {@link ConfigContext} → {@link #buildBrokerController(ConfigContext)} 构造控制器 →
+ * {@link #createBrokerController(String[])} 中调用 {@link BrokerController#initialize()} 并完成
+ * {@link Runtime#addShutdownHook(Thread)} 注册，最后 {@link #start(BrokerController)} 拉起服务。
+ */
 public class BrokerStartup {
 
     public static Logger log;
 
+    /**
+     * JVM 入口：创建控制器并启动 Broker。
+     *
+     * @param args 命令行参数，支持 -c 配置文件、-p/-m 打印配置等（见本类私有方法 {@code buildCommandlineOptions}）
+     */
     public static void main(String[] args) {
         start(createBrokerController(args));
     }
 
+    /**
+     * 启动已初始化完成的 {@link BrokerController}，打印成功提示（含 Broker 地址、序列化方式、NameServer 等）。
+     *
+     * @param controller 已完成 {@link BrokerController#initialize()} 的实例
+     * @return 启动成功时返回同一实例；异常时进程退出且可能返回 {@code null}
+     */
     public static BrokerController start(BrokerController controller) {
         try {
             controller.start();
@@ -73,12 +92,25 @@ public class BrokerStartup {
         return null;
     }
 
+    /**
+     * 优雅关闭 Broker，委托 {@link BrokerController#shutdown()}。
+     *
+     * @param controller 可为 null，为 null 时不做任何操作
+     */
     public static void shutdown(final BrokerController controller) {
         if (null != controller) {
             controller.shutdown();
         }
     }
 
+    /**
+     * 解析命令行：读取 -c 指定配置文件载入 {@link ConfigContext}，再将命令行上的覆盖项写入 {@link BrokerConfig}。
+     * <p>
+     * 若指定 -p 则打印全部配置项后退出；若指定 -m 则仅打印重要字段后退出。
+     *
+     * @param args 与 {@link #main(String[])} 相同
+     * @return 聚合了 Broker/Netty/Store/Auth 等配置的上下文
+     */
     public static ConfigContext parseCmdLine(String[] args) throws Exception {
         Options options = ServerUtil.buildCommandlineOptions(new Options());
         CommandLine commandLine = ServerUtil.parseCmdLine(
@@ -117,6 +149,14 @@ public class BrokerStartup {
         return configContext;
     }
 
+    /**
+     * 从可选的配置文件路径加载 Properties，并填充到 Broker、Netty 服务端/客户端、消息存储与鉴权配置对象中。
+     * <p>
+     * 若 {@code filePath} 非空，会同步更新 {@link BrokerPathConfigHelper#setBrokerConfigPath(String)}，
+     * 供其它组件解析相对路径配置。
+     *
+     * @param filePath 配置文件路径，可为空（仅使用各类配置的默认值）
+     */
     public static ConfigContext configFileToConfigContext(String filePath) throws Exception {
         SystemConfigFileHelper systemConfigFileHelper = new SystemConfigFileHelper();
         BrokerConfig brokerConfig = new BrokerConfig();
@@ -155,6 +195,13 @@ public class BrokerStartup {
             .build();
     }
 
+    /**
+     * 基于已加载的 {@link ConfigContext} 构造 {@link BrokerController}：校验环境变量与关键配置、
+     * 推导 HA 端口与 BrokerId、打印配置摘要，并将原始 Properties 注册到控制器的 {@link org.apache.rocketmq.remoting.Configuration} 以防丢失。
+     *
+     * @param configContext 由配置文件与命令行得到的聚合上下文
+     * @return 已关联 {@link ConfigContext}、尚未 {@link BrokerController#initialize()} 的控制器实例
+     */
     public static BrokerController buildBrokerController(ConfigContext configContext) {
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
 
@@ -248,6 +295,13 @@ public class BrokerStartup {
         return controller;
     }
 
+    /**
+     * 供 {@link Runtime#addShutdownHook(Thread)} 使用：在 JVM 退出时调用 {@link BrokerController#shutdown()}，
+     * 并保证钩子逻辑在多线程触发时仅执行一次。
+     *
+     * @param brokerController 运行中的 Broker 控制器
+     * @return 可在新线程中执行的关闭任务
+     */
     public static Runnable buildShutdownHook(BrokerController brokerController) {
         return new Runnable() {
             private volatile boolean hasShutdown = false;
@@ -269,6 +323,12 @@ public class BrokerStartup {
         };
     }
 
+    /**
+     * 完整工厂方法：解析参数 → 构建控制器 → {@link BrokerController#initialize()} → 注册 shutdown hook。
+     *
+     * @param args 命令行参数
+     * @return 已初始化且已注册关闭钩子的控制器；异常时进程直接退出
+     */
     public static BrokerController createBrokerController(String[] args) {
         try {
             ConfigContext configContext = parseCmdLine(args);

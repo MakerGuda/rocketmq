@@ -22,6 +22,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.common.MixAll;
 
+/**
+ * Broker 子系统组件 <b>BroadcastOffsetStore</b>（Broadcast Offset Store）。
+ */
 public class BroadcastOffsetStore {
 
     private final ConcurrentMap<Integer, AtomicLong> offsetTable = new ConcurrentHashMap<>();

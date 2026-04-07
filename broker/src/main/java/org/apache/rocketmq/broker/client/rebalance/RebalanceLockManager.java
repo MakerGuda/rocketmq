@@ -28,6 +28,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * <b>RebalanceLockManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ */
 public class RebalanceLockManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REBALANCE_LOCK_LOGGER_NAME);
     private final static long REBALANCE_LOCK_MAX_LIVE_TIME = Long.parseLong(System.getProperty(

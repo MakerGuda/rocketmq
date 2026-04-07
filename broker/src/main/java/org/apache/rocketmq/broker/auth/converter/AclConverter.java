@@ -31,6 +31,9 @@ import org.apache.rocketmq.auth.authorization.model.Resource;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.remoting.protocol.body.AclInfo;
 
+/**
+ * 转换器 <b>AclConverter</b>，在认证模型、ACL 等与 Broker 内部表示之间做映射。
+ */
 public class AclConverter {
 
     public static Acl convertAcl(AclInfo aclInfo) {

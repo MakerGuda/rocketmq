@@ -23,6 +23,9 @@ import org.apache.rocketmq.auth.authentication.enums.UserType;
 import org.apache.rocketmq.auth.authentication.model.User;
 import org.apache.rocketmq.remoting.protocol.body.UserInfo;
 
+/**
+ * 转换器 <b>UserConverter</b>，在认证模型、ACL 等与 Broker 内部表示之间做映射。
+ */
 public class UserConverter {
 
     public static List<UserInfo> convertUsers(List<User> users) {

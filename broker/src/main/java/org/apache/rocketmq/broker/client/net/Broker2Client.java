@@ -52,6 +52,9 @@ import org.apache.rocketmq.remoting.protocol.header.NotifyConsumerIdsChangedRequ
 import org.apache.rocketmq.remoting.protocol.header.ResetOffsetRequestHeader;
 import org.apache.rocketmq.store.exception.ConsumeQueueException;
 
+/**
+ * Broker 子系统组件 <b>Broker2Client</b>（Broker2Client）。
+ */
 public class Broker2Client {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

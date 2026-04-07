@@ -240,6 +240,11 @@ import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_IS_
 import static org.apache.rocketmq.common.message.MessageConst.TIMER_ENGINE_TYPE;
 import static org.apache.rocketmq.remoting.protocol.RemotingCommand.buildErrorResponse;
 
+/**
+ * Netty 请求处理器：处理与「Admin Broker」相关的 Remoting 请求。
+ * 
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
+ */
 public class AdminBrokerProcessor implements NettyRequestProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     protected final BrokerController brokerController;

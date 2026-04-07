@@ -30,6 +30,9 @@ import org.apache.rocketmq.store.exception.ConsumeQueueException;
 /**
  * manage the offset of broadcast.
  * now, use this to support switch remoting client between proxy and broker
+ *
+ * <b>BroadcastOffsetManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ * 继承关系：<code>ServiceThread</code>。
  */
 public class BroadcastOffsetManager extends ServiceThread {
     private static final String TOPIC_GROUP_SEPARATOR = "@";

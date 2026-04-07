@@ -32,6 +32,9 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+/**
+ * <b>QueueLevelConsumerOrderInfoLockManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ */
 public class QueueLevelConsumerOrderInfoLockManager {
     private static final Logger POP_LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
     private ConsumerOrderInfoManager consumerOrderInfoManager;

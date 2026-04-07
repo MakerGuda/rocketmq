@@ -20,6 +20,9 @@ import com.google.common.base.Objects;
 import org.apache.rocketmq.remoting.protocol.LanguageCode;
 import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 
+/**
+ * Broker 子系统组件 <b>ConsumerAttr</b>（Consumer Attr）。
+ */
 public class ConsumerAttr {
     String group;
     LanguageCode language;

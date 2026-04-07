@@ -28,6 +28,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Broker 子系统组件 <b>PopInflightMessageCounter</b>（Pop Inflight Message Counter）。
+ */
 public class PopInflightMessageCounter {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

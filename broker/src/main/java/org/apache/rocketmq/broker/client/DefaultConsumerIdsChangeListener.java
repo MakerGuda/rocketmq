@@ -32,6 +32,9 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
+/**
+ * 监听器 <b>DefaultConsumerIdsChangeListener</b>，在注册点被触发时接收事件并执行回调逻辑。
+ */
 public class DefaultConsumerIdsChangeListener implements ConsumerIdsChangeListener {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

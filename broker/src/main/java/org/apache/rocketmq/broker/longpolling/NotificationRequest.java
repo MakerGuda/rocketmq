@@ -22,6 +22,9 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
 import io.netty.channel.Channel;
 
+/**
+ * Broker 子系统组件 <b>NotificationRequest</b>（Notification Request）。
+ */
 public class NotificationRequest {
     private RemotingCommand remotingCommand;
     private Channel channel;

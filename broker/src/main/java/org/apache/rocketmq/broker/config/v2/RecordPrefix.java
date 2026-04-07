@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.config.v2;
 
+/**
+ * 枚举 <b>RecordPrefix</b>，表示一组离散状态或事件类型。
+ */
 public enum RecordPrefix {
     UNSPECIFIED((byte)0),
     DATA_VERSION((byte)1),

@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.metrics;
 
+/**
+ * 枚举 <b>PopReviveMessageType</b>，表示一组离散状态或事件类型。
+ */
 public enum PopReviveMessageType {
     CK,
     ACK

@@ -40,6 +40,13 @@ import org.apache.rocketmq.store.ha.HAConnectionState;
 import org.apache.rocketmq.store.ha.HAConnectionStateNotificationRequest;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
 
+/**
+ * Broker 正式对外「上线」前的预检服务：当 Broker 处于隔离（{@link BrokerController#isIsolated()}）等状态时，
+ * 在后台线程中等待 HA 握手、元数据同步、插件预上线等条件满足，再退出循环使主流程继续。
+ * <p>
+ * 典型场景包括从节点追赶主节点、Controller 模式下成员关系就绪等；与 {@link ServiceThread} 其它周期任务一样，
+ * 通过 {@link #getServiceName()} 区分容器内多 Broker 实例的线程命名。
+ */
 public class BrokerPreOnlineService extends ServiceThread {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

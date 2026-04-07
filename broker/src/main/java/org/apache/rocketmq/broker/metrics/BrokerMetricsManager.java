@@ -114,6 +114,9 @@ import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.OPEN_TELE
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_PROTOCOL_TYPE;
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.PROTOCOL_TYPE_REMOTING;
 
+/**
+ * <b>BrokerMetricsManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ */
 public class BrokerMetricsManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

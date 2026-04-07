@@ -20,6 +20,11 @@ import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+/**
+ * <b>RocksDBLmqSubscriptionGroupManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ * 
+ * 继承关系：<code>RocksDBSubscriptionGroupManager</code>。
+ */
 public class RocksDBLmqSubscriptionGroupManager extends RocksDBSubscriptionGroupManager {
 
     public RocksDBLmqSubscriptionGroupManager(BrokerController brokerController) {

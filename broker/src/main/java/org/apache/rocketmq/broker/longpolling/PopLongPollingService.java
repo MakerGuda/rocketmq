@@ -52,6 +52,11 @@ import static org.apache.rocketmq.broker.longpolling.PollingResult.POLLING_FULL;
 import static org.apache.rocketmq.broker.longpolling.PollingResult.POLLING_SUC;
 import static org.apache.rocketmq.broker.longpolling.PollingResult.POLLING_TIMEOUT;
 
+/**
+ * 后台服务线程 <b>PopLongPollingService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
+ * 
+ * 继承关系：<code>ServiceThread</code>。
+ */
 public class PopLongPollingService extends ServiceThread {
 
     private static final Logger POP_LOGGER =

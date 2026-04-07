@@ -22,6 +22,9 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Broker 子系统组件 <b>PopConsumerRecord</b>（Pop Consumer Record）。
+ */
 public class PopConsumerRecord {
 
     public enum RetryType {

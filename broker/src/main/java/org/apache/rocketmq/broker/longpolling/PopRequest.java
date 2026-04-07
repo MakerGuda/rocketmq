@@ -25,6 +25,9 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.store.MessageFilter;
 
+/**
+ * Broker 子系统组件 <b>PopRequest</b>（Pop Request）。
+ */
 public class PopRequest {
     private static final AtomicLong COUNTER = new AtomicLong(Long.MIN_VALUE);
 

@@ -21,6 +21,11 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.constant.PermName;
 
+/**
+ * <b>RocksDBLmqTopicConfigManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>RocksDBTopicConfigManager</code>。
+ */
 public class RocksDBLmqTopicConfigManager extends RocksDBTopicConfigManager {
 
     public RocksDBLmqTopicConfigManager(BrokerController brokerController) {

@@ -45,6 +45,11 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.ProducerData;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+/**
+ * Netty 请求处理器：处理与「Client Manage」相关的 Remoting 请求。
+ * 
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
+ */
 public class ClientManageProcessor implements NettyRequestProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerController brokerController;

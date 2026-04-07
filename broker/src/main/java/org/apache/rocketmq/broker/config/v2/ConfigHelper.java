@@ -28,6 +28,9 @@ import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteBatch;
 
+/**
+ * 工具类 <b>ConfigHelper</b>，提供静态方法以简化 Broker 内部重复逻辑。
+ */
 public class ConfigHelper {
 
     /**

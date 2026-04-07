@@ -41,6 +41,11 @@ import org.apache.rocketmq.store.timer.TimerMessageStore;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Netty 请求处理器：处理与「Recall Message」相关的 Remoting 请求。
+ * 
+ * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
+ */
 public class RecallMessageProcessor implements NettyRequestProcessor {
     private static final String RECALL_MESSAGE_TAG = "_RECALL_TAG_";
     private final BrokerController brokerController;

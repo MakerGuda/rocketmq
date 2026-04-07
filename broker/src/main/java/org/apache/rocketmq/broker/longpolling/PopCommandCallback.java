@@ -22,6 +22,9 @@ import java.util.function.BiConsumer;
 import org.apache.rocketmq.broker.metrics.ConsumerLagCalculator;
 import org.apache.rocketmq.remoting.CommandCallback;
 
+/**
+ * 回调接口 <b>PopCommandCallback</b>，用于异步或解耦流程中的结果通知。
+ */
 public class PopCommandCallback implements CommandCallback {
 
     private final BiConsumer<ConsumerLagCalculator.ProcessGroupInfo,

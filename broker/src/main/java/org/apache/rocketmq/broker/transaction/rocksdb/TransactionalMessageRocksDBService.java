@@ -42,6 +42,9 @@ import org.apache.rocketmq.store.transaction.TransRocksDBRecord;
 import org.apache.rocketmq.store.transaction.TransMessageRocksDBStore;
 import static org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage.TRANS_COLUMN_FAMILY;
 
+/**
+ * 服务组件 <b>TransactionalMessageRocksDBService</b>，封装一组可启动/关闭的 Broker 侧能力。
+ */
 public class TransactionalMessageRocksDBService {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
     private static final int MAX_BATCH_SIZE_FROM_ROCKSDB = 2000;

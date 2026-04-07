@@ -44,6 +44,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 
+/**
+ * 指标/统计组件 <b>TransactionMetrics</b>，为可观测性采集或计算 Broker 运行数据。
+ * 
+ * 继承关系：<code>ConfigManager</code>。
+ */
 public class TransactionMetrics extends ConfigManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

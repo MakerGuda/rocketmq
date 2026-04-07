@@ -23,6 +23,9 @@ import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.remoting.protocol.header.EndTransactionRequestHeader;
 import org.apache.rocketmq.store.PutMessageResult;
 
+/**
+ * 接口 <b>TransactionalMessageService</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface TransactionalMessageService {
 
     /**

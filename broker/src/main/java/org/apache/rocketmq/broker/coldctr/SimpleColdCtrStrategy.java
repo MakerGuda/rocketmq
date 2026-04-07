@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.coldctr;
 
+/**
+ * Broker 子系统组件 <b>SimpleColdCtrStrategy</b>（Simple Cold Ctr Strategy）。
+ */
 public class SimpleColdCtrStrategy implements ColdCtrStrategy {
     private final ColdDataCgCtrService coldDataCgCtrService;
 

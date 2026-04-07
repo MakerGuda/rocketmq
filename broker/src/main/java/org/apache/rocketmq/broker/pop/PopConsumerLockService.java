@@ -29,6 +29,9 @@ import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 服务组件 <b>PopConsumerLockService</b>，封装一组可启动/关闭的 Broker 侧能力。
+ */
 public class PopConsumerLockService {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);

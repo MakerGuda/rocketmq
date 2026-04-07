@@ -37,6 +37,8 @@ import org.apache.rocketmq.remoting.protocol.RemotingSysResponseCode;
 /**
  * BrokerFastFailure will cover {@link BrokerController#getSendThreadPoolQueue()} and {@link
  * BrokerController#getPullThreadPoolQueue()}
+ *
+ * Broker 子系统组件 <b>BrokerFastFailure</b>（Broker Fast Failure）。
  */
 public class BrokerFastFailure {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);

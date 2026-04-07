@@ -42,6 +42,9 @@ import org.rocksdb.WriteBatch;
  * <p>
  * Layout of consumer offset value: [offset, 8 bytes]
  * </p>
+ *
+ * Broker 子系统组件 <b>ConsumerOffsetManagerV2</b>（Consumer Offset Manager V2）。
+ * 继承关系：<code>ConsumerOffsetManager</code>。
  */
 public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
 

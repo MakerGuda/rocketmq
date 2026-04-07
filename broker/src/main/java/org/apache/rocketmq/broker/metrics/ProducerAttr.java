@@ -19,6 +19,9 @@ package org.apache.rocketmq.broker.metrics;
 import com.google.common.base.Objects;
 import org.apache.rocketmq.remoting.protocol.LanguageCode;
 
+/**
+ * Broker 子系统组件 <b>ProducerAttr</b>（Producer Attr）。
+ */
 public class ProducerAttr {
     LanguageCode language;
     int version;

@@ -63,6 +63,8 @@ import static org.apache.rocketmq.remoting.protocol.ResponseCode.CONTROLLER_BROK
  * both master and slave will start this timed task. 1.regularly syncing metadata from controllers, and changing broker
  * roles and master if needed, both master and slave will start this timed task. 2.regularly expanding and Shrinking
  * syncStateSet, only master will start this timed task.
+ *
+ * <b>ReplicasManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
  */
 public class ReplicasManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);

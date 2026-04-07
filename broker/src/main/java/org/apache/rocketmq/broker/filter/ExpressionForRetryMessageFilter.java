@@ -29,6 +29,9 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 /**
  * Support filter to retry topic.
  * <br>It will decode properties first in order to get real topic.
+ *
+ * 消息过滤器 <b>ExpressionForRetryMessageFilter</b>，在消费或投递路径上按表达式或规则筛选消息。
+ * 继承关系：<code>ExpressionMessageFilter</code>。
  */
 public class ExpressionForRetryMessageFilter extends ExpressionMessageFilter {
     public ExpressionForRetryMessageFilter(SubscriptionData subscriptionData, ConsumerFilterData consumerFilterData,

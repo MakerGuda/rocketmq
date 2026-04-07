@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.rocketmq.broker.config.v2;
-
-/*
- * <strong>Endian</strong>: we use network byte order for all integrals, aka, always big endian.
- *
- * Unlike v1 config managers, implementations in this package prioritize data integrity and reliability.
- * As a result,RocksDB write-ahead-log is always on and changes are immediately flushed. Another significant
- * difference is that heap-based cache is removed because it is not necessary and duplicated to RocksDB
- * MemTable/BlockCache.
+/**
+ * Broker 配置持久化 v2：基于 RocksDB 的配置与元数据管理实现包。
+ * <p>
+ * 与 v1 以 JSON 文件为主的 ConfigManager 相比，本包实现优先保证数据完整性与可靠性——RocksDB 写前日志常开并尽快刷盘；
+ * 不再维护额外的堆内全量缓存，避免与 RocksDB MemTable/BlockCache 重复。
+ * <p>
+ * <strong>Endian</strong>：所有整型在网络与存储中均使用大端（网络字节序）。
  */
+package org.apache.rocketmq.broker.config.v2;

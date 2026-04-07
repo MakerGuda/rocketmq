@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.metrics;
 
+/**
+ * Broker 子系统组件 <b>PopMetricsConstant</b>（Pop Metrics Constant）。
+ */
 public class PopMetricsConstant {
     public static final String HISTOGRAM_POP_BUFFER_SCAN_TIME_CONSUME = "rocketmq_pop_buffer_scan_time_consume";
     public static final String COUNTER_POP_REVIVE_IN_MESSAGE_TOTAL = "rocketmq_pop_revive_in_message_total";

@@ -30,6 +30,9 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.store.ConsumeQueueExt;
 import org.apache.rocketmq.store.MessageFilter;
 
+/**
+ * 消息过滤器 <b>ExpressionMessageFilter</b>，在消费或投递路径上按表达式或规则筛选消息。
+ */
 public class ExpressionMessageFilter implements MessageFilter {
 
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.FILTER_LOGGER_NAME);

@@ -18,6 +18,8 @@ package org.apache.rocketmq.broker.config.v2;
 
 /**
  * See <a href="https://book.tidb.io/session1/chapter3/tidb-kv-to-relation.html">Table, Key Value Mapping</a>
+ *
+ * 枚举 <b>TableId</b>，表示一组离散状态或事件类型。
  */
 public enum TableId {
     UNSPECIFIED((short) 0),

@@ -17,9 +17,9 @@
 package org.apache.rocketmq.broker.client;
 
 /**
- * producer manager will call this listener when something happen
+ * 生产者事件监听接口：由 {@link ProducerManager} 在生产者组或客户端连接发生变化时回调。
  * <p>
- * event type: {@link ProducerGroupEvent}
+ * 事件类型见 {@link ProducerGroupEvent}。
  */
 public interface ProducerChangeListener {
 

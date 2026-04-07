@@ -36,6 +36,11 @@ import java.nio.file.Paths;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * <b>RocksDBConsumerOffsetManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ * 
+ * 继承关系：<code>ConsumerOffsetManager</code>。
+ */
 public class RocksDBConsumerOffsetManager extends ConsumerOffsetManager {
 
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);

@@ -22,6 +22,11 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+/**
+ * 服务组件 <b>LmqPullRequestHoldService</b>，封装一组可启动/关闭的 Broker 侧能力。
+ * 
+ * 继承关系：<code>PullRequestHoldService</code>。
+ */
 public class LmqPullRequestHoldService extends PullRequestHoldService {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

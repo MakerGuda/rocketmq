@@ -23,6 +23,11 @@ import org.apache.rocketmq.common.ConfigManager;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.body.SetMessageRequestModeRequestBody;
 
+/**
+ * <b>MessageRequestModeManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
+ * 
+ * 继承关系：<code>ConfigManager</code>。
+ */
 public class MessageRequestModeManager extends ConfigManager {
 
     private transient BrokerController brokerController;

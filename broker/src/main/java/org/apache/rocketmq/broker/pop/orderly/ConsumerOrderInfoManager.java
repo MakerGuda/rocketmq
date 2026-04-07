@@ -32,6 +32,8 @@ import org.apache.rocketmq.store.GetMessageResult;
  * 2. Support message group-level ordered consumption (improve concurrency)
  * 3. Support custom ordered consumption strategies
  * </p>
+ *
+ * 接口 <b>ConsumerOrderInfoManager</b>，约定 Broker 子系统与外部组件之间的协作契约。
  */
 public interface ConsumerOrderInfoManager {
 

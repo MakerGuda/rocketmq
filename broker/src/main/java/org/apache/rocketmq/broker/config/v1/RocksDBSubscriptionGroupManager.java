@@ -36,6 +36,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 
+/**
+ * <b>RocksDBSubscriptionGroupManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
+ * 
+ * 继承关系：<code>SubscriptionGroupManager</code>。
+ */
 public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
 
     protected transient RocksDBConfigManager rocksDBConfigManager;

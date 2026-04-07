@@ -44,6 +44,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 后台服务线程 <b>PopBufferMergeService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
+ * 
+ * 继承关系：<code>ServiceThread</code>。
+ */
 public class PopBufferMergeService extends ServiceThread {
     private static final Logger POP_LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
     ConcurrentHashMap<String/*mergeKey*/, PopCheckPointWrapper>

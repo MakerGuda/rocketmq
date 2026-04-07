@@ -24,6 +24,11 @@ import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import org.apache.rocketmq.store.GetMessageResult;
 
+/**
+ * 传输对象 <b>ManyMessageTransfer</b>，实现 Netty FileRegion 等接口以零拷贝或高效方式写出消息体。
+ * 
+ * 继承关系：<code>AbstractReferenceCounted</code>。
+ */
 public class ManyMessageTransfer extends AbstractReferenceCounted implements FileRegion {
     private final ByteBuffer byteBufferHeader;
     private final GetMessageResult getMessageResult;

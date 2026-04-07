@@ -20,6 +20,9 @@ package org.apache.rocketmq.broker.longpolling;
 import org.apache.rocketmq.remoting.protocol.header.NotificationRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.PopMessageRequestHeader;
 
+/**
+ * Broker 子系统组件 <b>PollingHeader</b>（Polling Header）。
+ */
 public class PollingHeader {
     private final String consumerGroup;
     private final String topic;

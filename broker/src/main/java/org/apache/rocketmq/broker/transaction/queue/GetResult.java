@@ -19,6 +19,9 @@ package org.apache.rocketmq.broker.transaction.queue;
 import org.apache.rocketmq.client.consumer.PullResult;
 import org.apache.rocketmq.common.message.MessageExt;
 
+/**
+ * Broker 子系统组件 <b>GetResult</b>（Get Result）。
+ */
 public class GetResult {
     private MessageExt msg;
     private PullResult pullResult;

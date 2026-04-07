@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.mqtrace;
 
+/**
+ * 接口 <b>ConsumeMessageHook</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface ConsumeMessageHook {
     String hookName();
 

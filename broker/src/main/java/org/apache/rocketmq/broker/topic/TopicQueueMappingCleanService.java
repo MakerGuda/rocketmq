@@ -48,6 +48,11 @@ import org.apache.rocketmq.remoting.rpc.RpcRequest;
 import org.apache.rocketmq.remoting.rpc.RpcResponse;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+/**
+ * 后台服务线程 <b>TopicQueueMappingCleanService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
+ * 
+ * 继承关系：<code>ServiceThread</code>。
+ */
 public class TopicQueueMappingCleanService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 

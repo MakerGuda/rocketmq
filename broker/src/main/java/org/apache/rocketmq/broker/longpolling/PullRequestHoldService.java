@@ -30,6 +30,11 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.ConsumeQueueExt;
 import org.apache.rocketmq.store.exception.ConsumeQueueException;
 
+/**
+ * 后台服务线程 <b>PullRequestHoldService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
+ * 
+ * 继承关系：<code>ServiceThread</code>。
+ */
 public class PullRequestHoldService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     protected static final String TOPIC_QUEUEID_SEPARATOR = "@";

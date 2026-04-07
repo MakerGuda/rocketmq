@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.metrics;
 
+/**
+ * Broker 子系统组件 <b>BrokerMetricsConstant</b>（Broker Metrics Constant）。
+ */
 public class BrokerMetricsConstant {
     public static final String OPEN_TELEMETRY_METER_NAME = "broker-meter";
 

@@ -182,6 +182,16 @@ import org.apache.rocketmq.store.timer.TimerMetrics;
 import org.apache.rocketmq.store.timer.rocksdb.TimerMessageRocksDBStore;
 import org.apache.rocketmq.store.transaction.TransMessageRocksDBStore;
 
+/**
+ * Broker 运行时核心控制器，负责把配置、存储、网络、客户端会话与各业务处理器组装为可启动的 Broker 实例。
+ * <p>
+ * 主要职责包括：注册 Netty 请求处理器；管理 Topic/订阅组/消费位点等元数据管理器；维护生产者与消费者连接；
+ * 创建 {@link org.apache.rocketmq.store.MessageStore} 及定时、事务、Pop 等相关服务；向 NameServer 注册路由；
+ * 并在主从、Controller、DLedger 等模式下协调角色与同步语义。
+ * <p>
+ * 典型生命周期：由 {@link BrokerStartup} 解析配置后构造本类，调用 {@link #initialize()} 完成组件初始化，再
+ * {@link #start()} 对外提供服务，停机时 {@link #shutdown()} 释放资源。
+ */
 public class BrokerController {
     protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private static final Logger LOG_PROTECTION = LoggerFactory.getLogger(LoggerName.PROTECTION_LOGGER_NAME);

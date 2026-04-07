@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.coldctr;
 
+/**
+ * 接口 <b>ColdCtrStrategy</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface ColdCtrStrategy {
     /**
      * Calculate the determining factor about whether to accelerate or decelerate

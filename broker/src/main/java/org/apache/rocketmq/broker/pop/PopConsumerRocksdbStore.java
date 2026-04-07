@@ -38,6 +38,11 @@ import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 基于 RocksDB 的存储实现 <b>PopConsumerRocksdbStore</b>，承担对应状态的高性能持久化。
+ * 
+ * 继承关系：<code>AbstractRocksDBStorage</code>。
+ */
 public class PopConsumerRocksdbStore extends AbstractRocksDBStorage implements PopConsumerKVStore {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);

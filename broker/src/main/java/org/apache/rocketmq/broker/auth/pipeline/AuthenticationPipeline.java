@@ -31,6 +31,9 @@ import org.apache.rocketmq.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
+/**
+ * 管线组件 <b>AuthenticationPipeline</b>，将鉴权/授权等步骤串联为可插拔的处理链。
+ */
 public class AuthenticationPipeline implements RequestPipeline {
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final AuthConfig authConfig;

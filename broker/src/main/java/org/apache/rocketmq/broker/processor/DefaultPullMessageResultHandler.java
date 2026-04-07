@@ -65,6 +65,9 @@ import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_RESPONSE_CODE;
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_RESULT;
 
+/**
+ * 处理器 <b>DefaultPullMessageResultHandler</b>，用于响应角色切换、协议事件或管线阶段。
+ */
 public class DefaultPullMessageResultHandler implements PullMessageResultHandler {
 
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);

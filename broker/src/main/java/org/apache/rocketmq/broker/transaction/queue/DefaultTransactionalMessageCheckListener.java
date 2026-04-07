@@ -30,6 +30,11 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.PutMessageResult;
 import org.apache.rocketmq.store.PutMessageStatus;
 
+/**
+ * 监听器 <b>DefaultTransactionalMessageCheckListener</b>，在注册点被触发时接收事件并执行回调逻辑。
+ * 
+ * 继承关系：<code>AbstractTransactionalMessageCheckListener</code>。
+ */
 public class DefaultTransactionalMessageCheckListener extends AbstractTransactionalMessageCheckListener {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
 

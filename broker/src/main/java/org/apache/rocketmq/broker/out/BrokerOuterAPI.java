@@ -159,6 +159,9 @@ import org.apache.rocketmq.store.timer.TimerMetrics;
 import static org.apache.rocketmq.remoting.protocol.RemotingSysResponseCode.SUCCESS;
 import static org.apache.rocketmq.remoting.protocol.ResponseCode.CONTROLLER_MASTER_STILL_EXIST;
 
+/**
+ * Broker 子系统组件 <b>BrokerOuterAPI</b>（Broker Outer API）。
+ */
 public class BrokerOuterAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final RemotingClient remotingClient;

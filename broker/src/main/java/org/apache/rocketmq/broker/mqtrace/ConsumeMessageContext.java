@@ -21,6 +21,9 @@ import java.util.Map;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
+/**
+ * 上下文对象 <b>ConsumeMessageContext</b>，在一次 RPC 或处理链路中携带请求/响应相关数据。
+ */
 public class ConsumeMessageContext {
     private String consumerGroup;
     private String topic;

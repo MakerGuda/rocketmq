@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.client;
 
+/**
+ * 接口 <b>ConsumerIdsChangeListener</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface ConsumerIdsChangeListener {
 
     void handle(ConsumerGroupEvent event, String group, Object... args);

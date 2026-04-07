@@ -23,6 +23,13 @@ import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+/**
+ * Broker 启动阶段的「配置聚合体」：将配置文件路径、原始 {@link java.util.Properties} 以及
+ * {@link org.apache.rocketmq.common.BrokerConfig}、Netty 双端配置、{@link org.apache.rocketmq.store.config.MessageStoreConfig}、
+ * {@link org.apache.rocketmq.auth.config.AuthConfig} 等对象封装在一起，供 {@link BrokerStartup} 构建 {@link BrokerController}。
+ * <p>
+ * 使用 {@link Builder} 构造；与单次 Remoting 请求的「上下文」不同，本类型生命周期贯穿进程启动与配置热更新流程。
+ */
 public class ConfigContext {
     private String configFilePath;
     private Properties properties;

@@ -35,6 +35,11 @@ import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Broker 子系统组件 <b>PopConsumerCache</b>（Pop Consumer Cache）。
+ * 
+ * 继承关系：<code>ServiceThread</code>。
+ */
 public class PopConsumerCache extends ServiceThread {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);

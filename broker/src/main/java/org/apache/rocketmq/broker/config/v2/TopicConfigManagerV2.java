@@ -33,6 +33,9 @@ import org.rocksdb.WriteBatch;
 /**
  * Key layout: [table-prefix, 1 byte][table-id, 2 bytes][record-type-prefix, 1 byte][topic-len, 2 bytes][topic-bytes]
  * Value layout: [serialization-type, 1 byte][topic-config-bytes]
+ *
+ * Broker 子系统组件 <b>TopicConfigManagerV2</b>（Topic Config Manager V2）。
+ * 继承关系：<code>TopicConfigManager</code>。
  */
 public class TopicConfigManagerV2 extends TopicConfigManager {
     private final ConfigStorage configStorage;

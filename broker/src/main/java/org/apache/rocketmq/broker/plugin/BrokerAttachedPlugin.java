@@ -19,6 +19,9 @@ package org.apache.rocketmq.broker.plugin;
 
 import java.util.Map;
 
+/**
+ * 接口 <b>BrokerAttachedPlugin</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface BrokerAttachedPlugin {
 
     /**

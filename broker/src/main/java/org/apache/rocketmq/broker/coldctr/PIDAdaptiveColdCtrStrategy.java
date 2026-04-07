@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Broker 子系统组件 <b>PIDAdaptiveColdCtrStrategy</b>（PID Adaptive Cold Ctr Strategy）。
+ */
 public class PIDAdaptiveColdCtrStrategy implements ColdCtrStrategy {
     /**
      * Stores the maximum number of recent et val

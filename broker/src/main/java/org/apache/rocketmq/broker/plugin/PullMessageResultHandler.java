@@ -26,6 +26,9 @@ import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfi
 import org.apache.rocketmq.store.GetMessageResult;
 import org.apache.rocketmq.store.MessageFilter;
 
+/**
+ * 接口 <b>PullMessageResultHandler</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface PullMessageResultHandler {
 
     /**

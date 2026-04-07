@@ -20,6 +20,9 @@ package org.apache.rocketmq.broker.processor;
 import org.apache.rocketmq.broker.mqtrace.SendMessageContext;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+/**
+ * 接口 <b>SendMessageCallback</b>，约定 Broker 子系统与外部组件之间的协作契约。
+ */
 public interface SendMessageCallback {
     /**
      * On send complete.

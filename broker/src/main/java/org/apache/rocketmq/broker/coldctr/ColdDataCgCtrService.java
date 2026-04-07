@@ -39,6 +39,9 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 /**
  * store the cg cold read ctr table and acc the size of the cold
  * reading msg, timing to clear the table and set acc to zero
+ *
+ * 后台服务线程 <b>ColdDataCgCtrService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
+ * 继承关系：<code>ServiceThread</code>。
  */
 public class ColdDataCgCtrService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_COLDCTR_LOGGER_NAME);

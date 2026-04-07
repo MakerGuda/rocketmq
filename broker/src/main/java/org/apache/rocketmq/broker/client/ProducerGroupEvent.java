@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.broker.client;
 
+/**
+ * 枚举 <b>ProducerGroupEvent</b>，表示一组离散状态或事件类型。
+ */
 public enum ProducerGroupEvent {
     /**
      * The group of producer is unregistered.

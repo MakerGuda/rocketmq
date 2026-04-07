@@ -31,6 +31,13 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequestHeader;
 
+/**
+ * 事务消息回查监听器的抽象基类：在 Broker 需要向生产者确认事务最终状态时，
+ * 构造并派发 {@link org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequestHeader} 相关请求。
+ * <p>
+ * 具体策略由子类（如 {@link org.apache.rocketmq.broker.transaction.queue.DefaultTransactionalMessageCheckListener}）实现；
+ * 本类负责线程池、队列等基础设施的托管。
+ */
 public abstract class AbstractTransactionalMessageCheckListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
 
