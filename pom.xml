@@ -27,7 +27,7 @@
 
     <inceptionYear>2012</inceptionYear>
     <groupId>org.apache.rocketmq</groupId>
-    <artifactId>rocketmq-all</artifactId>
+    <artifactId>rocketmq</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
     <name>Apache RocketMQ ${project.version}</name>
