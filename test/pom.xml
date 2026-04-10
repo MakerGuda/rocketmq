@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-namesrv</artifactId>
+            <artifactId>namesrv</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

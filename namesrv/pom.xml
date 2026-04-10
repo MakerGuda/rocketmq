@@ -25,7 +25,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-    <artifactId>rocketmq-namesrv</artifactId>
+    <artifactId>namesrv</artifactId>
     <name>rocketmq-namesrv ${project.version}</name>
 
     <properties>

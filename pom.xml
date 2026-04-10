@@ -570,17 +570,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-filter</artifactId>
+                <artifactId>filter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-namesrv</artifactId>
+                <artifactId>namesrv</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-openmessaging</artifactId>
+                <artifactId>openmessaging</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

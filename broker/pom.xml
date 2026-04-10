@@ -57,7 +57,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-filter</artifactId>
+            <artifactId>filter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
