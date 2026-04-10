@@ -40,7 +40,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-srvutil</artifactId>
+            <artifactId>srvutil</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

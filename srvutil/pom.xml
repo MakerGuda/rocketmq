@@ -25,8 +25,8 @@
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-    <artifactId>rocketmq-srvutil</artifactId>
-    <name>rocketmq-srvutil ${project.version}</name>
+    <artifactId>srvutil</artifactId>
+    <name>srvutil ${project.version}</name>
 
     <properties>
         <project.root>${basedir}/..</project.root>

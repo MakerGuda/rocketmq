@@ -595,7 +595,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-srvutil</artifactId>
+                <artifactId>srvutil</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
