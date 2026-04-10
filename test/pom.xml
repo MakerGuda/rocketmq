@@ -25,7 +25,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>rocketmq-test</artifactId>
+    <artifactId>test</artifactId>
     <name>rocketmq-test ${project.version}</name>
 
     <properties>
@@ -75,7 +75,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-tools</artifactId>
+            <artifactId>tools</artifactId>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>

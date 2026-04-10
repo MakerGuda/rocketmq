@@ -85,14 +85,14 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.rocketmq:rocketmq-container</include>
-                <include>org.apache.rocketmq:rocketmq-broker</include>
-                <include>org.apache.rocketmq:rocketmq-tools</include>
-                <include>org.apache.rocketmq:rocketmq-client</include>
-                <include>org.apache.rocketmq:rocketmq-namesrv</include>
-                <include>org.apache.rocketmq:rocketmq-example</include>
+                <include>org.apache.rocketmq:container</include>
+                <include>org.apache.rocketmq:broker</include>
+                <include>org.apache.rocketmq:tools</include>
+                <include>org.apache.rocketmq:client</include>
+                <include>org.apache.rocketmq:namesrv</include>
+                <include>org.apache.rocketmq:example</include>
                 <include>org.apache.rocketmq:openmessaging</include>
-                <include>org.apache.rocketmq:rocketmq-controller</include>
+                <include>org.apache.rocketmq:controller</include>
             </includes>
             <binaries>
                 <outputDirectory>lib/</outputDirectory>

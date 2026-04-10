@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-tools</artifactId>
+            <artifactId>tools</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

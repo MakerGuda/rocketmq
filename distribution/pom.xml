@@ -57,7 +57,7 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.rocketmq</groupId>
-                    <artifactId>rocketmq-tools</artifactId>
+                    <artifactId>tools</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.rocketmq</groupId>

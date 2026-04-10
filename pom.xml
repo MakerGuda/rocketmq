@@ -600,22 +600,22 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-store</artifactId>
+                <artifactId>store</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-tiered-store</artifactId>
+                <artifactId>tieredstore</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-test</artifactId>
+                <artifactId>test</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-tools</artifactId>
+                <artifactId>tools</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

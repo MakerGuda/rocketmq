@@ -25,8 +25,8 @@
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-    <artifactId>rocketmq-tiered-store</artifactId>
-    <name>rocketmq-tiered-store ${project.version}</name>
+    <artifactId>tieredstore</artifactId>
+    <name>tiered-store ${project.version}</name>
 
     <properties>
         <project.root>${basedir}/..</project.root>
@@ -35,7 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
-            <artifactId>rocketmq-store</artifactId>
+            <artifactId>store</artifactId>
         </dependency>
 
         <dependency>
