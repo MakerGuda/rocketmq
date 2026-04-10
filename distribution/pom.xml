@@ -23,7 +23,7 @@
         <artifactId>rocketmq</artifactId>
         <version>${revision}</version>
     </parent>
-    <artifactId>rocketmq-distribution</artifactId>
+    <artifactId>distribution</artifactId>
     <name>rocketmq-distribution ${project.version}</name>
     <packaging>pom</packaging>
 

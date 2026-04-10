@@ -25,7 +25,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-    <artifactId>rocketmq-example</artifactId>
+    <artifactId>example</artifactId>
     <name>rocketmq-example ${project.version}</name>
 
     <properties>
