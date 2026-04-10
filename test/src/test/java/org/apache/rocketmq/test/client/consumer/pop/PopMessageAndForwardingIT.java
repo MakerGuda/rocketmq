@@ -17,8 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.pop;
 
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.rocketmq.client.consumer.PopResult;
 import org.apache.rocketmq.client.consumer.PopStatus;
 import org.apache.rocketmq.common.attribute.CQType;
@@ -35,6 +33,9 @@ import org.apache.rocketmq.test.client.rmq.RMQPopClient;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -72,7 +73,7 @@ public class PopMessageAndForwardingIT extends BasePop {
         AtomicReference<MessageExt> firstMessageExtRef = new AtomicReference<>();
         await().atMost(Duration.ofSeconds(3)).until(() -> {
             PopResult popResult = client.popMessageAsync(broker1Addr, broker1MessageQueue, 3000, 32, group, 1000,
-                true, ConsumeInitMode.MIN, false, ExpressionType.TAG, "*").get();
+                    true, ConsumeInitMode.MIN, false, ExpressionType.TAG, "*").get();
             if (!popResult.getPopStatus().equals(PopStatus.FOUND)) {
                 return false;
             }
@@ -84,7 +85,7 @@ public class PopMessageAndForwardingIT extends BasePop {
         AtomicReference<MessageExt> secondMessageExtRef = new AtomicReference<>();
         await().atMost(Duration.ofSeconds(3)).until(() -> {
             PopResult popResult = client.popMessageAsync(broker2Addr, broker2MessageQueue, 3000, 32, group, 1000,
-                true, ConsumeInitMode.MIN, false, ExpressionType.TAG, "*").get();
+                    true, ConsumeInitMode.MIN, false, ExpressionType.TAG, "*").get();
             if (!popResult.getPopStatus().equals(PopStatus.FOUND)) {
                 return false;
             }

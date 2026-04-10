@@ -62,8 +62,8 @@ public class AsyncSendWithMessageQueueIT extends BaseConf {
 
         consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), CONSUME_TIME);
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
 
         VerifyUtils.verifyMessageQueueId(queueId, consumer.getListener().getAllOriginMsg());
 
@@ -77,8 +77,8 @@ public class AsyncSendWithMessageQueueIT extends BaseConf {
 
         consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), CONSUME_TIME);
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
 
         VerifyUtils.verifyMessageQueueId(queueId, consumer.getListener().getAllOriginMsg());
     }

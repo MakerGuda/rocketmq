@@ -17,15 +17,16 @@
 
 package org.apache.rocketmq.test.client.consumer.pop;
 
+import org.apache.rocketmq.client.consumer.PopResult;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.assertj.core.util.Lists;
+import org.junit.Test;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import org.apache.rocketmq.client.consumer.PopResult;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.assertj.core.util.Lists;
-import org.junit.Test;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -280,10 +281,10 @@ public class PopOrderlyIT extends BasePopOrderly {
 
     private CompletableFuture<Void> popMessageForReentrant(String attemptId) {
         return popMessageOrderlyAsync(TimeUnit.SECONDS.toMillis(10), 3, TimeUnit.SECONDS.toMillis(30), attemptId)
-            .thenAccept(popResult -> {
-                for (MessageExt messageExt : popResult.getMsgFoundList()) {
-                    onRecvNewMessage(messageExt);
-                }
-            });
+                .thenAccept(popResult -> {
+                    for (MessageExt messageExt : popResult.getMsgFoundList()) {
+                        onRecvNewMessage(messageExt);
+                    }
+                });
     }
 }

@@ -16,18 +16,19 @@
  */
 package org.apache.rocketmq.broker.pop;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.rocketmq.common.KeyBuilder;
 import org.apache.rocketmq.common.PopAckConstants;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 服务组件 <b>PopConsumerLockService</b>，封装一组可启动/关闭的 Broker 侧能力。
@@ -46,7 +47,7 @@ public class PopConsumerLockService {
 
     public boolean tryLock(String groupId, String topicId) {
         return Objects.requireNonNull(ConcurrentHashMapUtils.computeIfAbsent(lockTable,
-            groupId + PopAckConstants.SPLIT + topicId, s -> new TimedLock())).tryLock();
+                groupId + PopAckConstants.SPLIT + topicId, s -> new TimedLock())).tryLock();
     }
 
     public void unlock(String groupId, String topicId) {
@@ -69,15 +70,15 @@ public class PopConsumerLockService {
             Map.Entry<String, TimedLock> entry = iterator.next();
             if (System.currentTimeMillis() - entry.getValue().getLockTime() > timeout) {
                 log.info("PopConsumerLockService remove timeout lock, " +
-                    "key={}, locked={}", entry.getKey(), entry.getValue().lock.get());
+                        "key={}, locked={}", entry.getKey(), entry.getValue().lock.get());
                 iterator.remove();
             }
         }
     }
 
     static class TimedLock {
-        private volatile long lockTime;
         private final AtomicBoolean lock;
+        private volatile long lockTime;
 
         public TimedLock() {
             this.lockTime = System.currentTimeMillis();

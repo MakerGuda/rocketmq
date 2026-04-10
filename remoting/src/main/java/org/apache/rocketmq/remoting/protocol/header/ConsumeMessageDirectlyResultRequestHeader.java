@@ -110,13 +110,13 @@ public class ConsumeMessageDirectlyResultRequestHeader extends TopicRequestHeade
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("clientId", clientId)
-            .add("msgId", msgId)
-            .add("brokerName", brokerName)
-            .add("topic", topic)
-            .add("topicSysFlag", topicSysFlag)
-            .add("groupSysFlag", groupSysFlag)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("clientId", clientId)
+                .add("msgId", msgId)
+                .add("brokerName", brokerName)
+                .add("topic", topic)
+                .add("topicSysFlag", topicSysFlag)
+                .add("groupSysFlag", groupSysFlag)
+                .toString();
     }
 }

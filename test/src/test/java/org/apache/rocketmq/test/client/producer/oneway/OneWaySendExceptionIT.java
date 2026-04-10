@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.test.client.producer.oneway;
 
-import java.util.List;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.common.message.Message;
@@ -31,6 +30,8 @@ import org.apache.rocketmq.test.util.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 public class OneWaySendExceptionIT extends BaseConf {
     private static Logger logger = LoggerFactory.getLogger(TagMessageWith1ConsumerIT.class);

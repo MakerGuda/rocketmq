@@ -16,17 +16,6 @@
  */
 package org.apache.rocketmq.client.impl.consumer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.consumer.AckCallback;
 import org.apache.rocketmq.client.consumer.AckResult;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -44,11 +33,17 @@ import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.common.utils.ThreadUtils;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.body.CMResult;
 import org.apache.rocketmq.remoting.protocol.body.ConsumeMessageDirectlyResult;
 import org.apache.rocketmq.remoting.protocol.header.ExtraInfoUtil;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.*;
 
 public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageService {
     private static final Logger log = LoggerFactory.getLogger(ConsumeMessagePopConcurrentlyService.class);
@@ -62,7 +57,7 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
     private final ScheduledExecutorService scheduledExecutorService;
 
     public ConsumeMessagePopConcurrentlyService(DefaultMQPushConsumerImpl defaultMQPushConsumerImpl,
-        MessageListenerConcurrently messageListener) {
+                                                MessageListenerConcurrently messageListener) {
         this.defaultMQPushConsumerImpl = defaultMQPushConsumerImpl;
         this.messageListener = messageListener;
 
@@ -71,12 +66,12 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
         this.consumeRequestQueue = new LinkedBlockingQueue<>();
 
         this.consumeExecutor = new ThreadPoolExecutor(
-            this.defaultMQPushConsumer.getConsumeThreadMin(),
-            this.defaultMQPushConsumer.getConsumeThreadMax(),
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            this.consumeRequestQueue,
-            new ThreadFactoryImpl("ConsumeMessageThread_"));
+                this.defaultMQPushConsumer.getConsumeThreadMin(),
+                this.defaultMQPushConsumer.getConsumeThreadMax(),
+                1000 * 60,
+                TimeUnit.MILLISECONDS,
+                this.consumeRequestQueue,
+                new ThreadFactoryImpl("ConsumeMessageThread_"));
 
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("ConsumeMessageScheduledThread_"));
     }
@@ -92,8 +87,8 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
     @Override
     public void updateCorePoolSize(int corePoolSize) {
         if (corePoolSize > 0
-            && corePoolSize <= Short.MAX_VALUE
-            && corePoolSize < this.defaultMQPushConsumer.getConsumeThreadMax()) {
+                && corePoolSize <= Short.MAX_VALUE
+                && corePoolSize < this.defaultMQPushConsumer.getConsumeThreadMax()) {
             this.consumeExecutor.setCorePoolSize(corePoolSize);
         }
     }
@@ -154,10 +149,10 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
             result.setRemark(UtilAll.exceptionSimpleDesc(e));
 
             log.warn("consumeMessageDirectly exception: {} Group: {} Msgs: {} MQ: {}",
-                UtilAll.exceptionSimpleDesc(e),
-                ConsumeMessagePopConcurrentlyService.this.consumerGroup,
-                msgs,
-                mq, e);
+                    UtilAll.exceptionSimpleDesc(e),
+                    ConsumeMessagePopConcurrentlyService.this.consumerGroup,
+                    msgs,
+                    mq, e);
         }
 
         result.setSpentTimeMills(System.currentTimeMillis() - beginTime);
@@ -175,9 +170,9 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
 
     @Override
     public void submitPopConsumeRequest(
-        final List<MessageExt> msgs,
-        final PopProcessQueue processQueue,
-        final MessageQueue messageQueue) {
+            final List<MessageExt> msgs,
+            final PopProcessQueue processQueue,
+            final MessageQueue messageQueue) {
         final int consumeBatchSize = this.defaultMQPushConsumer.getConsumeMessageBatchMaxSize();
         if (msgs.size() <= consumeBatchSize) {
             ConsumeRequest consumeRequest = new ConsumeRequest(msgs, processQueue, messageQueue);
@@ -212,9 +207,9 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
     }
 
     public void processConsumeResult(
-        final ConsumeConcurrentlyStatus status,
-        final ConsumeConcurrentlyContext context,
-        final ConsumeRequest consumeRequest) {
+            final ConsumeConcurrentlyStatus status,
+            final ConsumeConcurrentlyContext context,
+            final ConsumeRequest consumeRequest) {
 
         if (consumeRequest.getMsgs().isEmpty()) {
             return;
@@ -280,7 +275,7 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
 
             changePopInvisibleTime(msgExt, consumerGroup, delayLevel);
             log.warn("Consume too many times, but delay time {} not enough. changePopInvisibleTime to delayLevel {} . message key:{}",
-                msgDelaytime, delayLevel, msgExt.getKeys());
+                    msgDelaytime, delayLevel, msgExt.getKeys());
         }
     }
 
@@ -316,9 +311,9 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
     }
 
     private void submitConsumeRequestLater(
-        final List<MessageExt> msgs,
-        final PopProcessQueue processQueue,
-        final MessageQueue messageQueue
+            final List<MessageExt> msgs,
+            final PopProcessQueue processQueue,
+            final MessageQueue messageQueue
     ) {
 
         this.scheduledExecutorService.schedule(new Runnable() {
@@ -424,10 +419,10 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
                 status = listener.consumeMessage(Collections.unmodifiableList(msgs), context);
             } catch (Throwable e) {
                 log.warn("consumeMessage exception: {} Group: {} Msgs: {} MQ: {}",
-                    UtilAll.exceptionSimpleDesc(e),
-                    ConsumeMessagePopConcurrentlyService.this.consumerGroup,
-                    msgs,
-                    messageQueue);
+                        UtilAll.exceptionSimpleDesc(e),
+                        ConsumeMessagePopConcurrentlyService.this.consumerGroup,
+                        msgs,
+                        messageQueue);
                 hasException = true;
             }
             long consumeRT = System.currentTimeMillis() - beginTimestamp;
@@ -447,9 +442,9 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
 
             if (null == status) {
                 log.warn("consumeMessage return null, Group: {} Msgs: {} MQ: {}",
-                    ConsumeMessagePopConcurrentlyService.this.consumerGroup,
-                    msgs,
-                    messageQueue);
+                        ConsumeMessagePopConcurrentlyService.this.consumerGroup,
+                        msgs,
+                        messageQueue);
                 status = ConsumeConcurrentlyStatus.RECONSUME_LATER;
             }
 
@@ -462,7 +457,7 @@ public class ConsumeMessagePopConcurrentlyService implements ConsumeMessageServi
             }
 
             ConsumeMessagePopConcurrentlyService.this.getConsumerStatsManager()
-                .incConsumeRT(ConsumeMessagePopConcurrentlyService.this.consumerGroup, messageQueue.getTopic(), consumeRT);
+                    .incConsumeRT(ConsumeMessagePopConcurrentlyService.this.consumerGroup, messageQueue.getTopic(), consumeRT);
 
             if (!processQueue.isDropped() && !isPopTimeout()) {
                 ConsumeMessagePopConcurrentlyService.this.processConsumeResult(status, context, this);

@@ -16,10 +16,11 @@
  */
 package org.apache.rocketmq.auth.authentication.manager;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.auth.authentication.model.User;
 import org.apache.rocketmq.auth.config.AuthConfig;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public interface AuthenticationMetadataManager {
 

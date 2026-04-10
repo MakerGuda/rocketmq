@@ -19,12 +19,13 @@ package org.apache.rocketmq.proxy.remoting.protocol.remoting;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.function.Supplier;
 import org.apache.rocketmq.proxy.remoting.protocol.ProtocolHandler;
 import org.apache.rocketmq.remoting.netty.NettyDecoder;
 import org.apache.rocketmq.remoting.netty.NettyEncoder;
 import org.apache.rocketmq.remoting.netty.NettyRemotingServer;
 import org.apache.rocketmq.remoting.netty.RemotingCodeDistributionHandler;
+
+import java.util.function.Supplier;
 
 public class RemotingProtocolHandler implements ProtocolHandler {
 
@@ -34,9 +35,9 @@ public class RemotingProtocolHandler implements ProtocolHandler {
     private final Supplier<NettyRemotingServer.NettyServerHandler> serverHandlerSupplier;
 
     public RemotingProtocolHandler(Supplier<NettyEncoder> encoderSupplier,
-        Supplier<RemotingCodeDistributionHandler> remotingCodeDistributionHandlerSupplier,
-        Supplier<NettyRemotingServer.NettyConnectManageHandler> connectionManageHandlerSupplier,
-        Supplier<NettyRemotingServer.NettyServerHandler> serverHandlerSupplier) {
+                                   Supplier<RemotingCodeDistributionHandler> remotingCodeDistributionHandlerSupplier,
+                                   Supplier<NettyRemotingServer.NettyConnectManageHandler> connectionManageHandlerSupplier,
+                                   Supplier<NettyRemotingServer.NettyServerHandler> serverHandlerSupplier) {
         this.encoderSupplier = encoderSupplier;
         this.remotingCodeDistributionHandlerSupplier = remotingCodeDistributionHandlerSupplier;
         this.connectionManageHandlerSupplier = connectionManageHandlerSupplier;
@@ -51,11 +52,11 @@ public class RemotingProtocolHandler implements ProtocolHandler {
     @Override
     public void config(ChannelHandlerContext ctx, ByteBuf msg) {
         ctx.pipeline().addLast(
-            this.encoderSupplier.get(),
-            new NettyDecoder(),
-            this.remotingCodeDistributionHandlerSupplier.get(),
-            this.connectionManageHandlerSupplier.get(),
-            this.serverHandlerSupplier.get()
+                this.encoderSupplier.get(),
+                new NettyDecoder(),
+                this.remotingCodeDistributionHandlerSupplier.get(),
+                this.connectionManageHandlerSupplier.get(),
+                this.serverHandlerSupplier.get()
         );
     }
 }

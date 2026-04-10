@@ -36,11 +36,7 @@ import org.apache.rocketmq.controller.elect.impl.DefaultElectPolicy;
 import org.apache.rocketmq.controller.impl.closure.ControllerClosure;
 import org.apache.rocketmq.controller.impl.event.ControllerResult;
 import org.apache.rocketmq.controller.impl.manager.RaftReplicasInfoManager;
-import org.apache.rocketmq.controller.impl.task.BrokerCloseChannelRequest;
-import org.apache.rocketmq.controller.impl.task.CheckNotActiveBrokerRequest;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoRequest;
-import org.apache.rocketmq.controller.impl.task.GetSyncStateDataRequest;
-import org.apache.rocketmq.controller.impl.task.RaftBrokerHeartBeatEventRequest;
+import org.apache.rocketmq.controller.impl.task.*;
 import org.apache.rocketmq.controller.metrics.ControllerMetricsConstant;
 import org.apache.rocketmq.controller.metrics.ControllerMetricsManager;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
@@ -51,18 +47,9 @@ import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.remoting.protocol.body.SyncStateSet;
-import org.apache.rocketmq.remoting.protocol.header.controller.AlterSyncStateSetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.AlterSyncStateSetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoResponseHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.*;
 import org.apache.rocketmq.remoting.protocol.header.controller.admin.CleanControllerBrokerDataRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.ApplyBrokerIdRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.ApplyBrokerIdResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextBrokerIdRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextBrokerIdResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.RegisterBrokerToControllerRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.register.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,9 +58,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_BROKER_SET;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_CLUSTER_NAME;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_ELECTION_RESULT;
+import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.*;
 
 public class JRaftControllerStateMachine implements StateMachine {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CONTROLLER_LOGGER_NAME);
@@ -180,32 +165,32 @@ public class JRaftControllerStateMachine implements StateMachine {
     }
 
     private ControllerResult<AlterSyncStateSetResponseHeader> alterSyncStateSet(
-        AlterSyncStateSetRequestHeader requestHeader, SyncStateSet syncStateSet) {
+            AlterSyncStateSetRequestHeader requestHeader, SyncStateSet syncStateSet) {
         return replicasInfoManager.alterSyncStateSet(requestHeader, syncStateSet, new RaftReplicasInfoManager.BrokerValidPredicateWithInvokeTime(requestHeader.getInvokeTime(), this.replicasInfoManager));
     }
 
     private ControllerResult<ElectMasterResponseHeader> electMaster(ElectMasterRequestHeader request) {
         ControllerResult<ElectMasterResponseHeader> electResult = this.replicasInfoManager.electMaster(request, new DefaultElectPolicy(
-            (clusterName, brokerName, brokerId) -> replicasInfoManager.isBrokerActive(clusterName, brokerName, brokerId, request.getInvokeTime()),
-            replicasInfoManager::getBrokerLiveInfo
+                (clusterName, brokerName, brokerId) -> replicasInfoManager.isBrokerActive(clusterName, brokerName, brokerId, request.getInvokeTime()),
+                replicasInfoManager::getBrokerLiveInfo
         ));
         log.info("elect master, request :{}, result: {}", request.toString(), electResult.toString());
         AttributesBuilder attributesBuilder = ControllerMetricsManager.newAttributesBuilder()
-            .put(LABEL_CLUSTER_NAME, request.getClusterName())
-            .put(LABEL_BROKER_SET, request.getBrokerName());
+                .put(LABEL_CLUSTER_NAME, request.getClusterName())
+                .put(LABEL_BROKER_SET, request.getBrokerName());
         switch (electResult.getResponseCode()) {
             case ResponseCode.SUCCESS:
                 ControllerMetricsManager.electionTotal.add(1,
-                    attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NEW_MASTER_ELECTED.getLowerCaseName()).build());
+                        attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NEW_MASTER_ELECTED.getLowerCaseName()).build());
                 break;
             case ResponseCode.CONTROLLER_MASTER_STILL_EXIST:
                 ControllerMetricsManager.electionTotal.add(1,
-                    attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.KEEP_CURRENT_MASTER.getLowerCaseName()).build());
+                        attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.KEEP_CURRENT_MASTER.getLowerCaseName()).build());
                 break;
             case ResponseCode.CONTROLLER_MASTER_NOT_AVAILABLE:
             case ResponseCode.CONTROLLER_ELECT_MASTER_FAILED:
                 ControllerMetricsManager.electionTotal.add(1,
-                    attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NO_MASTER_ELECTED.getLowerCaseName()).build());
+                        attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NO_MASTER_ELECTED.getLowerCaseName()).build());
                 break;
             default:
                 break;
@@ -214,7 +199,7 @@ public class JRaftControllerStateMachine implements StateMachine {
     }
 
     private ControllerResult<GetNextBrokerIdResponseHeader> getNextBrokerId(
-        GetNextBrokerIdRequestHeader requestHeader) {
+            GetNextBrokerIdRequestHeader requestHeader) {
         return replicasInfoManager.getNextBrokerId(requestHeader);
     }
 

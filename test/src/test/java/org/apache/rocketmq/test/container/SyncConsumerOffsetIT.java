@@ -17,18 +17,7 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.container.BrokerContainer;
-import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -40,11 +29,18 @@ import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.container.BrokerContainer;
+import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -53,11 +49,10 @@ import static org.awaitility.Awaitility.await;
 public class SyncConsumerOffsetIT extends ContainerIntegrationTestBase {
     private static final String THREE_REPLICA_CONSUMER_GROUP = "SyncConsumerOffsetIT_ConsumerThreeReplica";
     private static final String TEST_SYNC_TOPIC = SyncConsumerOffsetIT.class.getSimpleName() + "_topic";
-
-    private static DefaultMQProducer mqProducer;
-    private static DefaultMQPushConsumer mqConsumerThreeReplica;
     private static final String MSG = "Hello RocketMQ ";
     private static final byte[] MESSAGE_BODY = MSG.getBytes(StandardCharsets.UTF_8);
+    private static DefaultMQProducer mqProducer;
+    private static DefaultMQPushConsumer mqConsumerThreeReplica;
 
     public SyncConsumerOffsetIT() {
     }
@@ -84,11 +79,11 @@ public class SyncConsumerOffsetIT extends ContainerIntegrationTestBase {
     @Test
     public void syncConsumerOffsetWith3Replicas() throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
         syncConsumeOffsetInner(TEST_SYNC_TOPIC, mqConsumerThreeReplica,
-            master3With3Replicas, Arrays.asList(brokerContainer1, brokerContainer2));
+                master3With3Replicas, Arrays.asList(brokerContainer1, brokerContainer2));
     }
 
     private void syncConsumeOffsetInner(String topic, DefaultMQPushConsumer consumer, BrokerController master,
-        List<BrokerContainer> slaveContainers) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
+                                        List<BrokerContainer> slaveContainers) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
         awaitUntilSlaveOK();
         String group = THREE_REPLICA_CONSUMER_GROUP;
 

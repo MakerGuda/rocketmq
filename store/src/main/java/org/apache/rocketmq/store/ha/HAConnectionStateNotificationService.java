@@ -17,13 +17,14 @@
 
 package org.apache.rocketmq.store.ha;
 
-import java.net.InetSocketAddress;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.config.BrokerRole;
+
+import java.net.InetSocketAddress;
 
 /**
  * Service to periodically check and notify for certain connection state.
@@ -112,7 +113,7 @@ public class HAConnectionStateNotificationService extends ServiceThread {
         String remoteAddress;
         try {
             remoteAddress = ((InetSocketAddress) connection.getSocketChannel().getRemoteAddress())
-                .getAddress().getHostAddress();
+                    .getAddress().getHostAddress();
             if (remoteAddress.equals(request.getRemoteAddr())) {
                 HAConnectionState connState = connection.getCurrentState();
 

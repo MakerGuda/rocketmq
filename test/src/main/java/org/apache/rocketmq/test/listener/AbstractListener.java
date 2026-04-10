@@ -17,15 +17,16 @@
 
 package org.apache.rocketmq.test.listener;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.client.consumer.listener.MessageListener;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.clientinterface.MQCollector;
 import org.apache.rocketmq.test.util.TestUtil;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class AbstractListener extends MQCollector implements MessageListener {
     public static final Logger LOGGER = LoggerFactory.getLogger(AbstractListener.class);
@@ -95,7 +96,7 @@ public class AbstractListener extends MQCollector implements MessageListener {
                 break;
             } else {
                 LOGGER.info(String.format("[%s] still [%s] msg not recv!",
-                    listenerName, size - msgBodys.getDataSize()));
+                        listenerName, size - msgBodys.getDataSize()));
                 TestUtil.waitForMonment(500);
             }
         }

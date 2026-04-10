@@ -18,11 +18,6 @@
 package org.apache.rocketmq.tools.command.consumer;
 
 import com.alibaba.fastjson2.JSON;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -34,6 +29,12 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
 
 public class UpdateSubGroupListSubCommand implements SubCommand {
     @Override
@@ -58,7 +59,7 @@ public class UpdateSubGroupListSubCommand implements SubCommand {
         options.addOptionGroup(optionGroup);
 
         opt = new Option("f", "filename", true,
-            "Path to a file with a list of org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig in json format");
+                "Path to a file with a list of org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig in json format");
         opt.setRequired(true);
         options.addOption(opt);
 
@@ -67,7 +68,7 @@ public class UpdateSubGroupListSubCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         final DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -91,7 +92,7 @@ public class UpdateSubGroupListSubCommand implements SubCommand {
                 defaultMQAdminExt.createAndUpdateSubscriptionGroupConfigList(brokerAddress, groupConfigs);
 
                 System.out.printf("submit batch of group config to %s success, please check the result later.%n",
-                    brokerAddress);
+                        brokerAddress);
                 return;
 
             } else if (commandLine.hasOption('c')) {
@@ -100,12 +101,12 @@ public class UpdateSubGroupListSubCommand implements SubCommand {
                 defaultMQAdminExt.start();
 
                 Set<String> masterSet =
-                    CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String brokerAddress : masterSet) {
                     defaultMQAdminExt.createAndUpdateSubscriptionGroupConfigList(brokerAddress, groupConfigs);
 
                     System.out.printf("submit batch of subscription group config to %s success, please check the result later.%n",
-                        brokerAddress);
+                            brokerAddress);
                 }
             }
 

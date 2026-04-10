@@ -16,20 +16,14 @@
  */
 package org.apache.rocketmq.store.rocksdb;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.config.AbstractRocksDBStorage;
 import org.apache.rocketmq.store.MessageStore;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.WriteBatch;
+import org.rocksdb.*;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsumeQueueRocksDBStorage extends AbstractRocksDBStorage {
 
@@ -107,7 +101,7 @@ public class ConsumeQueueRocksDBStorage extends AbstractRocksDBStorage {
     }
 
     public List<byte[]> multiGet(final List<ColumnFamilyHandle> cfhList,
-        final List<byte[]> keys) throws RocksDBException {
+                                 final List<byte[]> keys) throws RocksDBException {
         return multiGet(this.totalOrderReadOptions, cfhList, keys);
     }
 

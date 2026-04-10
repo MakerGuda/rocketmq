@@ -26,9 +26,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class SharedByteBufferManager {
 
-    private static volatile SharedByteBufferManager instance;
     private static final Object LOCK = new Object();
-
+    private static volatile SharedByteBufferManager instance;
     private SharedByteBuffer[] sharedByteBuffers;
     private int bufferSize;
     private int maxSharedNum;
@@ -55,14 +54,14 @@ public class SharedByteBufferManager {
     /**
      * Initialize shared buffers with specified messageSize size and shared buffer number
      *
-     * @param maxMessageSize max messageSize size
+     * @param maxMessageSize  max messageSize size
      * @param sharedBufferNum number of shared buffers
      */
     public synchronized void init(int maxMessageSize, int sharedBufferNum) {
         if (!initialized) {
             //Reserve 64kb for encoding buffer outside body
             bufferSize = Integer.MAX_VALUE - maxMessageSize >= 64 * 1024 ?
-                maxMessageSize + 64 * 1024 : Integer.MAX_VALUE;
+                    maxMessageSize + 64 * 1024 : Integer.MAX_VALUE;
 
             this.maxSharedNum = sharedBufferNum;
             this.sharedByteBuffers = new SharedByteBuffer[maxSharedNum];

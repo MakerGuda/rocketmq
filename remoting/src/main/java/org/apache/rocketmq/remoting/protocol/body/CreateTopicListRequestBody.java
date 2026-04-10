@@ -16,16 +16,18 @@
  */
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.List;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.util.List;
 
 public class CreateTopicListRequestBody extends RemotingSerializable {
     @CFNotNull
     private List<TopicConfig> topicConfigList;
 
-    public CreateTopicListRequestBody() {}
+    public CreateTopicListRequestBody() {
+    }
 
     public CreateTopicListRequestBody(List<TopicConfig> topicConfigList) {
         this.topicConfigList = topicConfigList;

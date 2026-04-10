@@ -17,34 +17,23 @@
 
 package org.apache.rocketmq.proxy.remoting;
 
-import io.netty.handler.ssl.ApplicationProtocolConfig;
-import io.netty.handler.ssl.ApplicationProtocolNames;
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.OpenSsl;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.cert.CertificateException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.netty.TlsHelper;
 
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerAuthClient;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerCertPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerKeyPassword;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerKeyPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerNeedClientAuth;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerTrustCertPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsTestModeEnable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.cert.CertificateException;
+
+import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.*;
 
 public class MultiProtocolTlsHelper extends TlsHelper {
     private final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -65,15 +54,15 @@ public class MultiProtocolTlsHelper extends TlsHelper {
         if (tlsTestModeEnable) {
             SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
             sslContextBuilder = SslContextBuilder
-                .forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
-                .sslProvider(provider)
-                .clientAuth(ClientAuth.OPTIONAL);
+                    .forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
+                    .sslProvider(provider)
+                    .clientAuth(ClientAuth.OPTIONAL);
         } else {
             sslContextBuilder = SslContextBuilder.forServer(
-                !StringUtils.isBlank(tlsServerCertPath) ? Files.newInputStream(Paths.get(tlsServerCertPath)) : null,
-                !StringUtils.isBlank(tlsServerKeyPath) ? DECRYPTION_STRATEGY.decryptPrivateKey(tlsServerKeyPath, false) : null,
-                !StringUtils.isBlank(tlsServerKeyPassword) ? tlsServerKeyPassword : null)
-                .sslProvider(provider);
+                            !StringUtils.isBlank(tlsServerCertPath) ? Files.newInputStream(Paths.get(tlsServerCertPath)) : null,
+                            !StringUtils.isBlank(tlsServerKeyPath) ? DECRYPTION_STRATEGY.decryptPrivateKey(tlsServerKeyPath, false) : null,
+                            !StringUtils.isBlank(tlsServerKeyPassword) ? tlsServerKeyPassword : null)
+                    .sslProvider(provider);
 
             if (!tlsServerAuthClient) {
                 sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
@@ -87,12 +76,12 @@ public class MultiProtocolTlsHelper extends TlsHelper {
         }
 
         sslContextBuilder.applicationProtocolConfig(new ApplicationProtocolConfig(
-            ApplicationProtocolConfig.Protocol.ALPN,
-            // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
-            ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-            // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
-            ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-            ApplicationProtocolNames.HTTP_2));
+                ApplicationProtocolConfig.Protocol.ALPN,
+                // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
+                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
+                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                ApplicationProtocolNames.HTTP_2));
 
         moreTlsConfig(sslContextBuilder);
         return sslContextBuilder.build();

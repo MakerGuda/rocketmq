@@ -43,7 +43,7 @@ public class TimerMessageConsumer {
             for (MessageExt message : messages) {
                 // Print approximate delay time period
                 System.out.printf("Receive message[msgId=%s %d  ms later]\n", message.getMsgId(),
-                    System.currentTimeMillis() - message.getBornTimestamp());
+                        System.currentTimeMillis() - message.getBornTimestamp());
             }
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
         });

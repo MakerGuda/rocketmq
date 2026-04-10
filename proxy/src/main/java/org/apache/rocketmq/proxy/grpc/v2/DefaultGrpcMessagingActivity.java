@@ -16,35 +16,12 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2;
 
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.AckMessageResponse;
-import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
-import apache.rocketmq.v2.ChangeInvisibleDurationResponse;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.EndTransactionResponse;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueRequest;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueResponse;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.HeartbeatResponse;
-import apache.rocketmq.v2.NotifyClientTerminationRequest;
-import apache.rocketmq.v2.NotifyClientTerminationResponse;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryAssignmentResponse;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.QueryRouteResponse;
-import apache.rocketmq.v2.RecallMessageRequest;
-import apache.rocketmq.v2.RecallMessageResponse;
-import apache.rocketmq.v2.ReceiveMessageRequest;
-import apache.rocketmq.v2.ReceiveMessageResponse;
-import apache.rocketmq.v2.SendMessageRequest;
-import apache.rocketmq.v2.SendMessageResponse;
-import apache.rocketmq.v2.TelemetryCommand;
+import apache.rocketmq.v2.*;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.AbstractStartAndShutdown;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.common.utils.AbstractStartAndShutdown;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.grpc.v2.channel.GrpcChannelManager;
 import org.apache.rocketmq.proxy.grpc.v2.client.ClientActivity;
@@ -58,6 +35,8 @@ import org.apache.rocketmq.proxy.grpc.v2.producer.SendMessageActivity;
 import org.apache.rocketmq.proxy.grpc.v2.route.RouteActivity;
 import org.apache.rocketmq.proxy.grpc.v2.transaction.EndTransactionActivity;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
+
+import java.util.concurrent.CompletableFuture;
 
 public class DefaultGrpcMessagingActivity extends AbstractStartAndShutdown implements GrpcMessagingActivity {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -112,13 +91,13 @@ public class DefaultGrpcMessagingActivity extends AbstractStartAndShutdown imple
 
     @Override
     public CompletableFuture<QueryAssignmentResponse> queryAssignment(ProxyContext ctx,
-        QueryAssignmentRequest request) {
+                                                                      QueryAssignmentRequest request) {
         return this.routeActivity.queryAssignment(ctx, request);
     }
 
     @Override
     public void receiveMessage(ProxyContext ctx, ReceiveMessageRequest request,
-        StreamObserver<ReceiveMessageResponse> responseObserver) {
+                               StreamObserver<ReceiveMessageResponse> responseObserver) {
         this.receiveMessageActivity.receiveMessage(ctx, request, responseObserver);
     }
 
@@ -129,7 +108,7 @@ public class DefaultGrpcMessagingActivity extends AbstractStartAndShutdown imple
 
     @Override
     public CompletableFuture<ForwardMessageToDeadLetterQueueResponse> forwardMessageToDeadLetterQueue(ProxyContext ctx,
-        ForwardMessageToDeadLetterQueueRequest request) {
+                                                                                                      ForwardMessageToDeadLetterQueueRequest request) {
         return this.forwardMessageToDLQActivity.forwardMessageToDeadLetterQueue(ctx, request);
     }
 
@@ -140,19 +119,19 @@ public class DefaultGrpcMessagingActivity extends AbstractStartAndShutdown imple
 
     @Override
     public CompletableFuture<NotifyClientTerminationResponse> notifyClientTermination(ProxyContext ctx,
-        NotifyClientTerminationRequest request) {
+                                                                                      NotifyClientTerminationRequest request) {
         return this.clientActivity.notifyClientTermination(ctx, request);
     }
 
     @Override
     public CompletableFuture<ChangeInvisibleDurationResponse> changeInvisibleDuration(ProxyContext ctx,
-        ChangeInvisibleDurationRequest request) {
+                                                                                      ChangeInvisibleDurationRequest request) {
         return this.changeInvisibleDurationActivity.changeInvisibleDuration(ctx, request);
     }
 
     @Override
     public CompletableFuture<RecallMessageResponse> recallMessage(ProxyContext ctx,
-        RecallMessageRequest request) {
+                                                                  RecallMessageRequest request) {
         return this.recallMessageActivity.recallMessage(ctx, request);
     }
 

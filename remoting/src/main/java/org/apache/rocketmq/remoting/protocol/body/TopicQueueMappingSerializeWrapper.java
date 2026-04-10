@@ -17,10 +17,11 @@
 
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.Map;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingDetail;
+
+import java.util.Map;
 
 public class TopicQueueMappingSerializeWrapper extends RemotingSerializable {
     private Map<String/* topic */, TopicQueueMappingDetail> topicQueueMappingInfoMap;

@@ -16,27 +16,21 @@
  */
 package org.apache.rocketmq.common.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.nio.channels.Selector;
-import java.nio.channels.spi.SelectorProvider;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.*;
+import java.nio.channels.Selector;
+import java.nio.channels.spi.SelectorProvider;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 public class NetworkUtil {
     public static final String OS_NAME = System.getProperty("os.name");
@@ -228,7 +222,7 @@ public class NetworkUtil {
     // with scope 2001:0db8:85a3:0000:0000:8a2e:0370:7334%eth0
     // with bracketed [2001:0db8:85a3:0000:0000:8a2e:0370:7334]
     public static boolean validCommonInet6Address(String ipOrCidr) {
-        String  ipWithoutBracketed = denormalizeHostAddress(ipOrCidr);
+        String ipWithoutBracketed = denormalizeHostAddress(ipOrCidr);
         if (ipWithoutBracketed != null && ipWithoutBracketed.length() != 0) {
             InetAddressValidator validator = InetAddressValidator.getInstance();
             if (validator.isValidInet6Address(ipWithoutBracketed.split("%")[0])) {

@@ -57,13 +57,6 @@ public class ProxyStartup {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     private static final ProxyStartAndShutdown PROXY_START_AND_SHUTDOWN = new ProxyStartAndShutdown();
 
-    private static class ProxyStartAndShutdown extends AbstractStartAndShutdown {
-        @Override
-        public void appendStartAndShutdown(StartAndShutdown startAndShutdown) {
-            super.appendStartAndShutdown(startAndShutdown);
-        }
-    }
-
     public static void main(String[] args) {
         try {
             // parse argument from command line
@@ -83,13 +76,13 @@ public class ProxyStartup {
 
             // create grpcServer
             GrpcServer grpcServer = GrpcServerBuilder.newBuilder(executor,
-                    ConfigurationManager.getProxyConfig().getGrpcServerPort(), tlsCertificateManager)
-                .addService(createServiceProcessor(messagingProcessor))
-                .addService(ChannelzService.newInstance(100))
-                .addService(ProtoReflectionService.newInstance())
-                .configInterceptor()
-                .shutdownTime(ConfigurationManager.getProxyConfig().getGrpcShutdownTimeSeconds(), TimeUnit.SECONDS)
-                .build();
+                            ConfigurationManager.getProxyConfig().getGrpcServerPort(), tlsCertificateManager)
+                    .addService(createServiceProcessor(messagingProcessor))
+                    .addService(ChannelzService.newInstance(100))
+                    .addService(ProtoReflectionService.newInstance())
+                    .configInterceptor()
+                    .shutdownTime(ConfigurationManager.getProxyConfig().getGrpcShutdownTimeSeconds(), TimeUnit.SECONDS)
+                    .build();
             PROXY_START_AND_SHUTDOWN.appendStartAndShutdown(grpcServer);
 
             RemotingProtocolServer remotingServer = new RemotingProtocolServer(messagingProcessor, tlsCertificateManager);
@@ -130,7 +123,7 @@ public class ProxyStartup {
 
     protected static CommandLineArgument parseCommandLineArgument(String[] args) {
         CommandLine commandLine = ServerUtil.parseCmdLine("mqproxy", args,
-            buildCommandlineOptions(), new DefaultParser());
+                buildCommandlineOptions(), new DefaultParser());
         if (commandLine == null) {
             throw new RuntimeException("parse command line argument failed");
         }
@@ -186,7 +179,7 @@ public class ProxyStartup {
                 public void start() throws Exception {
                     brokerController.start();
                     String tip = "The broker[" + brokerController.getBrokerConfig().getBrokerName() + ", "
-                        + brokerController.getBrokerAddr() + "] boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
+                            + brokerController.getBrokerAddr() + "] boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
                     if (null != brokerController.getBrokerConfig().getNamesrvAddr()) {
                         tip += " and name server is " + brokerController.getBrokerConfig().getNamesrvAddr();
                     }
@@ -229,11 +222,11 @@ public class ProxyStartup {
         int threadPoolNums = config.getGrpcThreadPoolNums();
         int threadPoolQueueCapacity = config.getGrpcThreadPoolQueueCapacity();
         ThreadPoolExecutor executor = ThreadPoolMonitor.createAndMonitor(
-            threadPoolNums,
-            threadPoolNums,
-            1, TimeUnit.MINUTES,
-            "GrpcRequestExecutorThread",
-            threadPoolQueueCapacity
+                threadPoolNums,
+                threadPoolNums,
+                1, TimeUnit.MINUTES,
+                "GrpcRequestExecutorThread",
+                threadPoolQueueCapacity
         );
         PROXY_START_AND_SHUTDOWN.appendShutdown(executor::shutdown);
         return executor;
@@ -242,10 +235,17 @@ public class ProxyStartup {
     public static void initThreadPoolMonitor() {
         ProxyConfig config = ConfigurationManager.getProxyConfig();
         ThreadPoolMonitor.config(
-            LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME),
-            LoggerFactory.getLogger(LoggerName.PROXY_WATER_MARK_LOGGER_NAME),
-            config.isEnablePrintJstack(), config.getPrintJstackInMillis(),
-            config.getPrintThreadPoolStatusInMillis());
+                LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME),
+                LoggerFactory.getLogger(LoggerName.PROXY_WATER_MARK_LOGGER_NAME),
+                config.isEnablePrintJstack(), config.getPrintJstackInMillis(),
+                config.getPrintThreadPoolStatusInMillis());
         ThreadPoolMonitor.init();
+    }
+
+    private static class ProxyStartAndShutdown extends AbstractStartAndShutdown {
+        @Override
+        public void appendStartAndShutdown(StartAndShutdown startAndShutdown) {
+            super.appendStartAndShutdown(startAndShutdown);
+        }
     }
 }

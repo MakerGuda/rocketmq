@@ -16,9 +16,10 @@
  */
 package org.apache.rocketmq.remoting.rpc;
 
-import java.nio.ByteBuffer;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.nio.ByteBuffer;
 
 public class RpcClientUtils {
 
@@ -40,11 +41,11 @@ public class RpcClientUtils {
             return null;
         }
         if (body instanceof byte[]) {
-            return (byte[])body;
+            return (byte[]) body;
         } else if (body instanceof RemotingSerializable) {
             return ((RemotingSerializable) body).encode();
         } else if (body instanceof ByteBuffer) {
-            ByteBuffer buffer = (ByteBuffer)body;
+            ByteBuffer buffer = (ByteBuffer) body;
             buffer.mark();
             byte[] data = new byte[buffer.remaining()];
             buffer.get(data);

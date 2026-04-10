@@ -17,15 +17,6 @@
 
 package org.apache.rocketmq.store.ha.autoswitch;
 
-import java.io.IOException;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -40,6 +31,16 @@ import org.apache.rocketmq.store.ha.HAClient;
 import org.apache.rocketmq.store.ha.HAConnectionState;
 import org.apache.rocketmq.store.ha.io.AbstractHAReader;
 import org.apache.rocketmq.store.ha.io.HAWriter;
+
+import java.io.IOException;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AutoSwitchHAClient extends ServiceThread implements HAClient {
 
@@ -138,7 +139,7 @@ public class AutoSwitchHAClient extends ServiceThread implements HAClient {
     private volatile int currentReceivedEpoch;
 
     public AutoSwitchHAClient(AutoSwitchHAService haService, DefaultMessageStore defaultMessageStore,
-        EpochFileCache epochCache, Long brokerId) throws IOException {
+                              EpochFileCache epochCache, Long brokerId) throws IOException {
         this.haService = haService;
         this.messageStore = defaultMessageStore;
         this.epochCache = epochCache;
@@ -415,7 +416,7 @@ public class AutoSwitchHAClient extends ServiceThread implements HAClient {
                 long interval = this.messageStore.now() - this.lastReadTimestamp;
                 if (interval > this.messageStore.getMessageStoreConfig().getHaHousekeepingInterval()) {
                     LOGGER.warn("AutoSwitchHAClient, housekeeping, found this connection[" + this.masterHaAddress
-                        + "] expired, " + interval);
+                            + "] expired, " + interval);
                     closeMaster();
                     LOGGER.warn("AutoSwitchHAClient, master not response some time, so close connection");
                 }
@@ -504,7 +505,7 @@ public class AutoSwitchHAClient extends ServiceThread implements HAClient {
                             AutoSwitchHAClient.this.processPosition += headerSize + bodySize;
                             AutoSwitchHAClient.this.waitForRunning(1);
                             LOGGER.error("State not matched, masterState:{}, slaveState:{}, bodySize:{}, offset:{}, masterEpoch:{}, masterEpochStartOffset:{}, confirmOffset:{}",
-                                HAConnectionState.values()[masterState], AutoSwitchHAClient.this.currentState, bodySize, masterOffset, masterEpoch, masterEpochStartOffset, confirmOffset);
+                                    HAConnectionState.values()[masterState], AutoSwitchHAClient.this.currentState, bodySize, masterOffset, masterEpoch, masterEpochStartOffset, confirmOffset);
                             return false;
                         }
 
@@ -552,7 +553,7 @@ public class AutoSwitchHAClient extends ServiceThread implements HAClient {
                                 if (slavePhyOffset != 0) {
                                     if (slavePhyOffset != masterOffset) {
                                         LOGGER.error("master pushed offset not equal the max phy offset in slave, SLAVE: "
-                                            + slavePhyOffset + " MASTER: " + masterOffset);
+                                                + slavePhyOffset + " MASTER: " + masterOffset);
                                         return false;
                                     }
                                 }

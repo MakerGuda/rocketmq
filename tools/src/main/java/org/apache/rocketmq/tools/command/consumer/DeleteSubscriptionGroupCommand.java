@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.consumer;
 
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -27,6 +26,8 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Set;
 
 public class DeleteSubscriptionGroupCommand implements SubCommand {
     @Override
@@ -81,7 +82,7 @@ public class DeleteSubscriptionGroupCommand implements SubCommand {
 
                 adminExt.deleteSubscriptionGroup(addr, groupName, cleanOffset);
                 System.out.printf("delete subscription group [%s] from broker [%s] success.%n", groupName,
-                    addr);
+                        addr);
 
                 return;
             } else if (commandLine.hasOption('c')) {
@@ -92,8 +93,8 @@ public class DeleteSubscriptionGroupCommand implements SubCommand {
                 for (String master : masterSet) {
                     adminExt.deleteSubscriptionGroup(master, groupName, cleanOffset);
                     System.out.printf(
-                        "delete subscription group [%s] from broker [%s] in cluster [%s] success.%n",
-                        groupName, master, clusterName);
+                            "delete subscription group [%s] from broker [%s] in cluster [%s] success.%n",
+                            groupName, master, clusterName);
                 }
 
                 try {

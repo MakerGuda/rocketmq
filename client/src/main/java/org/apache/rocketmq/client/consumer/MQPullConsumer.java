@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.client.consumer;
 
-import java.util.Set;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
+
+import java.util.Set;
 
 /**
  * Pulling consumer interface
@@ -45,16 +46,16 @@ public interface MQPullConsumer extends MQConsumer {
     /**
      * Pulling the messages,not blocking
      *
-     * @param mq from which message queue
+     * @param mq            from which message queue
      * @param subExpression subscription expression.it only support or operation such as "tag1 || tag2 || tag3" <br> if
-     * null or * expression,meaning subscribe all
-     * @param offset from where to pull
-     * @param maxNums max pulling numbers
+     *                      null or * expression,meaning subscribe all
+     * @param offset        from where to pull
+     * @param maxNums       max pulling numbers
      * @return The resulting {@code PullRequest}
      */
     PullResult pull(final MessageQueue mq, final String subExpression, final long offset,
-        final int maxNums) throws MQClientException, RemotingException, MQBrokerException,
-        InterruptedException;
+                    final int maxNums) throws MQClientException, RemotingException, MQBrokerException,
+            InterruptedException;
 
     /**
      * Pulling the messages in the specified timeout
@@ -62,8 +63,8 @@ public interface MQPullConsumer extends MQConsumer {
      * @return The resulting {@code PullRequest}
      */
     PullResult pull(final MessageQueue mq, final String subExpression, final long offset,
-        final int maxNums, final long timeout) throws MQClientException, RemotingException,
-        MQBrokerException, InterruptedException;
+                    final int maxNums, final long timeout) throws MQClientException, RemotingException,
+            MQBrokerException, InterruptedException;
 
     /**
      * Pulling the messages, not blocking
@@ -71,15 +72,15 @@ public interface MQPullConsumer extends MQConsumer {
      * support other message selection, such as {@link org.apache.rocketmq.common.filter.ExpressionType#SQL92}
      * </p>
      *
-     * @param mq from which message queue
+     * @param mq       from which message queue
      * @param selector message selector({@link MessageSelector}), can be null.
-     * @param offset from where to pull
-     * @param maxNums max pulling numbers
+     * @param offset   from where to pull
+     * @param maxNums  max pulling numbers
      * @return The resulting {@code PullRequest}
      */
     PullResult pull(final MessageQueue mq, final MessageSelector selector, final long offset,
-        final int maxNums) throws MQClientException, RemotingException, MQBrokerException,
-        InterruptedException;
+                    final int maxNums) throws MQClientException, RemotingException, MQBrokerException,
+            InterruptedException;
 
     /**
      * Pulling the messages in the specified timeout
@@ -87,51 +88,51 @@ public interface MQPullConsumer extends MQConsumer {
      * support other message selection, such as {@link org.apache.rocketmq.common.filter.ExpressionType#SQL92}
      * </p>
      *
-     * @param mq from which message queue
+     * @param mq       from which message queue
      * @param selector message selector({@link MessageSelector}), can be null.
-     * @param offset from where to pull
-     * @param maxNums max pulling numbers
-     * @param timeout Pulling the messages in the specified timeout
+     * @param offset   from where to pull
+     * @param maxNums  max pulling numbers
+     * @param timeout  Pulling the messages in the specified timeout
      * @return The resulting {@code PullRequest}
      */
     PullResult pull(final MessageQueue mq, final MessageSelector selector, final long offset,
-        final int maxNums, final long timeout) throws MQClientException, RemotingException, MQBrokerException,
-        InterruptedException;
+                    final int maxNums, final long timeout) throws MQClientException, RemotingException, MQBrokerException,
+            InterruptedException;
 
     /**
      * Pulling the messages in a async. way
      */
     void pull(final MessageQueue mq, final String subExpression, final long offset, final int maxNums,
-        final PullCallback pullCallback) throws MQClientException, RemotingException,
-        InterruptedException;
+              final PullCallback pullCallback) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages in a async. way
      */
     void pull(final MessageQueue mq, final String subExpression, final long offset, final int maxNums,
-        final PullCallback pullCallback, long timeout) throws MQClientException, RemotingException,
-        InterruptedException;
+              final PullCallback pullCallback, long timeout) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages in a async. way
      */
     void pull(final MessageQueue mq, final String subExpression, final long offset, final int maxNums, final int maxSize,
-        final PullCallback pullCallback, long timeout) throws MQClientException, RemotingException,
-        InterruptedException;
+              final PullCallback pullCallback, long timeout) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages in a async way. Support message selection
      */
     void pull(final MessageQueue mq, final MessageSelector selector, final long offset, final int maxNums,
-        final PullCallback pullCallback) throws MQClientException, RemotingException,
-        InterruptedException;
+              final PullCallback pullCallback) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages in a async. way. Support message selection
      */
     void pull(final MessageQueue mq, final MessageSelector selector, final long offset, final int maxNums,
-        final PullCallback pullCallback, long timeout) throws MQClientException, RemotingException,
-        InterruptedException;
+              final PullCallback pullCallback, long timeout) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages,if no message arrival,blocking some time
@@ -139,23 +140,23 @@ public interface MQPullConsumer extends MQConsumer {
      * @return The resulting {@code PullRequest}
      */
     PullResult pullBlockIfNotFound(final MessageQueue mq, final String subExpression,
-        final long offset, final int maxNums) throws MQClientException, RemotingException,
-        MQBrokerException, InterruptedException;
+                                   final long offset, final int maxNums) throws MQClientException, RemotingException,
+            MQBrokerException, InterruptedException;
 
     /**
      * Pulling the messages through callback function,if no message arrival,blocking.
      */
     void pullBlockIfNotFound(final MessageQueue mq, final String subExpression, final long offset,
-        final int maxNums, final PullCallback pullCallback) throws MQClientException, RemotingException,
-        InterruptedException;
+                             final int maxNums, final PullCallback pullCallback) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages through callback function,if no message arrival,blocking. Support message selection
      */
     void pullBlockIfNotFoundWithMessageSelector(final MessageQueue mq, final MessageSelector selector,
-        final long offset, final int maxNums,
-        final PullCallback pullCallback) throws MQClientException, RemotingException,
-        InterruptedException;
+                                                final long offset, final int maxNums,
+                                                final PullCallback pullCallback) throws MQClientException, RemotingException,
+            InterruptedException;
 
     /**
      * Pulling the messages,if no message arrival,blocking some time. Support message selection
@@ -163,8 +164,8 @@ public interface MQPullConsumer extends MQConsumer {
      * @return The resulting {@code PullRequest}
      */
     PullResult pullBlockIfNotFoundWithMessageSelector(final MessageQueue mq, final MessageSelector selector,
-        final long offset, final int maxNums) throws MQClientException, RemotingException,
-        MQBrokerException, InterruptedException;
+                                                      final long offset, final int maxNums) throws MQClientException, RemotingException,
+            MQBrokerException, InterruptedException;
 
     /**
      * Update the offset
@@ -191,6 +192,6 @@ public interface MQPullConsumer extends MQConsumer {
      * Mind! message can only be consumed in the same group.
      */
     void sendMessageBack(MessageExt msg, int delayLevel, String brokerName, String consumerGroup)
-        throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
 
 }

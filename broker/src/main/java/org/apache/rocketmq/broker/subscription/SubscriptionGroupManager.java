@@ -19,15 +19,6 @@ package org.apache.rocketmq.broker.subscription;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,23 +36,26 @@ import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
+
 @SuppressWarnings("Duplicates")
 /**
  * <b>SubscriptionGroupManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
- * 
+ *
  * 继承关系：<code>ConfigManager</code>。
  */
 public class SubscriptionGroupManager extends ConfigManager {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
-    protected ConcurrentMap<String, SubscriptionGroupConfig> subscriptionGroupTable =
-        new ConcurrentHashMap<>(1024);
-
-    private ConcurrentMap<String, ConcurrentMap<String, Integer>> forbiddenTable =
-        new ConcurrentHashMap<>(4);
-
     protected final DataVersion dataVersion = new DataVersion();
+    protected ConcurrentMap<String, SubscriptionGroupConfig> subscriptionGroupTable =
+            new ConcurrentHashMap<>(1024);
     protected transient BrokerController brokerController;
+    private ConcurrentMap<String, ConcurrentMap<String, Integer>> forbiddenTable =
+            new ConcurrentHashMap<>(4);
 
     public SubscriptionGroupManager() {
         this.init();
@@ -159,10 +153,10 @@ public class SubscriptionGroupManager extends ConfigManager {
         Map<String, String> currentAttributes = current(config.getGroupName());
 
         Map<String, String> finalAttributes = AttributeUtil.alterCurrentAttributes(
-            this.subscriptionGroupTable.get(config.getGroupName()) == null,
-            SubscriptionGroupAttributes.ALL,
-            ImmutableMap.copyOf(currentAttributes),
-            ImmutableMap.copyOf(newAttributes));
+                this.subscriptionGroupTable.get(config.getGroupName()) == null,
+                SubscriptionGroupAttributes.ALL,
+                ImmutableMap.copyOf(currentAttributes),
+                ImmutableMap.copyOf(newAttributes));
 
         config.setAttributes(finalAttributes);
 
@@ -291,7 +285,7 @@ public class SubscriptionGroupManager extends ConfigManager {
     @Override
     public String configFilePath() {
         return BrokerPathConfigHelper.getSubscriptionGroupPath(this.brokerController.getMessageStoreConfig()
-            .getStorePathRootDir());
+                .getStorePathRootDir());
     }
 
     @Override
@@ -324,14 +318,18 @@ public class SubscriptionGroupManager extends ConfigManager {
         return subscriptionGroupTable;
     }
 
+    public void setSubscriptionGroupTable(ConcurrentMap<String, SubscriptionGroupConfig> subscriptionGroupTable) {
+        this.subscriptionGroupTable = subscriptionGroupTable;
+    }
+
     public ConcurrentHashMap<String, SubscriptionGroupConfig> subGroupTable(String dataVersion, int groupSeq,
-        int maxGroupNum) {
+                                                                            int maxGroupNum) {
         // [groupSeq, groupSeq + maxGroupNum)
         int beginIndex = groupSeq;
         if (StringUtils.isBlank(dataVersion) || !Objects.equals(DataVersion.fromJson(dataVersion, DataVersion.class), this.dataVersion)) {
             beginIndex = 0;
             log.info("get sub subscription group table from {} due to {}", beginIndex,
-                StringUtils.isBlank(dataVersion) ? "DataVersion Empty" : "DataVersion Changed");
+                    StringUtils.isBlank(dataVersion) ? "DataVersion Empty" : "DataVersion Changed");
         }
 
         ConcurrentHashMap<String, SubscriptionGroupConfig> subGroupTable = new ConcurrentHashMap<>();
@@ -339,8 +337,8 @@ public class SubscriptionGroupManager extends ConfigManager {
             int endIndex = Math.min(beginIndex + maxGroupNum, subscriptionGroupTable.size());
 
             ImmutableSortedMap<String, SubscriptionGroupConfig> sortedMap = ImmutableSortedMap.copyOf(subscriptionGroupTable);
-            subGroupTable.putAll(sortedMap.subMap(sortedMap.keySet().asList().get(beginIndex),true,
-                sortedMap.keySet().asList().get(endIndex - 1),true));
+            subGroupTable.putAll(sortedMap.subMap(sortedMap.keySet().asList().get(beginIndex), true,
+                    sortedMap.keySet().asList().get(endIndex - 1), true));
         }
 
         return subGroupTable;
@@ -350,23 +348,27 @@ public class SubscriptionGroupManager extends ConfigManager {
         return forbiddenTable;
     }
 
+    public void setForbiddenTable(
+            ConcurrentMap<String, ConcurrentMap<String, Integer>> forbiddenTable) {
+        this.forbiddenTable = forbiddenTable;
+    }
+
     public ConcurrentMap<String, ConcurrentMap<String, Integer>> subForbiddenTable(Set<String> groupSet) {
         if (MapUtils.isEmpty(forbiddenTable) || CollectionUtils.isEmpty(groupSet)) {
             return Maps.newConcurrentMap();
         }
 
         return forbiddenTable.entrySet().stream()
-            .filter(e -> groupSet.contains(e.getKey()))
-            .collect(Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    public void setForbiddenTable(
-        ConcurrentMap<String, ConcurrentMap<String, Integer>> forbiddenTable) {
-        this.forbiddenTable = forbiddenTable;
+                .filter(e -> groupSet.contains(e.getKey()))
+                .collect(Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public DataVersion getDataVersion() {
         return dataVersion;
+    }
+
+    public void setDataVersion(DataVersion dataVersion) {
+        this.dataVersion.assignNewOne(dataVersion);
     }
 
     public boolean loadDataVersion() {
@@ -401,11 +403,6 @@ public class SubscriptionGroupManager extends ConfigManager {
         }
     }
 
-
-    public void setSubscriptionGroupTable(ConcurrentMap<String, SubscriptionGroupConfig> subscriptionGroupTable) {
-        this.subscriptionGroupTable = subscriptionGroupTable;
-    }
-
     public boolean containsSubscriptionGroup(String group) {
         if (StringUtils.isBlank(group)) {
             return false;
@@ -430,10 +427,6 @@ public class SubscriptionGroupManager extends ConfigManager {
                 return attributes;
             }
         }
-    }
-
-    public void setDataVersion(DataVersion dataVersion) {
-        this.dataVersion.assignNewOne(dataVersion);
     }
 
     public void updateDataVersion() {

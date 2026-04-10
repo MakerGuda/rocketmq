@@ -16,6 +16,15 @@
  */
 package org.apache.rocketmq.client.consumer;
 
+import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.common.ThreadFactoryImpl;
+import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.RPCHook;
+import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
+import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
+
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -23,14 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.common.ThreadFactoryImpl;
-import org.apache.rocketmq.common.message.MessageQueue;
-import org.apache.rocketmq.remoting.RPCHook;
-import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
-import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 /**
  * Schedule service for pull consumer.
@@ -41,11 +42,11 @@ public class MQPullConsumerScheduleService {
     private final Logger log = LoggerFactory.getLogger(MQPullConsumerScheduleService.class);
     private final MessageQueueListener messageQueueListener = new MessageQueueListenerImpl();
     private final ConcurrentMap<MessageQueue, PullTaskImpl> taskTable =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
     private DefaultMQPullConsumer defaultMQPullConsumer;
     private int pullThreadNums = 20;
     private ConcurrentMap<String /* topic */, PullTaskCallback> callbackTable =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
 
     public MQPullConsumerScheduleService(final String consumerGroup) {
@@ -83,8 +84,8 @@ public class MQPullConsumerScheduleService {
     public void start() throws MQClientException {
         final String group = this.defaultMQPullConsumer.getConsumerGroup();
         this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(
-            this.pullThreadNums,
-            new ThreadFactoryImpl("PullMsgThread-" + group)
+                this.pullThreadNums,
+                new ThreadFactoryImpl("PullMsgThread-" + group)
         );
 
         this.defaultMQPullConsumer.setMessageQueueListener(this.messageQueueListener);
@@ -92,7 +93,7 @@ public class MQPullConsumerScheduleService {
         this.defaultMQPullConsumer.start();
 
         log.info("MQPullConsumerScheduleService start OK, {} {}",
-            this.defaultMQPullConsumer.getConsumerGroup(), this.callbackTable);
+                this.defaultMQPullConsumer.getConsumerGroup(), this.callbackTable);
     }
 
     public void registerPullTaskCallback(final String topic, final PullTaskCallback callback) {
@@ -146,7 +147,7 @@ public class MQPullConsumerScheduleService {
         @Override
         public void messageQueueChanged(String topic, Set<MessageQueue> mqAll, Set<MessageQueue> mqDivided) {
             MessageModel messageModel =
-                MQPullConsumerScheduleService.this.defaultMQPullConsumer.getMessageModel();
+                    MQPullConsumerScheduleService.this.defaultMQPullConsumer.getMessageModel();
             switch (messageModel) {
                 case BROADCASTING:
                     MQPullConsumerScheduleService.this.putTask(topic, mqAll);
@@ -173,7 +174,7 @@ public class MQPullConsumerScheduleService {
             String topic = this.messageQueue.getTopic();
             if (!this.isCancelled()) {
                 PullTaskCallback pullTaskCallback =
-                    MQPullConsumerScheduleService.this.callbackTable.get(topic);
+                        MQPullConsumerScheduleService.this.callbackTable.get(topic);
                 if (pullTaskCallback != null) {
                     final PullTaskContext context = new PullTaskContext();
                     context.setPullConsumer(MQPullConsumerScheduleService.this.defaultMQPullConsumer);
@@ -186,7 +187,7 @@ public class MQPullConsumerScheduleService {
 
                     if (!this.isCancelled()) {
                         MQPullConsumerScheduleService.this.scheduledThreadPoolExecutor.schedule(this,
-                            context.getPullNextDelayTimeMillis(), TimeUnit.MILLISECONDS);
+                                context.getPullNextDelayTimeMillis(), TimeUnit.MILLISECONDS);
                     } else {
                         log.warn("The Pull Task is cancelled after doPullTask, {}", messageQueue);
                     }

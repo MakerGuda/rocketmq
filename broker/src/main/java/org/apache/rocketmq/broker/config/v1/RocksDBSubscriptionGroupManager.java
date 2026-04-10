@@ -38,36 +38,34 @@ import java.util.function.BiConsumer;
 
 /**
  * <b>RocksDBSubscriptionGroupManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
- * 
+ * <p>
  * 继承关系：<code>SubscriptionGroupManager</code>。
  */
 public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
 
-    protected transient RocksDBConfigManager rocksDBConfigManager;
-
     private static final String VERSION_COLUMN_FAMILY = "subscriptionGroupVersion";
     private static final String GROUP_COLUMN_FAMILY = "subscriptionGroup";
     private static final String FORBIDDEN_COLUMN_FAMILY_NAME = "forbidden";
-
     private final boolean useSingleRocksDBForAllConfigs;
     private final String storePathRootDir;
+    protected transient RocksDBConfigManager rocksDBConfigManager;
 
     public RocksDBSubscriptionGroupManager(BrokerController brokerController, boolean useSingleRocksDB,
-        String storePathRootDir) {
+                                           String storePathRootDir) {
         super(brokerController, false);
 
         this.useSingleRocksDBForAllConfigs = useSingleRocksDB;
         this.storePathRootDir = StringUtils.isBlank(storePathRootDir) ?
-            brokerController.getMessageStoreConfig().getStorePathRootDir() : storePathRootDir;
+                brokerController.getMessageStoreConfig().getStorePathRootDir() : storePathRootDir;
 
         long flushInterval = brokerController.getMessageStoreConfig().getMemTableFlushIntervalMs();
         CompressionType compressionType =
-            CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
+                CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
         String rocksDBPath = rocksdbConfigFilePath(storePathRootDir, useSingleRocksDB);
 
         this.rocksDBConfigManager = useSingleRocksDB ? new RocksDBConfigManager(rocksDBPath, flushInterval,
-            compressionType, GROUP_COLUMN_FAMILY, VERSION_COLUMN_FAMILY) : new RocksDBConfigManager(rocksDBPath,
-            flushInterval, compressionType);
+                compressionType, GROUP_COLUMN_FAMILY, VERSION_COLUMN_FAMILY) : new RocksDBConfigManager(rocksDBPath,
+                flushInterval, compressionType);
     }
 
     public RocksDBSubscriptionGroupManager(BrokerController brokerController, boolean useSingleRocksDBForAllConfigs) {
@@ -138,7 +136,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
             for (Map.Entry<String, ConcurrentMap<String, Integer>> entry : forbiddenTable.entrySet()) {
                 try {
                     this.rocksDBConfigManager.put(FORBIDDEN_COLUMN_FAMILY_NAME, entry.getKey(),
-                        JSON.toJSONString(entry.getValue()));
+                            JSON.toJSONString(entry.getValue()));
                     log.info("import forbidden config to rocksdb, group={}", entry.getValue());
                 } catch (Exception e) {
                     log.error("import forbidden config to rocksdb failed, group={}", entry.getValue());
@@ -272,7 +270,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
         try {
             super.updateForbidden(group, topic, forbiddenIndex, setOrClear);
             this.rocksDBConfigManager.put(FORBIDDEN_COLUMN_FAMILY_NAME, group,
-                JSON.toJSONString(this.getForbiddenTable().get(group)));
+                    JSON.toJSONString(this.getForbiddenTable().get(group)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -283,7 +281,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
         try {
             super.setForbidden(group, topic, forbiddenIndex);
             this.rocksDBConfigManager.put(FORBIDDEN_COLUMN_FAMILY_NAME, group,
-                JSON.toJSONString(this.getForbiddenTable().get(group)));
+                    JSON.toJSONString(this.getForbiddenTable().get(group)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -294,7 +292,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
         try {
             super.clearForbidden(group, topic, forbiddenIndex);
             this.rocksDBConfigManager.put(FORBIDDEN_COLUMN_FAMILY_NAME, group,
-                JSON.toJSONString(this.getForbiddenTable().get(group)));
+                    JSON.toJSONString(this.getForbiddenTable().get(group)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -312,7 +310,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
         // Check if separate RocksDB exists
         if (!org.apache.rocketmq.common.UtilAll.isPathExists(separateRocksDBPath)) {
             log.info("Separate RocksDB for subscription groups does not exist at {}, no migration needed",
-                separateRocksDBPath);
+                    separateRocksDBPath);
             return;
         }
 
@@ -323,10 +321,10 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
         try {
             long memTableFlushIntervalMs = brokerController.getMessageStoreConfig().getMemTableFlushIntervalMs();
             org.rocksdb.CompressionType compressionType =
-                org.rocksdb.CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
+                    org.rocksdb.CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
 
             separateRocksDBConfigManager = new RocksDBConfigManager(separateRocksDBPath, memTableFlushIntervalMs,
-                compressionType);
+                    compressionType);
 
             // Initialize in read-only mode
             if (!separateRocksDBConfigManager.init(true)) {
@@ -341,7 +339,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
             }
 
             org.apache.rocketmq.remoting.protocol.DataVersion separateDataVersion =
-                separateRocksDBConfigManager.getKvDataVersion();
+                    separateRocksDBConfigManager.getKvDataVersion();
             org.apache.rocketmq.remoting.protocol.DataVersion unifiedDataVersion = this.getDataVersion();
 
             log.info("Comparing data versions - Separate: {}, Unified: {}", separateDataVersion, unifiedDataVersion);
@@ -356,7 +354,7 @@ public class RocksDBSubscriptionGroupManager extends SubscriptionGroupManager {
                     // Load forbidden data directly using the storage
                     try {
                         separateRocksDBConfigManager.configRocksDBStorage.iterate(FORBIDDEN_COLUMN_FAMILY_NAME,
-                            this::importForbidden);
+                                this::importForbidden);
                         log.info("Successfully imported subscription groups and forbidden data from separate RocksDB");
 
                         // Update unified data version to be newer than separate one

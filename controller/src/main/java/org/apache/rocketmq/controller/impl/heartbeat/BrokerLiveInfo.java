@@ -17,6 +17,7 @@
 package org.apache.rocketmq.controller.impl.heartbeat;
 
 import io.netty.channel.Channel;
+
 import java.io.Serializable;
 
 public class BrokerLiveInfo implements Serializable {
@@ -34,7 +35,7 @@ public class BrokerLiveInfo implements Serializable {
     private Integer electionPriority;
 
     public BrokerLiveInfo(String brokerName, String brokerAddr, long brokerId, long lastUpdateTimestamp,
-        long heartbeatTimeoutMillis, Channel channel, int epoch, long maxOffset, Integer electionPriority) {
+                          long heartbeatTimeoutMillis, Channel channel, int epoch, long maxOffset, Integer electionPriority) {
         this.brokerName = brokerName;
         this.brokerAddr = brokerAddr;
         this.brokerId = brokerId;
@@ -47,8 +48,8 @@ public class BrokerLiveInfo implements Serializable {
     }
 
     public BrokerLiveInfo(String brokerName, String brokerAddr, long brokerId, long lastUpdateTimestamp,
-        long heartbeatTimeoutMillis, Channel channel, int epoch, long maxOffset, Integer electionPriority,
-        long confirmOffset) {
+                          long heartbeatTimeoutMillis, Channel channel, int epoch, long maxOffset, Integer electionPriority,
+                          long confirmOffset) {
         this.brokerName = brokerName;
         this.brokerAddr = brokerAddr;
         this.brokerId = brokerId;
@@ -64,16 +65,16 @@ public class BrokerLiveInfo implements Serializable {
     @Override
     public String toString() {
         return "BrokerLiveInfo{" +
-            "brokerName='" + brokerName + '\'' +
-            ", brokerAddr='" + brokerAddr + '\'' +
-            ", heartbeatTimeoutMillis=" + heartbeatTimeoutMillis +
-            ", channel=" + channel +
-            ", brokerId=" + brokerId +
-            ", lastUpdateTimestamp=" + lastUpdateTimestamp +
-            ", epoch=" + epoch +
-            ", maxOffset=" + maxOffset +
-            ", confirmOffset=" + confirmOffset +
-            '}';
+                "brokerName='" + brokerName + '\'' +
+                ", brokerAddr='" + brokerAddr + '\'' +
+                ", heartbeatTimeoutMillis=" + heartbeatTimeoutMillis +
+                ", channel=" + channel +
+                ", brokerId=" + brokerId +
+                ", lastUpdateTimestamp=" + lastUpdateTimestamp +
+                ", epoch=" + epoch +
+                ", maxOffset=" + maxOffset +
+                ", confirmOffset=" + confirmOffset +
+                '}';
     }
 
     public String getBrokerName() {
@@ -90,6 +91,10 @@ public class BrokerLiveInfo implements Serializable {
 
     public Channel getChannel() {
         return channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public long getBrokerId() {
@@ -128,27 +133,23 @@ public class BrokerLiveInfo implements Serializable {
         return brokerAddr;
     }
 
-    public void setConfirmOffset(long confirmOffset) {
-        this.confirmOffset = confirmOffset;
-    }
-
-    public void setElectionPriority(Integer electionPriority) {
-        this.electionPriority = electionPriority;
+    public void setBrokerAddr(String brokerAddr) {
+        this.brokerAddr = brokerAddr;
     }
 
     public Integer getElectionPriority() {
         return electionPriority;
     }
 
+    public void setElectionPriority(Integer electionPriority) {
+        this.electionPriority = electionPriority;
+    }
+
     public long getConfirmOffset() {
         return confirmOffset;
     }
 
-    public void setBrokerAddr(String brokerAddr) {
-        this.brokerAddr = brokerAddr;
-    }
-
-    public void setChannel(Channel channel) {
-        this.channel = channel;
+    public void setConfirmOffset(long confirmOffset) {
+        this.confirmOffset = confirmOffset;
     }
 }

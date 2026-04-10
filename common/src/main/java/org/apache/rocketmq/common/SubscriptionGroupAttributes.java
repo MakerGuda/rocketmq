@@ -16,19 +16,20 @@
  */
 package org.apache.rocketmq.common;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.rocketmq.common.attribute.Attribute;
 import org.apache.rocketmq.common.attribute.LongRangeAttribute;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SubscriptionGroupAttributes {
     public static final Map<String, Attribute> ALL;
     public static final LongRangeAttribute PRIORITY_FACTOR_ATTRIBUTE = new LongRangeAttribute(
-        "priority.factor",
-        true,
-        0, // disable priority mode
-        100, // enable priority mode
-        100
+            "priority.factor",
+            true,
+            0, // disable priority mode
+            100, // enable priority mode
+            100
     );
 
     static {

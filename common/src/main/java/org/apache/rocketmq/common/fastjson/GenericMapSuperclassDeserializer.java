@@ -30,6 +30,7 @@ import java.util.Map;
  */
 public class GenericMapSuperclassDeserializer implements ObjectReader<Object> {
     public static final GenericMapSuperclassDeserializer INSTANCE = new GenericMapSuperclassDeserializer();
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public Object readObject(JSONReader reader, Type type, Object fieldName, long features) {

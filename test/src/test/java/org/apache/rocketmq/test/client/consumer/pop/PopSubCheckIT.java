@@ -31,11 +31,7 @@ import org.apache.rocketmq.test.util.RandomUtil;
 import org.apache.rocketmq.test.util.TestUtils;
 import org.apache.rocketmq.test.util.VerifyUtils;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -74,7 +70,7 @@ public class PopSubCheckIT extends BaseConf {
         }
 
         RMQPopConsumer consumer = ConsumerFactory.getRMQPopConsumer(NAMESRV_ADDR, group,
-            topic, "*", new RMQNormalListener());
+                topic, "*", new RMQNormalListener());
         mqClients.add(consumer);
 
         int msgNum = 1;
@@ -86,7 +82,7 @@ public class PopSubCheckIT extends BaseConf {
 
         consumer.getListener().waitForMessageConsume(msgNum, 30_000);
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(), consumer.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                .containsExactlyElementsIn(producer.getAllMsgBody());
         for (Object o : consumer.getListener().getAllOriginMsg()) {
             MessageClientExt msg = (MessageClientExt) o;
             assertThat(msg.getProperty(MessageConst.PROPERTY_POP_CK)).named("check pop meta").isNotEmpty();

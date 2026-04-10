@@ -17,10 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -36,6 +32,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.awaitility.Awaitility.await;
 
 //The test is correct, but it takes too much time and not core functions, so it is ignored for the time being
@@ -44,16 +45,10 @@ public class ScheduleSlaveActingMasterIT extends ContainerIntegrationTestBase {
 
     private static final String CONSUME_GROUP = ScheduleSlaveActingMasterIT.class.getSimpleName() + "_Consumer";
     private static final int MESSAGE_COUNT = 32;
-    private final Random random = new Random();
-    private static DefaultMQProducer producer;
     private static final String MESSAGE_STRING = RandomStringUtils.random(1024);
     private static final byte[] MESSAGE_BODY = MESSAGE_STRING.getBytes(StandardCharsets.UTF_8);
-
-    void createTopic(String topic) {
-        createTopicTo(master1With3Replicas, topic, 1, 1);
-        createTopicTo(master2With3Replicas, topic, 1, 1);
-        createTopicTo(master3With3Replicas, topic, 1, 1);
-    }
+    private static DefaultMQProducer producer;
+    private final Random random = new Random();
 
     @BeforeClass
     public static void beforeClass() throws Throwable {
@@ -65,6 +60,12 @@ public class ScheduleSlaveActingMasterIT extends ContainerIntegrationTestBase {
     @AfterClass
     public static void afterClass() throws Exception {
         producer.shutdown();
+    }
+
+    void createTopic(String topic) {
+        createTopicTo(master1With3Replicas, topic, 1, 1);
+        createTopicTo(master2With3Replicas, topic, 1, 1);
+        createTopicTo(master3With3Replicas, topic, 1, 1);
     }
 
     @Test
@@ -103,9 +104,9 @@ public class ScheduleSlaveActingMasterIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId()));
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId()));
 
         System.out.printf("Remove master1%n");
 
@@ -162,9 +163,9 @@ public class ScheduleSlaveActingMasterIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId()));
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId()));
 
         System.out.printf("Remove master1%n");
 
@@ -229,18 +230,18 @@ public class ScheduleSlaveActingMasterIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         BrokerIdentity master1BrokerIdentity = new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId());
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId());
 
         brokerContainer1.removeBroker(master1BrokerIdentity);
         System.out.printf("Remove master1%n");
 
         isolateBroker(master2With3Replicas);
         BrokerIdentity master2BrokerIdentity = new BrokerIdentity(
-            master2With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master2With3Replicas.getBrokerConfig().getBrokerName(),
-            master2With3Replicas.getBrokerConfig().getBrokerId());
+                master2With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master2With3Replicas.getBrokerConfig().getBrokerName(),
+                master2With3Replicas.getBrokerConfig().getBrokerId());
         brokerContainer2.removeBroker(master2BrokerIdentity);
         System.out.printf("Remove master2%n");
 
@@ -311,16 +312,16 @@ public class ScheduleSlaveActingMasterIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId()));
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId()));
         System.out.printf("Remove master1%n");
 
         isolateBroker(master2With3Replicas);
         brokerContainer2.removeBroker(new BrokerIdentity(
-            master2With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master2With3Replicas.getBrokerConfig().getBrokerName(),
-            master2With3Replicas.getBrokerConfig().getBrokerId()));
+                master2With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master2With3Replicas.getBrokerConfig().getBrokerName(),
+                master2With3Replicas.getBrokerConfig().getBrokerId()));
         System.out.printf("Remove master2%n");
 
         await().atMost(Duration.ofMinutes(1)).until(() -> receivedMsgCount.get() >= MESSAGE_COUNT && master3MsgCount.get() >= MESSAGE_COUNT && inTimeMsgCount.get() >= MESSAGE_COUNT * 0.95);

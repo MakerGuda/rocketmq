@@ -49,22 +49,22 @@ public class DefaultRecallMessageTraceHook implements RPCHook {
     @Override
     public void doAfterResponse(String remoteAddr, RemotingCommand request, RemotingCommand response) {
         if (request.getCode() != RequestCode.RECALL_MESSAGE
-            || !enableDefaultTrace
-            || null == response.getExtFields()
-            || null == response.getExtFields().get(MessageConst.PROPERTY_MSG_REGION)
-            || null == traceDispatcher) {
+                || !enableDefaultTrace
+                || null == response.getExtFields()
+                || null == response.getExtFields().get(MessageConst.PROPERTY_MSG_REGION)
+                || null == traceDispatcher) {
             return;
         }
 
         try {
             String regionId = response.getExtFields().get(MessageConst.PROPERTY_MSG_REGION);
             RecallMessageRequestHeader requestHeader =
-                request.decodeCommandCustomHeader(RecallMessageRequestHeader.class);
+                    request.decodeCommandCustomHeader(RecallMessageRequestHeader.class);
             String topic = NamespaceUtil.withoutNamespace(requestHeader.getTopic());
             String group = NamespaceUtil.withoutNamespace(requestHeader.getProducerGroup());
             String recallHandle = requestHeader.getRecallHandle();
             RecallMessageHandle.HandleV1 handleV1 =
-                (RecallMessageHandle.HandleV1) RecallMessageHandle.decodeHandle(recallHandle);
+                    (RecallMessageHandle.HandleV1) RecallMessageHandle.decodeHandle(recallHandle);
 
             TraceBean traceBean = new TraceBean();
             traceBean.setTopic(topic);

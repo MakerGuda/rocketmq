@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.broker.auth.converter;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.rocketmq.auth.authentication.enums.UserStatus;
 import org.apache.rocketmq.auth.authentication.enums.UserType;
 import org.apache.rocketmq.auth.authentication.model.User;
 import org.apache.rocketmq.remoting.protocol.body.UserInfo;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 转换器 <b>UserConverter</b>，在认证模型、ACL 等与 Broker 内部表示之间做映射。
@@ -30,7 +31,7 @@ public class UserConverter {
 
     public static List<UserInfo> convertUsers(List<User> users) {
         return users.stream().map(UserConverter::convertUser)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     public static UserInfo convertUser(User user) {

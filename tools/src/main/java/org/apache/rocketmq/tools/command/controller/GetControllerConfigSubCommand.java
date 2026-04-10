@@ -18,10 +18,6 @@
 
 package org.apache.rocketmq.tools.command.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -29,6 +25,11 @@ import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 public class GetControllerConfigSubCommand implements SubCommand {
     @Override
@@ -52,7 +53,7 @@ public class GetControllerConfigSubCommand implements SubCommand {
 
     @Override
     public void execute(final CommandLine commandLine, final Options options,
-        final RPCHook rpcHook) throws SubCommandException {
+                        final RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         try {
@@ -73,7 +74,7 @@ public class GetControllerConfigSubCommand implements SubCommand {
 
             for (Map.Entry<String, Properties> controllerConfigEntry : controllerConfigs.entrySet()) {
                 System.out.printf("============%s============\n",
-                    controllerConfigEntry.getKey());
+                        controllerConfigEntry.getKey());
                 for (Map.Entry<Object, Object> entry : controllerConfigEntry.getValue().entrySet()) {
                     System.out.printf("%-50s=  %s\n", entry.getKey(), entry.getValue());
                 }

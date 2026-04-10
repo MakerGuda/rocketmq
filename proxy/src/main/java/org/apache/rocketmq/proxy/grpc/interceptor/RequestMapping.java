@@ -17,20 +17,11 @@
 
 package org.apache.rocketmq.proxy.grpc.interceptor;
 
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueResponse;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.NotifyClientTerminationRequest;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.RecallMessageRequest;
-import apache.rocketmq.v2.ReceiveMessageRequest;
-import apache.rocketmq.v2.SendMessageRequest;
+import apache.rocketmq.v2.*;
+import org.apache.rocketmq.remoting.protocol.RequestCode;
+
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.rocketmq.remoting.protocol.RequestCode;
 
 public class RequestMapping {
     @SuppressWarnings("DoubleBraceInitialization")

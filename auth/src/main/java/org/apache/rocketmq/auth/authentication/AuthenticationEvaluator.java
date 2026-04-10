@@ -16,11 +16,12 @@
  */
 package org.apache.rocketmq.auth.authentication;
 
-import java.util.function.Supplier;
 import org.apache.rocketmq.auth.authentication.context.AuthenticationContext;
 import org.apache.rocketmq.auth.authentication.factory.AuthenticationFactory;
 import org.apache.rocketmq.auth.authentication.strategy.AuthenticationStrategy;
 import org.apache.rocketmq.auth.config.AuthConfig;
+
+import java.util.function.Supplier;
 
 public class AuthenticationEvaluator {
 

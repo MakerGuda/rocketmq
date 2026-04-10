@@ -32,14 +32,14 @@ public enum FileSegmentType {
         this.code = code;
     }
 
-    public int getCode() {
-        return code;
-    }
-
     public static FileSegmentType valueOf(int fileType) {
         return Arrays.stream(FileSegmentType.values())
-            .filter(segmentType -> segmentType.getCode() == fileType)
-            .findFirst()
-            .orElse(COMMIT_LOG);
+                .filter(segmentType -> segmentType.getCode() == fileType)
+                .findFirst()
+                .orElse(COMMIT_LOG);
+    }
+
+    public int getCode() {
+        return code;
     }
 }

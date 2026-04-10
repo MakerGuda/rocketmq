@@ -17,9 +17,10 @@
 
 package org.apache.rocketmq.tieredstore.common;
 
-import java.util.List;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
+
+import java.util.List;
 
 public class GroupCommitContext {
 

@@ -38,7 +38,7 @@ public class FlatFileFactory {
     }
 
     public FlatFileFactory(MetadataStore metadataStore,
-        MessageStoreConfig storeConfig, MessageStoreExecutor executor) {
+                           MessageStoreConfig storeConfig, MessageStoreExecutor executor) {
 
         this.metadataStore = metadataStore;
         this.storeConfig = storeConfig;

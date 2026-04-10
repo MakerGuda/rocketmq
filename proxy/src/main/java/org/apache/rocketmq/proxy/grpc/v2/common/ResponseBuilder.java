@@ -19,28 +19,28 @@ package org.apache.rocketmq.proxy.grpc.v2.common;
 
 import apache.rocketmq.v2.Code;
 import apache.rocketmq.v2.Status;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.auth.authentication.exception.AuthenticationException;
 import org.apache.rocketmq.auth.authorization.exception.AuthorizationException;
 import org.apache.rocketmq.client.common.ClientErrorCode;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.ExceptionUtils;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.common.ProxyException;
-import org.apache.rocketmq.common.utils.ExceptionUtils;
 import org.apache.rocketmq.proxy.service.route.TopicRouteHelper;
 import org.apache.rocketmq.remoting.exception.RemotingTimeoutException;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ResponseBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     protected static final Map<Integer, Code> RESPONSE_CODE_MAPPING = new ConcurrentHashMap<>();
-
     protected static final Object INSTANCE_CREATE_LOCK = new Object();
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     protected static volatile ResponseBuilder instance;
 
     static {
@@ -96,9 +96,9 @@ public class ResponseBuilder {
 
     public Status buildStatus(Code code, String message) {
         return Status.newBuilder()
-            .setCode(code)
-            .setMessage(message != null ? message : code.name())
-            .build();
+                .setCode(code)
+                .setMessage(message != null ? message : code.name())
+                .build();
     }
 
     public Status buildStatus(int remotingResponseCode, String remark) {
@@ -107,9 +107,9 @@ public class ResponseBuilder {
             message = String.valueOf(remotingResponseCode);
         }
         return Status.newBuilder()
-            .setCode(buildCode(remotingResponseCode))
-            .setMessage(message)
-            .build();
+                .setCode(buildCode(remotingResponseCode))
+                .setMessage(message)
+                .build();
     }
 
     public Code buildCode(int remotingResponseCode) {

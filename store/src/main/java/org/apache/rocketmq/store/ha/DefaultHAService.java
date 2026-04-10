@@ -17,6 +17,17 @@
 
 package org.apache.rocketmq.store.ha;
 
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.NetworkUtil;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.body.HARuntimeInfo;
+import org.apache.rocketmq.store.CommitLog;
+import org.apache.rocketmq.store.DefaultMessageStore;
+import org.apache.rocketmq.store.config.BrokerRole;
+import org.apache.rocketmq.store.config.MessageStoreConfig;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -29,16 +40,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.utils.NetworkUtil;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.remoting.protocol.body.HARuntimeInfo;
-import org.apache.rocketmq.store.CommitLog;
-import org.apache.rocketmq.store.DefaultMessageStore;
-import org.apache.rocketmq.store.config.BrokerRole;
-import org.apache.rocketmq.store.config.MessageStoreConfig;
 
 public class DefaultHAService implements HAService {
 
@@ -98,9 +99,9 @@ public class DefaultHAService implements HAService {
     public boolean isSlaveOK(final long masterPutWhere) {
         boolean result = this.connectionCount.get() > 0;
         result =
-            result
-                && masterPutWhere - this.push2SlaveMaxOffset.get() < this.defaultMessageStore
-                .getMessageStoreConfig().getHaMaxGapNotInSync();
+                result
+                        && masterPutWhere - this.push2SlaveMaxOffset.get() < this.defaultMessageStore
+                        .getMessageStoreConfig().getHaMaxGapNotInSync();
         return result;
     }
 
@@ -200,7 +201,7 @@ public class DefaultHAService implements HAService {
 
     protected boolean isInSyncSlave(final long masterPutWhere, HAConnection conn) {
         if (masterPutWhere - conn.getSlaveAckOffset() < this.defaultMessageStore.getMessageStoreConfig()
-            .getHaMaxGapNotInSync()) {
+                .getHaMaxGapNotInSync()) {
             return true;
         }
         return false;
@@ -288,10 +289,9 @@ public class DefaultHAService implements HAService {
      */
     protected abstract class AcceptSocketService extends ServiceThread {
         private final SocketAddress socketAddressListen;
+        private final MessageStoreConfig messageStoreConfig;
         private ServerSocketChannel serverSocketChannel;
         private Selector selector;
-
-        private final MessageStoreConfig messageStoreConfig;
 
         public AcceptSocketService(final MessageStoreConfig messageStoreConfig) {
             this.messageStoreConfig = messageStoreConfig;
@@ -354,7 +354,7 @@ public class DefaultHAService implements HAService {
 
                                 if (sc != null) {
                                     DefaultHAService.log.info("HAService receive new connection, "
-                                        + sc.socket().getRemoteSocketAddress());
+                                            + sc.socket().getRemoteSocketAddress());
                                     try {
                                         HAConnection conn = createConnection(sc);
                                         DefaultHAService.this.addConnection(conn);

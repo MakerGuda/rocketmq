@@ -16,18 +16,6 @@
  */
 package org.apache.rocketmq.store.timer.rocksdb;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import com.conversantmedia.util.concurrent.DisruptorBlockingQueue;
 import com.google.common.util.concurrent.RateLimiter;
 import io.opentelemetry.api.common.Attributes;
@@ -36,12 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.TopicFilterType;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageClientIDSetter;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.DefaultMessageStore;
@@ -59,6 +42,13 @@ import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 import org.apache.rocketmq.store.timer.TimerMetrics;
 import org.apache.rocketmq.store.util.PerfCounter;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+
 import static org.apache.rocketmq.common.message.MessageConst.PROPERTY_TIMER_ROLL_LABEL;
 import static org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage.TIMER_COLUMN_FAMILY;
 import static org.apache.rocketmq.store.timer.TimerMessageStore.TIMER_TOPIC;
@@ -74,27 +64,27 @@ public class TimerMessageRocksDBStore {
     private static final int MAX_GET_MSG_TIMES = 3, MAX_PUT_MSG_TIMES = 3;
     private static final int TIME_UP_CAPACITY = 100, ROLL_CAPACITY = 50;
     private static final int INITIAL = 0, RUNNING = 1, SHUTDOWN = 2;
-    private volatile int state = INITIAL;
     private static long expirationThresholdMillis = 999L;
+    protected final PerfCounter.Ticks perfCounterTicks = new PerfCounter.Ticks(log);
     private final AtomicLong readOffset = new AtomicLong(0);//timerSysTopic read offset
     private final MessageStore messageStore;
     private final TimerMetrics timerMetrics;
     private final MessageStoreConfig storeConfig;
     private final BrokerStatsManager brokerStatsManager;
     private final MessageRocksDBStorage messageRocksDBStorage;
+    protected long precisionMs;
+    private volatile int state = INITIAL;
     private Timeline timeline;
     private TimerSysTopicScanService timerSysTopicScanService;
     private TimerMessageReputService expiredMessageReputService;
     private TimerMessageReputService rollMessageReputService;
-    protected long precisionMs;
     private BlockingQueue<List<TimerRocksDBRecord>> expiredMessageQueue;
     private BlockingQueue<List<TimerRocksDBRecord>> rollMessageQueue;
-    protected final PerfCounter.Ticks perfCounterTicks = new PerfCounter.Ticks(log);
     private Function<MessageExtBrokerInner, PutMessageResult> escapeBridgeHook;
     private ThreadLocal<ByteBuffer> bufferLocal = null;
 
     public TimerMessageRocksDBStore(final MessageStore messageStore, final TimerMetrics timerMetrics,
-        final BrokerStatsManager brokerStatsManager) {
+                                    final BrokerStatsManager brokerStatsManager) {
         this.messageStore = messageStore;
         this.storeConfig = messageStore.getMessageStoreConfig();
         this.precisionMs = storeConfig.getTimerRocksDBPrecisionMs() < 100L ? 1000L : storeConfig.getTimerRocksDBPrecisionMs();
@@ -103,6 +93,10 @@ public class TimerMessageRocksDBStore {
         this.timerMetrics = timerMetrics;
         this.brokerStatsManager = brokerStatsManager;
         bufferLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(storeConfig.getMaxMessageSize()));
+    }
+
+    public static boolean isExpired(long delayedTime) {
+        return delayedTime <= System.currentTimeMillis() + expirationThresholdMillis;
     }
 
     public synchronized boolean load() {
@@ -383,10 +377,6 @@ public class TimerMessageRocksDBStore {
         return PUT_NEED_RETRY;
     }
 
-    public static boolean isExpired(long delayedTime) {
-        return delayedTime <= System.currentTimeMillis() + expirationThresholdMillis;
-    }
-
     public void registerEscapeBridgeHook(Function<MessageExtBrokerInner, PutMessageResult> escapeBridgeHook) {
         this.escapeBridgeHook = escapeBridgeHook;
     }
@@ -394,7 +384,7 @@ public class TimerMessageRocksDBStore {
     private String getServiceThreadName() {
         String brokerIdentifier = "";
         if (TimerMessageRocksDBStore.this.messageStore instanceof DefaultMessageStore) {
-            DefaultMessageStore messageStore = (DefaultMessageStore)TimerMessageRocksDBStore.this.messageStore;
+            DefaultMessageStore messageStore = (DefaultMessageStore) TimerMessageRocksDBStore.this.messageStore;
             if (messageStore.getBrokerConfig().isInBrokerContainer()) {
                 brokerIdentifier = messageStore.getBrokerConfig().getIdentifier();
             }
@@ -425,7 +415,7 @@ public class TimerMessageRocksDBStore {
                     waitForRunning(waitTime);
                 } catch (Exception e) {
                     logError.error("TimerMessageRocksDBStore error occurred in: {}, error: {}", getServiceName(),
-                        e.getMessage());
+                            e.getMessage());
                 }
             }
             log.info(this.getServiceName() + " service end");
@@ -481,7 +471,7 @@ public class TimerMessageRocksDBStore {
 
                         StoreMetricsManager metricsManager = messageStore.getStoreMetricsManager();
                         if (metricsManager instanceof DefaultStoreMetricsManager) {
-                            DefaultStoreMetricsManager defaultMetricsManager = (DefaultStoreMetricsManager)metricsManager;
+                            DefaultStoreMetricsManager defaultMetricsManager = (DefaultStoreMetricsManager) metricsManager;
                             Attributes attributes = defaultMetricsManager.newAttributesBuilder().put(DefaultStoreMetricsConstant.LABEL_TOPIC, msgExt.getProperty(MessageConst.PROPERTY_REAL_TOPIC)).build();
                             defaultMetricsManager.getTimerMessageSetLatency().record((delayedTime - msgExt.getBornTimestamp()) / 1000, attributes);
                         }
@@ -507,12 +497,12 @@ public class TimerMessageRocksDBStore {
         private final RateLimiter rateLimiter;
         private final boolean writeCheckPoint;
         ExecutorService executor = new ThreadPoolExecutor(
-            6,
-            6,
-            60,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10000),
-            new ThreadPoolExecutor.CallerRunsPolicy()
+                6,
+                6,
+                60,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(10000),
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
 
         public TimerMessageReputService(BlockingQueue<List<TimerRocksDBRecord>> queue, double maxTps, boolean writeCheckPoint) {

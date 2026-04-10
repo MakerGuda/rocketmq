@@ -28,36 +28,25 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PerfCounter {
 
-    private long last = System.currentTimeMillis();
-    private float lastTps = 0.0f;
-
     private final ThreadLocal<AtomicLong> lastTickMs = new ThreadLocal<AtomicLong>() {
         @Override
         protected AtomicLong initialValue() {
             return new AtomicLong(System.currentTimeMillis());
         }
     };
-
     private final Logger logger;
-    private String prefix = "DEFAULT";
-
-    public float getLastTps() {
-        if (System.currentTimeMillis() - last <= maxTimeMsPerCount  + 3000) {
-            return lastTps;
-        }
-        return 0.0f;
-    }
-
     //1000 * ms, 1000 * 10 ms, then 100ms every slots
     private final AtomicInteger[] count;
     private final AtomicLong allCount;
     private final int maxNumPerCount;
     private final int maxTimeMsPerCount;
-
-
+    private long last = System.currentTimeMillis();
+    private float lastTps = 0.0f;
+    private String prefix = "DEFAULT";
     public PerfCounter() {
         this(5001, null, null, 1000 * 1000, 10 * 1000);
     }
+
 
     public PerfCounter(int slots, Logger logger, String prefix, int maxNumPerCount, int maxTimeMsPerCount) {
         if (slots < 3000) {
@@ -74,6 +63,13 @@ public class PerfCounter {
         reset();
     }
 
+    public float getLastTps() {
+        if (System.currentTimeMillis() - last <= maxTimeMsPerCount + 3000) {
+            return lastTps;
+        }
+        return 0.0f;
+    }
+
     public void flow(long cost) {
         flow(cost, 1);
     }
@@ -83,10 +79,10 @@ public class PerfCounter {
         allCount.addAndGet(num);
         count[getIndex(cost)].addAndGet(num);
         if (allCount.get() >= maxNumPerCount
-            || System.currentTimeMillis() - last >= maxTimeMsPerCount) {
+                || System.currentTimeMillis() - last >= maxTimeMsPerCount) {
             synchronized (allCount) {
                 if (allCount.get() < maxNumPerCount
-                    && System.currentTimeMillis() - last < maxTimeMsPerCount) {
+                        && System.currentTimeMillis() - last < maxTimeMsPerCount) {
                     return;
                 }
                 print();
@@ -114,10 +110,10 @@ public class PerfCounter {
         long elapsed = System.currentTimeMillis() - last;
         lastTps = (allCount.get() + 0.1f) * 1000 / elapsed;
         String str = String.format("PERF_COUNTER_%s[%s] num:%d cost:%d tps:%.4f min:%d max:%d tp50:%d tp80:%d tp90:%d tp99:%d tp999:%d " +
-                "0_1:%d 2_5:%d 6_10:%d 11_50:%d 51_100:%d 101_500:%d 501_999:%d 1000_:%d",
-            prefix, new Timestamp(System.currentTimeMillis()), allCount.get(), elapsed, lastTps,
-            min, max, tp50, tp80, tp90, tp99, tp999,
-            count0t1, count2t5, count6t10, count11t50, count51t100, count101t500, count501t999, count1000t);
+                        "0_1:%d 2_5:%d 6_10:%d 11_50:%d 51_100:%d 101_500:%d 501_999:%d 1000_:%d",
+                prefix, new Timestamp(System.currentTimeMillis()), allCount.get(), elapsed, lastTps,
+                min, max, tp50, tp80, tp90, tp99, tp999,
+                count0t1, count2t5, count6t10, count11t50, count51t100, count101t500, count501t999, count1000t);
         if (logger != null) {
             logger.info(str);
         }
@@ -238,19 +234,19 @@ public class PerfCounter {
             this(logger, 1000 * 1000, 10 * 1000, 20 * 1000, 100 * 1000);
         }
 
-        @Override
-        public String getServiceName() {
-            return this.getClass().getName();
-        }
-
         public Ticks(Logger logger, int maxNumPerCount, int maxTimeMsPerCount, int maxKeyNumPerf, int maxKeyNumDebug) {
             this.logger = logger;
             this.maxNumPerCount = maxNumPerCount;
             this.maxTimeMsPerCount = maxTimeMsPerCount;
-            this.maxKeyNumPerf =  maxKeyNumPerf;
-            this.maxKeyNumDebug =  maxKeyNumDebug;
+            this.maxKeyNumPerf = maxKeyNumPerf;
+            this.maxKeyNumDebug = maxKeyNumDebug;
             this.defaultPerf = new PerfCounter(3001, logger, null, maxNumPerCount, maxTimeMsPerCount);
 
+        }
+
+        @Override
+        public String getServiceName() {
+            return this.getClass().getName();
         }
 
         private PerfCounter makeSureExists(String key) {
@@ -306,9 +302,10 @@ public class PerfCounter {
             }
             return keyFreqs.getOrDefault(key, defaultTime);
         }
+
         public boolean shouldDebugKeyAndTimeMs(String key, int intervalMs) {
             try {
-                AtomicLong lastTimeMs =  makeSureDebugKeyExists(key);
+                AtomicLong lastTimeMs = makeSureDebugKeyExists(key);
                 if (System.currentTimeMillis() - lastTimeMs.get() > intervalMs) {
                     lastTimeMs.set(System.currentTimeMillis());
                     return true;

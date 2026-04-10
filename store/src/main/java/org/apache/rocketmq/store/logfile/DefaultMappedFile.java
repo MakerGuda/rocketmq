@@ -18,6 +18,21 @@ package org.apache.rocketmq.store.logfile;
 
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
+import io.netty.util.internal.PlatformDependent;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.message.MessageExtBatch;
+import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.utils.NetworkUtil;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.config.FlushDiskType;
+import org.apache.rocketmq.store.util.LibC;
+import sun.misc.Unsafe;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,89 +53,18 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-import io.netty.util.internal.PlatformDependent;
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBatch;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.common.utils.NetworkUtil;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.store.AppendMessageCallback;
-import org.apache.rocketmq.store.AppendMessageResult;
-import org.apache.rocketmq.store.AppendMessageStatus;
-import org.apache.rocketmq.store.CompactionAppendMsgCallback;
-import org.apache.rocketmq.store.PutMessageContext;
-import org.apache.rocketmq.store.RunningFlags;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
-import org.apache.rocketmq.store.TransientStorePool;
-import org.apache.rocketmq.store.config.FlushDiskType;
-import org.apache.rocketmq.store.util.LibC;
-import sun.misc.Unsafe;
-
 
 public class DefaultMappedFile extends AbstractMappedFile {
     public static final int OS_PAGE_SIZE = 1024 * 4;
     public static final Unsafe UNSAFE = getUnsafe();
-    private static final Method IS_LOADED_METHOD;
     public static final int UNSAFE_PAGE_SIZE = UNSAFE == null ? OS_PAGE_SIZE : UNSAFE.pageSize();
-
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
-
     protected static final AtomicLong TOTAL_MAPPED_VIRTUAL_MEMORY = new AtomicLong(0);
-
     protected static final AtomicInteger TOTAL_MAPPED_FILES = new AtomicInteger(0);
-
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> WROTE_POSITION_UPDATER;
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> COMMITTED_POSITION_UPDATER;
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> FLUSHED_POSITION_UPDATER;
-
-    protected volatile int wrotePosition;
-    protected volatile int committedPosition;
-    protected volatile int flushedPosition;
-    protected int fileSize;
-    protected FileChannel fileChannel;
-
-    /**
-     * Message will put to here first, and then reput to FileChannel if writeBuffer is not null.
-     */
-    protected ByteBuffer writeBuffer = null;
-    protected TransientStorePool transientStorePool = null;
-    /**
-     * Configuration flag to use RandomAccessFile instead of MappedByteBuffer for writing
-     */
-    protected boolean writeWithoutMmap = false;
-    protected String fileName;
-    protected long fileFromOffset;
-    protected File file;
-    protected MappedByteBuffer mappedByteBuffer;
-    protected volatile long storeTimestamp = 0;
-    protected boolean firstCreateInQueue = false;
-    private long lastFlushTime = -1L;
-
-    protected MappedByteBuffer mappedByteBufferWaitToClean = null;
-    protected long swapMapTime = 0L;
-    protected long mappedByteBufferAccessCountSinceLastSwap = 0L;
-
-    /**
-     * If this mapped file belongs to consume queue, this field stores store-timestamp of first message referenced by
-     * this logical queue.
-     */
-    private long startTimestamp = -1;
-
-    /**
-     * If this mapped file belongs to consume queue, this field stores store-timestamp of last message referenced by
-     * this logical queue.
-     */
-    private long stopTimestamp = -1;
-
-
-
-    protected RunningFlags runningFlags;
-
-
+    private static final Method IS_LOADED_METHOD;
 
     static {
         WROTE_POSITION_UPDATER = AtomicIntegerFieldUpdater.newUpdater(DefaultMappedFile.class, "wrotePosition");
@@ -140,6 +84,41 @@ public class DefaultMappedFile extends AbstractMappedFile {
         IS_LOADED_METHOD = isLoaded0method;
     }
 
+    protected volatile int wrotePosition;
+    protected volatile int committedPosition;
+    protected volatile int flushedPosition;
+    protected int fileSize;
+    protected FileChannel fileChannel;
+    /**
+     * Message will put to here first, and then reput to FileChannel if writeBuffer is not null.
+     */
+    protected ByteBuffer writeBuffer = null;
+    protected TransientStorePool transientStorePool = null;
+    /**
+     * Configuration flag to use RandomAccessFile instead of MappedByteBuffer for writing
+     */
+    protected boolean writeWithoutMmap = false;
+    protected String fileName;
+    protected long fileFromOffset;
+    protected File file;
+    protected MappedByteBuffer mappedByteBuffer;
+    protected volatile long storeTimestamp = 0;
+    protected boolean firstCreateInQueue = false;
+    protected MappedByteBuffer mappedByteBufferWaitToClean = null;
+    protected long swapMapTime = 0L;
+    protected long mappedByteBufferAccessCountSinceLastSwap = 0L;
+    protected RunningFlags runningFlags;
+    private long lastFlushTime = -1L;
+    /**
+     * If this mapped file belongs to consume queue, this field stores store-timestamp of first message referenced by
+     * this logical queue.
+     */
+    private long startTimestamp = -1;
+    /**
+     * If this mapped file belongs to consume queue, this field stores store-timestamp of last message referenced by
+     * this logical queue.
+     */
+    private long stopTimestamp = -1;
 
 
     public DefaultMappedFile() {
@@ -158,22 +137,22 @@ public class DefaultMappedFile extends AbstractMappedFile {
     }
 
     public DefaultMappedFile(final String fileName, final int fileSize, final RunningFlags runningFlags,
-        final TransientStorePool transientStorePool) throws IOException {
+                             final TransientStorePool transientStorePool) throws IOException {
         this(fileName, fileSize, runningFlags, transientStorePool, false);
     }
 
     public DefaultMappedFile(final String fileName, final int fileSize, final RunningFlags runningFlags,
-        final boolean writeWithoutMmap) throws IOException {
+                             final boolean writeWithoutMmap) throws IOException {
         this(fileName, fileSize, runningFlags, null, writeWithoutMmap);
     }
 
     public DefaultMappedFile(final String fileName, final int fileSize,
-        final TransientStorePool transientStorePool, final boolean writeWithoutMmap) throws IOException {
+                             final TransientStorePool transientStorePool, final boolean writeWithoutMmap) throws IOException {
         this(fileName, fileSize, null, transientStorePool, writeWithoutMmap);
     }
 
     public DefaultMappedFile(final String fileName, final int fileSize, final RunningFlags runningFlags,
-        final TransientStorePool transientStorePool, final boolean writeWithoutMmap) throws IOException {
+                             final TransientStorePool transientStorePool, final boolean writeWithoutMmap) throws IOException {
         this.writeWithoutMmap = writeWithoutMmap;
         init(fileName, fileSize, runningFlags, transientStorePool);
     }
@@ -186,9 +165,30 @@ public class DefaultMappedFile extends AbstractMappedFile {
         return TOTAL_MAPPED_VIRTUAL_MEMORY.get();
     }
 
+    public static Unsafe getUnsafe() {
+        try {
+            Field f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            return (Unsafe) f.get(null);
+        } catch (Exception ignore) {
+
+        }
+        return null;
+    }
+
+    public static long mappingAddr(long addr) {
+        long offset = addr % UNSAFE_PAGE_SIZE;
+        offset = (offset >= 0) ? offset : (UNSAFE_PAGE_SIZE + offset);
+        return addr - offset;
+    }
+
+    public static int pageCount(long size) {
+        return (int) (size + (long) UNSAFE_PAGE_SIZE - 1L) / UNSAFE_PAGE_SIZE;
+    }
+
     @Override
     public void init(final String fileName, final int fileSize, final RunningFlags runningFlags,
-        final TransientStorePool transientStorePool) throws IOException {
+                     final TransientStorePool transientStorePool) throws IOException {
         init(fileName, fileSize, runningFlags);
         if (transientStorePool != null) {
             this.writeBuffer = transientStorePool.borrowBuffer();
@@ -269,11 +269,11 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 }
             } else {
                 log.debug("matched, but hold failed, request pos: " + pos + ", fileFromOffset: "
-                    + this.fileFromOffset);
+                        + this.fileFromOffset);
             }
         } else {
             log.warn("selectMappedBuffer request pos invalid, request pos: " + pos + ", size: " + size
-                + ", fileFromOffset: " + this.fileFromOffset);
+                    + ", fileFromOffset: " + this.fileFromOffset);
         }
 
         return false;
@@ -338,18 +338,18 @@ public class DefaultMappedFile extends AbstractMappedFile {
 
     @Override
     public AppendMessageResult appendMessage(final MessageExtBrokerInner msg, final AppendMessageCallback cb,
-        PutMessageContext putMessageContext) {
+                                             PutMessageContext putMessageContext) {
         return appendMessagesInner(msg, cb, putMessageContext);
     }
 
     @Override
     public AppendMessageResult appendMessages(final MessageExtBatch messageExtBatch, final AppendMessageCallback cb,
-        PutMessageContext putMessageContext) {
+                                              PutMessageContext putMessageContext) {
         return appendMessagesInner(messageExtBatch, cb, putMessageContext);
     }
 
     public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb,
-        PutMessageContext putMessageContext) {
+                                                   PutMessageContext putMessageContext) {
         assert messageExt != null;
         assert cb != null;
 
@@ -374,11 +374,11 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 if (messageExt instanceof MessageExtBatch && !((MessageExtBatch) messageExt).isInnerBatch()) {
                     // traditional batch message
                     result = cb.doAppend(fileFromOffset, byteBuffer, this.fileSize - currentPos,
-                        (MessageExtBatch) messageExt, putMessageContext);
+                            (MessageExtBatch) messageExt, putMessageContext);
                 } else if (messageExt instanceof MessageExtBrokerInner) {
                     // traditional single message or newly introduced inner-batch message
                     result = cb.doAppend(fileFromOffset, byteBuffer, this.fileSize - currentPos,
-                        (MessageExtBrokerInner) messageExt, putMessageContext);
+                            (MessageExtBrokerInner) messageExt, putMessageContext);
                 } else {
                     return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
                 }
@@ -406,6 +406,7 @@ public class DefaultMappedFile extends AbstractMappedFile {
         log.error("MappedFile.appendMessage return null, wrotePosition: {} fileSize: {}", currentPos, this.fileSize);
         return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
     }
+
     protected ByteBuffer appendMessageBuffer() {
         this.mappedByteBufferAccessCountSinceLastSwap++;
         return writeBuffer != null ? writeBuffer : this.mappedByteBuffer;
@@ -663,11 +664,11 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 return new SelectMappedBufferResult(this.fileFromOffset + pos, byteBufferNew, size, this);
             } else {
                 log.warn("matched, but hold failed, request pos: " + pos + ", fileFromOffset: "
-                    + this.fileFromOffset);
+                        + this.fileFromOffset);
             }
         } else {
             log.warn("selectMappedBuffer request pos invalid, request pos: " + pos + ", size: " + size
-                + ", fileFromOffset: " + this.fileFromOffset);
+                    + ", fileFromOffset: " + this.fileFromOffset);
         }
 
         return null;
@@ -695,13 +696,13 @@ public class DefaultMappedFile extends AbstractMappedFile {
     public boolean cleanup(final long currentRef) {
         if (this.isAvailable()) {
             log.error("this file[REF:" + currentRef + "] " + this.fileName
-                + " have not shutdown, stop unmapping.");
+                    + " have not shutdown, stop unmapping.");
             return false;
         }
 
         if (this.isCleanupOver()) {
             log.error("this file[REF:" + currentRef + "] " + this.fileName
-                + " have cleanup, do not do it again.");
+                    + " have cleanup, do not do it again.");
             return true;
         }
 
@@ -739,10 +740,10 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 long beginTime = System.currentTimeMillis();
                 boolean result = this.file.delete();
                 log.info("delete file[REF:" + this.getRefCount() + "] " + this.fileName
-                    + (result ? " OK, " : " Failed, ") + "W:" + this.getWrotePosition() + " M:"
-                    + this.getFlushedPosition() + ", "
-                    + UtilAll.computeElapsedTimeMilliseconds(beginTime)
-                    + "," + (System.currentTimeMillis() - lastModified));
+                        + (result ? " OK, " : " Failed, ") + "W:" + this.getWrotePosition() + " M:"
+                        + this.getFlushedPosition() + ", "
+                        + UtilAll.computeElapsedTimeMilliseconds(beginTime)
+                        + "," + (System.currentTimeMillis() - lastModified));
             } catch (Exception e) {
                 log.warn("close file channel " + this.fileName + " Failed. ", e);
             }
@@ -750,7 +751,7 @@ public class DefaultMappedFile extends AbstractMappedFile {
             return true;
         } else {
             log.warn("destroy mapped file[REF:" + this.getRefCount() + "] " + this.fileName
-                + " Failed. cleanupOver: " + this.cleanupOver);
+                    + " Failed. cleanupOver: " + this.cleanupOver);
         }
 
         return false;
@@ -812,11 +813,11 @@ public class DefaultMappedFile extends AbstractMappedFile {
         // force flush when prepare load finished
         if (type == FlushDiskType.SYNC_FLUSH) {
             log.info("mapped file warm-up done, force to disk, mappedFile={}, costTime={}",
-                this.getFileName(), System.currentTimeMillis() - beginTime);
+                    this.getFileName(), System.currentTimeMillis() - beginTime);
             mappedByteBuffer.force();
         }
         log.info("mapped file warm-up done. mappedFile={}, costTime={}", this.getFileName(),
-            System.currentTimeMillis() - beginTime);
+                System.currentTimeMillis() - beginTime);
 
         this.mlock();
     }
@@ -1024,27 +1025,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
         return new Itr(startPos);
     }
 
-    public static Unsafe getUnsafe() {
-        try {
-            Field f = Unsafe.class.getDeclaredField("theUnsafe");
-            f.setAccessible(true);
-            return (Unsafe) f.get(null);
-        } catch (Exception ignore) {
-
-        }
-        return null;
-    }
-
-    public static long mappingAddr(long addr) {
-        long offset = addr % UNSAFE_PAGE_SIZE;
-        offset = (offset >= 0) ? offset : (UNSAFE_PAGE_SIZE + offset);
-        return addr - offset;
-    }
-
-    public static int pageCount(long size) {
-        return (int) (size + (long) UNSAFE_PAGE_SIZE - 1L) / UNSAFE_PAGE_SIZE;
-    }
-
     @Override
     public boolean isLoaded(long position, int size) {
         if (IS_LOADED_METHOD == null) {
@@ -1088,7 +1068,7 @@ public class DefaultMappedFile extends AbstractMappedFile {
                     bufferResult.limit(size);
                     current += size;
                     return new SelectMappedBufferResult(fileFromOffset + current, bufferResult, size,
-                        DefaultMappedFile.this);
+                            DefaultMappedFile.this);
                 }
             }
             return null;

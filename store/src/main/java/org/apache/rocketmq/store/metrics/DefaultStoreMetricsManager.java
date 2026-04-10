@@ -23,15 +23,7 @@ import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongGauge;
-import io.opentelemetry.sdk.metrics.Aggregation;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.InstrumentType;
-import io.opentelemetry.sdk.metrics.View;
-import io.opentelemetry.sdk.metrics.ViewBuilder;
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Supplier;
+import io.opentelemetry.sdk.metrics.*;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.metrics.NopLongCounter;
 import org.apache.rocketmq.common.metrics.NopLongHistogram;
@@ -43,25 +35,12 @@ import org.apache.rocketmq.store.timer.TimerMessageStore;
 import org.apache.rocketmq.store.timer.TimerMetrics;
 import org.apache.rocketmq.store.timer.TimerWheel;
 
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.COUNTER_TIMER_DEQUEUE_TOTAL;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.COUNTER_TIMER_ENQUEUE_TOTAL;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.DEFAULT_STORAGE_MEDIUM;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.DEFAULT_STORAGE_TYPE;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_STORAGE_DISPATCH_BEHIND;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_STORAGE_FLUSH_BEHIND;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_STORAGE_MESSAGE_RESERVE_TIME;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_STORAGE_SIZE;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_TIMER_DEQUEUE_LAG;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_TIMER_DEQUEUE_LATENCY;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_TIMER_ENQUEUE_LAG;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_TIMER_ENQUEUE_LATENCY;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_TIMER_MESSAGE_SNAPSHOT;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_TIMING_MESSAGES;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.HISTOGRAM_DELAY_MSG_LATENCY;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.LABEL_STORAGE_MEDIUM;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.LABEL_STORAGE_TYPE;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.LABEL_TIMING_BOUND;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.LABEL_TOPIC;
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.*;
 
 public class DefaultStoreMetricsManager implements StoreMetricsManager {
     private Supplier<AttributesBuilder> attributesBuilderSupplier;
@@ -109,7 +88,7 @@ public class DefaultStoreMetricsManager implements StoreMetricsManager {
     }
 
     public void init(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier,
-        MessageStore messageStore) {
+                     MessageStore messageStore) {
 
         // Also add some metrics for rocksdb's monitoring.
         this.rocksDBStoreMetricsManager.init(meter, attributesBuilderSupplier, messageStore.getQueueStore());
@@ -118,115 +97,115 @@ public class DefaultStoreMetricsManager implements StoreMetricsManager {
         this.messageStoreConfig = messageStore.getMessageStoreConfig();
 
         this.storageSize = meter.gaugeBuilder(GAUGE_STORAGE_SIZE)
-            .setDescription("Broker storage size")
-            .setUnit("bytes")
-            .ofLongs()
-            .buildWithCallback(measurement -> {
-                File storeDir = new File(this.messageStoreConfig.getStorePathRootDir());
-                if (storeDir.exists() && storeDir.isDirectory()) {
-                    long totalSpace = storeDir.getTotalSpace();
-                    if (totalSpace > 0) {
-                        measurement.record(totalSpace - storeDir.getFreeSpace(), this.newAttributesBuilder().build());
+                .setDescription("Broker storage size")
+                .setUnit("bytes")
+                .ofLongs()
+                .buildWithCallback(measurement -> {
+                    File storeDir = new File(this.messageStoreConfig.getStorePathRootDir());
+                    if (storeDir.exists() && storeDir.isDirectory()) {
+                        long totalSpace = storeDir.getTotalSpace();
+                        if (totalSpace > 0) {
+                            measurement.record(totalSpace - storeDir.getFreeSpace(), this.newAttributesBuilder().build());
+                        }
                     }
-                }
-            });
+                });
 
         this.flushBehind = meter.gaugeBuilder(GAUGE_STORAGE_FLUSH_BEHIND)
-            .setDescription("Broker flush behind bytes")
-            .setUnit("bytes")
-            .ofLongs()
-            .buildWithCallback(measurement -> measurement.record(messageStore.flushBehindBytes(), this.newAttributesBuilder().build()));
+                .setDescription("Broker flush behind bytes")
+                .setUnit("bytes")
+                .ofLongs()
+                .buildWithCallback(measurement -> measurement.record(messageStore.flushBehindBytes(), this.newAttributesBuilder().build()));
 
         this.dispatchBehind = meter.gaugeBuilder(GAUGE_STORAGE_DISPATCH_BEHIND)
-            .setDescription("Broker dispatch behind bytes")
-            .setUnit("bytes")
-            .ofLongs()
-            .buildWithCallback(measurement -> measurement.record(messageStore.dispatchBehindBytes(), this.newAttributesBuilder().build()));
+                .setDescription("Broker dispatch behind bytes")
+                .setUnit("bytes")
+                .ofLongs()
+                .buildWithCallback(measurement -> measurement.record(messageStore.dispatchBehindBytes(), this.newAttributesBuilder().build()));
 
         this.messageReserveTime = meter.gaugeBuilder(GAUGE_STORAGE_MESSAGE_RESERVE_TIME)
-            .setDescription("Broker message reserve time")
-            .setUnit("milliseconds")
-            .ofLongs()
-            .buildWithCallback(measurement -> {
-                long earliestMessageTime = messageStore.getEarliestMessageTime();
-                if (earliestMessageTime <= 0) {
-                    return;
-                }
-                measurement.record(System.currentTimeMillis() - earliestMessageTime, this.newAttributesBuilder().build());
-            });
+                .setDescription("Broker message reserve time")
+                .setUnit("milliseconds")
+                .ofLongs()
+                .buildWithCallback(measurement -> {
+                    long earliestMessageTime = messageStore.getEarliestMessageTime();
+                    if (earliestMessageTime <= 0) {
+                        return;
+                    }
+                    measurement.record(System.currentTimeMillis() - earliestMessageTime, this.newAttributesBuilder().build());
+                });
 
         if (messageStore.getMessageStoreConfig().isTimerWheelEnable()) {
             this.timerEnqueueLag = meter.gaugeBuilder(GAUGE_TIMER_ENQUEUE_LAG)
-                .setDescription("Timer enqueue messages lag")
-                .ofLongs()
-                .buildWithCallback(measurement -> {
-                    TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
-                    measurement.record(timerMessageStore.getEnqueueBehindMessages(), this.newAttributesBuilder().build());
-                });
+                    .setDescription("Timer enqueue messages lag")
+                    .ofLongs()
+                    .buildWithCallback(measurement -> {
+                        TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
+                        measurement.record(timerMessageStore.getEnqueueBehindMessages(), this.newAttributesBuilder().build());
+                    });
 
             this.timerEnqueueLatency = meter.gaugeBuilder(GAUGE_TIMER_ENQUEUE_LATENCY)
-                .setDescription("Timer enqueue latency")
-                .setUnit("milliseconds")
-                .ofLongs()
-                .buildWithCallback(measurement -> {
-                    TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
-                    measurement.record(timerMessageStore.getEnqueueBehindMillis(), this.newAttributesBuilder().build());
-                });
+                    .setDescription("Timer enqueue latency")
+                    .setUnit("milliseconds")
+                    .ofLongs()
+                    .buildWithCallback(measurement -> {
+                        TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
+                        measurement.record(timerMessageStore.getEnqueueBehindMillis(), this.newAttributesBuilder().build());
+                    });
             this.timerDequeueLag = meter.gaugeBuilder(GAUGE_TIMER_DEQUEUE_LAG)
-                .setDescription("Timer dequeue messages lag")
-                .ofLongs()
-                .buildWithCallback(measurement -> {
-                    TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
-                    measurement.record(timerMessageStore.getDequeueBehindMessages(), this.newAttributesBuilder().build());
-                });
+                    .setDescription("Timer dequeue messages lag")
+                    .ofLongs()
+                    .buildWithCallback(measurement -> {
+                        TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
+                        measurement.record(timerMessageStore.getDequeueBehindMessages(), this.newAttributesBuilder().build());
+                    });
             this.timerDequeueLatency = meter.gaugeBuilder(GAUGE_TIMER_DEQUEUE_LATENCY)
-                .setDescription("Timer dequeue latency")
-                .setUnit("milliseconds")
-                .ofLongs()
-                .buildWithCallback(measurement -> {
-                    TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
-                    measurement.record(timerMessageStore.getDequeueBehindMillis(), this.newAttributesBuilder().build());
-                });
+                    .setDescription("Timer dequeue latency")
+                    .setUnit("milliseconds")
+                    .ofLongs()
+                    .buildWithCallback(measurement -> {
+                        TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
+                        measurement.record(timerMessageStore.getDequeueBehindMillis(), this.newAttributesBuilder().build());
+                    });
             this.timingMessages = meter.gaugeBuilder(GAUGE_TIMING_MESSAGES)
-                .setDescription("Current message number in timing")
-                .ofLongs()
-                .buildWithCallback(measurement -> {
-                    TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
-                    timerMessageStore.getTimerMetrics()
-                        .getTimingCount()
-                        .forEach((topic, metric) -> {
-                            measurement.record(
-                                metric.getCount().get(),
-                                this.newAttributesBuilder().put(LABEL_TOPIC, topic).build()
-                            );
-                        });
-                });
+                    .setDescription("Current message number in timing")
+                    .ofLongs()
+                    .buildWithCallback(measurement -> {
+                        TimerMessageStore timerMessageStore = messageStore.getTimerMessageStore();
+                        timerMessageStore.getTimerMetrics()
+                                .getTimingCount()
+                                .forEach((topic, metric) -> {
+                                    measurement.record(
+                                            metric.getCount().get(),
+                                            this.newAttributesBuilder().put(LABEL_TOPIC, topic).build()
+                                    );
+                                });
+                    });
             this.timerDequeueTotal = meter.counterBuilder(COUNTER_TIMER_DEQUEUE_TOTAL)
-                .setDescription("Total number of timer dequeue")
-                .build();
+                    .setDescription("Total number of timer dequeue")
+                    .build();
             this.timerEnqueueTotal = meter.counterBuilder(COUNTER_TIMER_ENQUEUE_TOTAL)
-                .setDescription("Total number of timer enqueue")
-                .build();
+                    .setDescription("Total number of timer enqueue")
+                    .build();
             this.timerMessageSnapshot = meter.gaugeBuilder(GAUGE_TIMER_MESSAGE_SNAPSHOT)
-                .setDescription("Timer message distribution snapshot, only count timing messages in 24h.")
-                .ofLongs()
-                .buildWithCallback(measurement -> {
-                    TimerMetrics timerMetrics = messageStore.getTimerMessageStore().getTimerMetrics();
-                    TimerWheel timerWheel = messageStore.getTimerMessageStore().getTimerWheel();
-                    int precisionMs = this.messageStoreConfig.getTimerPrecisionMs();
-                    List<Integer> timerDist = timerMetrics.getTimerDistList();
-                    long currTime = System.currentTimeMillis() / precisionMs * precisionMs;
-                    for (int i = 0; i < timerDist.size(); i++) {
-                        int slotBeforeNum = i == 0 ? 0 : timerDist.get(i - 1) * 1000 / precisionMs;
-                        int slotTotalNum = timerDist.get(i) * 1000 / precisionMs;
-                        int periodTotal = 0;
-                        for (int j = slotBeforeNum; j < slotTotalNum; j++) {
-                            Slot slotEach = timerWheel.getSlot(currTime + (long) j * precisionMs);
-                            periodTotal += slotEach.num;
+                    .setDescription("Timer message distribution snapshot, only count timing messages in 24h.")
+                    .ofLongs()
+                    .buildWithCallback(measurement -> {
+                        TimerMetrics timerMetrics = messageStore.getTimerMessageStore().getTimerMetrics();
+                        TimerWheel timerWheel = messageStore.getTimerMessageStore().getTimerWheel();
+                        int precisionMs = this.messageStoreConfig.getTimerPrecisionMs();
+                        List<Integer> timerDist = timerMetrics.getTimerDistList();
+                        long currTime = System.currentTimeMillis() / precisionMs * precisionMs;
+                        for (int i = 0; i < timerDist.size(); i++) {
+                            int slotBeforeNum = i == 0 ? 0 : timerDist.get(i - 1) * 1000 / precisionMs;
+                            int slotTotalNum = timerDist.get(i) * 1000 / precisionMs;
+                            int periodTotal = 0;
+                            for (int j = slotBeforeNum; j < slotTotalNum; j++) {
+                                Slot slotEach = timerWheel.getSlot(currTime + (long) j * precisionMs);
+                                periodTotal += slotEach.num;
+                            }
+                            measurement.record(periodTotal, this.newAttributesBuilder().put(LABEL_TIMING_BOUND, timerDist.get(i).toString()).build());
                         }
-                        measurement.record(periodTotal, this.newAttributesBuilder().put(LABEL_TIMING_BOUND, timerDist.get(i).toString()).build());
-                    }
-                });
+                    });
             this.timerMessageSetLatency = meter.histogramBuilder(HISTOGRAM_DELAY_MSG_LATENCY)
                     .setDescription("Timer message set latency distribution")
                     .setUnit("seconds")
@@ -237,8 +216,8 @@ public class DefaultStoreMetricsManager implements StoreMetricsManager {
 
     public void incTimerDequeueCount(String topic) {
         this.timerDequeueTotal.add(1, this.newAttributesBuilder()
-            .put(LABEL_TOPIC, topic)
-            .build());
+                .put(LABEL_TOPIC, topic)
+                .build());
     }
 
     public void incTimerEnqueueCount(String topic) {
@@ -254,13 +233,18 @@ public class DefaultStoreMetricsManager implements StoreMetricsManager {
             return Attributes.builder();
         }
         return this.attributesBuilderSupplier.get()
-            .put(LABEL_STORAGE_TYPE, DEFAULT_STORAGE_TYPE)
-            .put(LABEL_STORAGE_MEDIUM, DEFAULT_STORAGE_MEDIUM);
+                .put(LABEL_STORAGE_TYPE, DEFAULT_STORAGE_TYPE)
+                .put(LABEL_STORAGE_MEDIUM, DEFAULT_STORAGE_MEDIUM);
     }
 
     // Getter methods for external access
     public Supplier<AttributesBuilder> getAttributesBuilderSupplier() {
         return attributesBuilderSupplier;
+    }
+
+    // Setter methods for testing
+    public void setAttributesBuilderSupplier(Supplier<AttributesBuilder> attributesBuilderSupplier) {
+        this.attributesBuilderSupplier = attributesBuilderSupplier;
     }
 
     public MessageStoreConfig getMessageStoreConfig() {
@@ -317,11 +301,6 @@ public class DefaultStoreMetricsManager implements StoreMetricsManager {
 
     public LongHistogram getTimerMessageSetLatency() {
         return timerMessageSetLatency;
-    }
-
-    // Setter methods for testing
-    public void setAttributesBuilderSupplier(Supplier<AttributesBuilder> attributesBuilderSupplier) {
-        this.attributesBuilderSupplier = attributesBuilderSupplier;
     }
 
     public RocksDBStoreMetricsManager getRocksDBStoreMetricsManager() {

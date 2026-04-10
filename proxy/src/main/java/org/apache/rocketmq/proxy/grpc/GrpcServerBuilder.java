@@ -31,10 +31,10 @@ import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.grpc.interceptor.ContextInterceptor;
 import org.apache.rocketmq.proxy.grpc.interceptor.GlobalExceptionInterceptor;
 import org.apache.rocketmq.proxy.grpc.interceptor.HeaderInterceptor;
+import org.apache.rocketmq.proxy.service.cert.TlsCertificateManager;
 
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.apache.rocketmq.proxy.service.cert.TlsCertificateManager;
 
 public class GrpcServerBuilder {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -45,11 +45,6 @@ public class GrpcServerBuilder {
     protected TimeUnit unit = TimeUnit.SECONDS;
 
     protected TlsCertificateManager tlsCertificateManager;
-
-    public static GrpcServerBuilder newBuilder(ThreadPoolExecutor executor, int port,
-        TlsCertificateManager tlsCertificateManager) {
-        return new GrpcServerBuilder(executor, port, tlsCertificateManager);
-    }
 
     protected GrpcServerBuilder(ThreadPoolExecutor executor, int port, TlsCertificateManager tlsCertificateManager) {
         this.tlsCertificateManager = tlsCertificateManager;
@@ -65,21 +60,26 @@ public class GrpcServerBuilder {
 
         if (ConfigurationManager.getProxyConfig().isEnableGrpcEpoll()) {
             serverBuilder.bossEventLoopGroup(new EpollEventLoopGroup(bossLoopNum))
-                .workerEventLoopGroup(new EpollEventLoopGroup(workerLoopNum))
-                .channelType(EpollServerSocketChannel.class)
-                .executor(executor);
+                    .workerEventLoopGroup(new EpollEventLoopGroup(workerLoopNum))
+                    .channelType(EpollServerSocketChannel.class)
+                    .executor(executor);
         } else {
             serverBuilder.bossEventLoopGroup(new NioEventLoopGroup(bossLoopNum))
-                .workerEventLoopGroup(new NioEventLoopGroup(workerLoopNum))
-                .channelType(NioServerSocketChannel.class)
-                .executor(executor);
+                    .workerEventLoopGroup(new NioEventLoopGroup(workerLoopNum))
+                    .channelType(NioServerSocketChannel.class)
+                    .executor(executor);
         }
 
         serverBuilder.maxInboundMessageSize(maxInboundMessageSize)
-            .maxConnectionIdle(idleTimeMills, TimeUnit.MILLISECONDS);
+                .maxConnectionIdle(idleTimeMills, TimeUnit.MILLISECONDS);
 
         log.info("grpc server has built. port: {}, bossLoopNum: {}, workerLoopNum: {}, maxInboundMessageSize: {}",
-            port, bossLoopNum, workerLoopNum, maxInboundMessageSize);
+                port, bossLoopNum, workerLoopNum, maxInboundMessageSize);
+    }
+
+    public static GrpcServerBuilder newBuilder(ThreadPoolExecutor executor, int port,
+                                               TlsCertificateManager tlsCertificateManager) {
+        return new GrpcServerBuilder(executor, port, tlsCertificateManager);
     }
 
     public GrpcServerBuilder shutdownTime(long time, TimeUnit unit) {
@@ -109,9 +109,9 @@ public class GrpcServerBuilder {
 
     public GrpcServerBuilder configInterceptor() {
         this.serverBuilder
-            .intercept(new GlobalExceptionInterceptor())
-            .intercept(new ContextInterceptor())
-            .intercept(new HeaderInterceptor());
+                .intercept(new GlobalExceptionInterceptor())
+                .intercept(new ContextInterceptor())
+                .intercept(new HeaderInterceptor());
         return this;
     }
 }

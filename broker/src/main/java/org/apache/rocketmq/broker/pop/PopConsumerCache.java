@@ -16,6 +16,15 @@
  */
 package org.apache.rocketmq.broker.pop;
 
+import org.apache.rocketmq.broker.BrokerController;
+import org.apache.rocketmq.broker.offset.ConsumerOffsetManager;
+import org.apache.rocketmq.common.BrokerConfig;
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,18 +35,10 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.broker.offset.ConsumerOffsetManager;
-import org.apache.rocketmq.common.BrokerConfig;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Broker 子系统组件 <b>PopConsumerCache</b>（Pop Consumer Cache）。
- * 
+ * <p>
  * 继承关系：<code>ServiceThread</code>。
  */
 public class PopConsumerCache extends ServiceThread {
@@ -54,7 +55,7 @@ public class PopConsumerCache extends ServiceThread {
     private final ConcurrentMap<String, ConsumerRecords> consumerRecordTable;
 
     public PopConsumerCache(BrokerController brokerController, PopConsumerKVStore consumerRecordStore,
-        PopConsumerLockService popConsumerLockService, Consumer<PopConsumerRecord> reviveConsumer) {
+                            PopConsumerLockService popConsumerLockService, Consumer<PopConsumerRecord> reviveConsumer) {
 
         this.reviveConsumer = reviveConsumer;
         this.brokerController = brokerController;
@@ -98,8 +99,8 @@ public class PopConsumerCache extends ServiceThread {
         this.estimateCacheSize.addAndGet(consumerRecordList.size());
         consumerRecordList.forEach(consumerRecord -> {
             ConsumerRecords consumerRecords = ConcurrentHashMapUtils.computeIfAbsent(consumerRecordTable,
-                this.getKey(consumerRecord), k -> new ConsumerRecords(brokerController.getBrokerConfig(),
-                    consumerRecord.getGroupId(), consumerRecord.getTopicId(), consumerRecord.getQueueId()));
+                    this.getKey(consumerRecord), k -> new ConsumerRecords(brokerController.getBrokerConfig(),
+                            consumerRecord.getGroupId(), consumerRecord.getTopicId(), consumerRecord.getQueueId()));
             assert consumerRecords != null;
             consumerRecords.write(consumerRecord);
         });
@@ -128,18 +129,18 @@ public class PopConsumerCache extends ServiceThread {
             // revive or write record to store
             ConsumerRecords records = iterator.next().getValue();
             boolean timeout = consumerLockService.isLockTimeout(
-                records.getGroupId(), records.getTopicId());
+                    records.getGroupId(), records.getTopicId());
 
             if (timeout) {
                 records.stageExpiredRecords(Long.MAX_VALUE);
                 List<PopConsumerRecord> writeConsumerRecords =
-                    new ArrayList<>(records.getRemoveTreeMap().values());
+                        new ArrayList<>(records.getRemoveTreeMap().values());
                 if (!writeConsumerRecords.isEmpty()) {
                     consumerRecordStore.writeRecords(writeConsumerRecords);
                 }
                 records.clearStagedRecords();
                 log.info("PopConsumerOffline, so clean expire records, groupId={}, topic={}, queueId={}, records={}",
-                    records.getGroupId(), records.getTopicId(), records.getQueueId(), records.getInFlightRecordCount());
+                        records.getGroupId(), records.getTopicId(), records.getQueueId(), records.getInFlightRecordCount());
                 iterator.remove();
                 continue;
             }
@@ -163,7 +164,7 @@ public class PopConsumerCache extends ServiceThread {
             long offset = records.getMinOffsetInBuffer();
             if (offset > OFFSET_NOT_EXIST) {
                 this.commitOffset("PopConsumerCache",
-                    records.getGroupId(), records.getTopicId(), records.getQueueId(), offset);
+                        records.getGroupId(), records.getTopicId(), records.getQueueId(), offset);
             }
 
             remain += records.getInFlightRecordCount();
@@ -180,7 +181,7 @@ public class PopConsumerCache extends ServiceThread {
             long commit = consumerOffsetManager.queryOffset(groupId, topicId, queueId);
             if (commit != OFFSET_NOT_EXIST && offset < commit) {
                 log.info("PopConsumerCache, consumer offset less than store, " +
-                    "groupId={}, topicId={}, queueId={}, offset={}", groupId, topicId, queueId, offset);
+                        "groupId={}, topicId={}, queueId={}, offset={}", groupId, topicId, queueId, offset);
             }
             consumerOffsetManager.commitOffset(clientHost, groupId, topicId, queueId, offset);
         } finally {
@@ -251,13 +252,13 @@ public class PopConsumerCache extends ServiceThread {
 
         public void stageExpiredRecords(long currentTime) {
             Iterator<Map.Entry<Long, PopConsumerRecord>>
-                iterator = recordTreeMap.entrySet().iterator();
+                    iterator = recordTreeMap.entrySet().iterator();
 
             // refer: org.apache.rocketmq.broker.processor.PopBufferMergeService.scan
             while (iterator.hasNext()) {
                 Map.Entry<Long, PopConsumerRecord> entry = iterator.next();
                 if (entry.getValue().getVisibilityTimeout() <= currentTime ||
-                    entry.getValue().getPopTime() + brokerConfig.getPopCkStayBufferTime() <= currentTime) {
+                        entry.getValue().getPopTime() + brokerConfig.getPopCkStayBufferTime() <= currentTime) {
                     removeTreeMap.put(entry.getKey(), entry.getValue());
                     iterator.remove();
                 }
@@ -287,11 +288,11 @@ public class PopConsumerCache extends ServiceThread {
         @Override
         public String toString() {
             return "ConsumerRecords{" +
-                ", topicId=" + topicId +
-                ", groupId=" + groupId +
-                ", queueId=" + queueId +
-                ", recordTreeMap=" + recordTreeMap.size() +
-                '}';
+                    ", topicId=" + topicId +
+                    ", groupId=" + groupId +
+                    ", queueId=" + queueId +
+                    ", recordTreeMap=" + recordTreeMap.size() +
+                    '}';
         }
     }
 }

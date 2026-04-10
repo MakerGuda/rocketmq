@@ -16,8 +16,9 @@
  */
 package org.apache.rocketmq.client.consumer;
 
-import java.util.List;
 import org.apache.rocketmq.common.message.MessageExt;
+
+import java.util.List;
 
 public class PopResult {
     private List<MessageExt> msgFoundList;
@@ -57,13 +58,12 @@ public class PopResult {
         this.invisibleTime = invisibleTime;
     }
 
+    public PopStatus getPopStatus() {
+        return popStatus;
+    }
 
     public void setPopStatus(PopStatus popStatus) {
         this.popStatus = popStatus;
-    }
-
-    public PopStatus getPopStatus() {
-        return popStatus;
     }
 
     public List<MessageExt> getMsgFoundList() {
@@ -77,6 +77,6 @@ public class PopResult {
     @Override
     public String toString() {
         return "PopResult [popStatus=" + popStatus + ",msgFoundList="
-            + (msgFoundList == null ? 0 : msgFoundList.size()) + ",restNum=" + restNum + "]";
+                + (msgFoundList == null ? 0 : msgFoundList.size()) + ",restNum=" + restNum + "]";
     }
 }

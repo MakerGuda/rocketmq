@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.proxy.service.relay;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.proxy.common.ProxyContext;
@@ -29,6 +28,8 @@ import org.apache.rocketmq.proxy.service.transaction.TransactionService;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequestHeader;
 
+import java.util.concurrent.CompletableFuture;
+
 public abstract class AbstractProxyRelayService implements ProxyRelayService {
 
     protected final TransactionService transactionService;
@@ -39,21 +40,21 @@ public abstract class AbstractProxyRelayService implements ProxyRelayService {
 
     @Override
     public RelayData<TransactionData, Void> processCheckTransactionState(ProxyContext context,
-        RemotingCommand command, CheckTransactionStateRequestHeader header, MessageExt messageExt) {
+                                                                         RemotingCommand command, CheckTransactionStateRequestHeader header, MessageExt messageExt) {
         CompletableFuture<ProxyRelayResult<Void>> future = new CompletableFuture<>();
         String group = messageExt.getProperty(MessageConst.PROPERTY_PRODUCER_GROUP);
         TransactionData transactionData = transactionService.addTransactionDataByBrokerAddr(
-            context,
-            command.getExtFields().get(ProxyUtils.BROKER_ADDR),
-            messageExt.getTopic(),
-            group,
-            header.getTranStateTableOffset(),
-            header.getCommitLogOffset(),
-            header.getTransactionId(),
-            messageExt);
+                context,
+                command.getExtFields().get(ProxyUtils.BROKER_ADDR),
+                messageExt.getTopic(),
+                group,
+                header.getTranStateTableOffset(),
+                header.getCommitLogOffset(),
+                header.getTransactionId(),
+                messageExt);
         if (transactionData == null) {
             throw new ProxyException(ProxyExceptionCode.INTERNAL_SERVER_ERROR,
-                String.format("add transaction data failed. request:%s, message:%s", command, messageExt));
+                    String.format("add transaction data failed. request:%s, message:%s", command, messageExt));
         }
         future.exceptionally(throwable -> {
             this.transactionService.onSendCheckTransactionStateFailed(context, group, transactionData);

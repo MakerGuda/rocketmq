@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.proxy.service.metadata;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.auth.authentication.model.Subject;
 import org.apache.rocketmq.auth.authentication.model.User;
 import org.apache.rocketmq.auth.authorization.model.Acl;
@@ -26,6 +25,8 @@ import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
+
+import java.util.concurrent.CompletableFuture;
 
 public class LocalMetadataService implements MetadataService {
     private final BrokerController brokerController;

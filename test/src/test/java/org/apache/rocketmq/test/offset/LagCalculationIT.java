@@ -17,10 +17,6 @@
 
 package org.apache.rocketmq.test.offset;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.filter.ConsumerFilterData;
 import org.apache.rocketmq.broker.filter.ExpressionMessageFilter;
@@ -50,6 +46,11 @@ import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -92,10 +93,10 @@ public class LagCalculationIT extends BaseConf {
                     long brokerOffset = controller.getMessageStore().getMaxOffsetInQueue(topic, mq.getQueueId());
 
                     long consumerOffset = controller.getConsumerOffsetManager().queryOffset(consumer.getConsumerGroup(),
-                        topic, mq.getQueueId());
-                    long pullOffset =
-                        controller.getConsumerOffsetManager().queryPullOffset(consumer.getConsumerGroup(),
                             topic, mq.getQueueId());
+                    long pullOffset =
+                            controller.getConsumerOffsetManager().queryPullOffset(consumer.getConsumerGroup(),
+                                    topic, mq.getQueueId());
                     OffsetWrapper offsetWrapper = offsetTable.get(mq);
                     assertEquals(brokerOffset, offsetWrapper.getBrokerOffset());
                     if (offsetWrapper.getConsumerOffset() != consumerOffset || offsetWrapper.getPullOffset() != pullOffset) {
@@ -207,8 +208,8 @@ public class LagCalculationIT extends BaseConf {
                 if (mq.getBrokerName().equals(controller.getBrokerConfig().getBrokerName())) {
                     long brokerOffset = controller.getMessageStore().getMaxOffsetInQueue(topic, mq.getQueueId());
                     long estimateMessageCount = controller.getMessageStore()
-                        .estimateMessageCount(topic, mq.getQueueId(), 0, brokerOffset,
-                            new DefaultMessageFilter(FilterAPI.buildSubscriptionData(topic, tag)));
+                            .estimateMessageCount(topic, mq.getQueueId(), 0, brokerOffset,
+                                    new DefaultMessageFilter(FilterAPI.buildSubscriptionData(topic, tag)));
                     assertEquals(repeat * msgWithTagSize, estimateMessageCount);
                 }
             }
@@ -221,8 +222,8 @@ public class LagCalculationIT extends BaseConf {
                     long brokerOffset = controller.getMessageStore().getMaxOffsetInQueue(topic, mq.getQueueId());
                     ConsumerFilterData consumerFilterData = controller.getConsumerFilterManager().get(topic, sqlConsumer.getConsumerGroup());
                     long estimateMessageCount = controller.getMessageStore()
-                        .estimateMessageCount(topic, mq.getQueueId(), 0, brokerOffset,
-                            new ExpressionMessageFilter(subscriptionData, consumerFilterData, controller.getConsumerFilterManager()));
+                            .estimateMessageCount(topic, mq.getQueueId(), 0, brokerOffset,
+                                    new ExpressionMessageFilter(subscriptionData, consumerFilterData, controller.getConsumerFilterManager()));
                     assertEquals(repeat / 2 * msgWithTagSize, estimateMessageCount);
                 }
             }

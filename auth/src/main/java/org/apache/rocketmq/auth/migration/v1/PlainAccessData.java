@@ -52,6 +52,19 @@ public class PlainAccessData implements Serializable {
         this.dataVersion = dataVersion;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PlainAccessData that = (PlainAccessData) o;
+        return Objects.equals(globalWhiteRemoteAddresses, that.globalWhiteRemoteAddresses) && Objects.equals(accounts, that.accounts) && Objects.equals(dataVersion, that.dataVersion);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(globalWhiteRemoteAddresses, accounts, dataVersion);
+    }
+
     public static class DataVersion implements Serializable {
         private static final long serialVersionUID = 6437361970079056954L;
         private long timestamp;
@@ -85,18 +98,5 @@ public class PlainAccessData implements Serializable {
         public int hashCode() {
             return Objects.hash(timestamp, counter);
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PlainAccessData that = (PlainAccessData) o;
-        return Objects.equals(globalWhiteRemoteAddresses, that.globalWhiteRemoteAddresses) && Objects.equals(accounts, that.accounts) && Objects.equals(dataVersion, that.dataVersion);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(globalWhiteRemoteAddresses, accounts, dataVersion);
     }
 }

@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.proxy.service;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.client.ConsumerManager;
 import org.apache.rocketmq.broker.client.ProducerManager;
@@ -45,6 +43,9 @@ import org.apache.rocketmq.proxy.service.transaction.LocalTransactionService;
 import org.apache.rocketmq.proxy.service.transaction.TransactionService;
 import org.apache.rocketmq.remoting.RPCHook;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class LocalServiceManager extends AbstractStartAndShutdown implements ServiceManager {
 
     private final BrokerController brokerController;
@@ -59,7 +60,7 @@ public class LocalServiceManager extends AbstractStartAndShutdown implements Ser
     private final ChannelManager channelManager;
 
     private final ScheduledExecutorService scheduledExecutorService = ThreadUtils.newSingleThreadScheduledExecutor(
-        new ThreadFactoryImpl("LocalServiceManagerScheduledThread"));
+            new ThreadFactoryImpl("LocalServiceManagerScheduledThread"));
 
     public LocalServiceManager(BrokerController brokerController, RPCHook rpcHook) {
         this.brokerController = brokerController;
@@ -67,14 +68,14 @@ public class LocalServiceManager extends AbstractStartAndShutdown implements Ser
         this.messageService = new LocalMessageService(brokerController, channelManager, rpcHook);
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         NameserverAccessConfig nameserverAccessConfig = new NameserverAccessConfig(proxyConfig.getNamesrvAddr(),
-            proxyConfig.getNamesrvDomain(), proxyConfig.getNamesrvDomainSubgroup());
+                proxyConfig.getNamesrvDomain(), proxyConfig.getNamesrvDomainSubgroup());
         this.mqClientAPIFactory = new MQClientAPIFactory(
-            nameserverAccessConfig,
-            "LocalMQClient_",
-            1,
-            new DoNothingClientRemotingProcessor(null),
-            rpcHook,
-            scheduledExecutorService
+                nameserverAccessConfig,
+                "LocalMQClient_",
+                1,
+                new DoNothingClientRemotingProcessor(null),
+                rpcHook,
+                scheduledExecutorService
         );
         this.topicRouteService = new LocalTopicRouteService(brokerController, mqClientAPIFactory);
         this.transactionService = new LocalTransactionService(brokerController.getBrokerConfig());

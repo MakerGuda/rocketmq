@@ -17,8 +17,9 @@
 package org.apache.rocketmq.remoting.rpc;
 
 import com.google.common.base.MoreObjects;
-import java.util.Objects;
 import org.apache.rocketmq.remoting.CommandCustomHeader;
+
+import java.util.Objects;
 
 public abstract class RpcRequestHeader implements CommandCustomHeader {
     //the namespace name
@@ -92,10 +93,10 @@ public abstract class RpcRequestHeader implements CommandCustomHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("namespace", ns)
-            .add("namespaced", nsd)
-            .add("brokerName", bname)
-            .add("oneway", oway)
-            .toString();
+                .add("namespace", ns)
+                .add("namespaced", nsd)
+                .add("brokerName", bname)
+                .add("oneway", oway)
+                .toString();
     }
 }

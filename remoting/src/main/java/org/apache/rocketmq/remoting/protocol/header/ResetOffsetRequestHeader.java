@@ -23,8 +23,8 @@ import org.apache.rocketmq.common.resource.ResourceType;
 import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 
 @RocketMQAction(value = RequestCode.INVOKE_BROKER_TO_RESET_OFFSET, action = Action.UPDATE)
 public class ResetOffsetRequestHeader extends TopicQueueRequestHeader {

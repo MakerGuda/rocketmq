@@ -16,19 +16,19 @@
  */
 package org.apache.rocketmq.client.impl.consumer;
 
-import java.util.List;
 import org.apache.rocketmq.client.consumer.PullResult;
 import org.apache.rocketmq.client.consumer.PullStatus;
 import org.apache.rocketmq.common.message.MessageExt;
 
+import java.util.List;
+
 public class PullResultExt extends PullResult {
     private final long suggestWhichBrokerId;
+    private final Long offsetDelta;
     private byte[] messageBinary;
 
-    private final Long offsetDelta;
-
     public PullResultExt(PullStatus pullStatus, long nextBeginOffset, long minOffset, long maxOffset,
-        List<MessageExt> msgFoundList, final long suggestWhichBrokerId, final byte[] messageBinary) {
+                         List<MessageExt> msgFoundList, final long suggestWhichBrokerId, final byte[] messageBinary) {
         this(pullStatus, nextBeginOffset, minOffset, maxOffset, msgFoundList, suggestWhichBrokerId, messageBinary, 0L);
     }
 

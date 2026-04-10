@@ -22,12 +22,12 @@ public class AckResult {
     private String extraInfo;
     private long popTime;
 
-    public void setPopTime(long popTime) {
-        this.popTime = popTime;
-    }
-
     public long getPopTime() {
         return popTime;
+    }
+
+    public void setPopTime(long popTime) {
+        this.popTime = popTime;
     }
 
     public AckStatus getStatus() {
@@ -38,12 +38,12 @@ public class AckResult {
         this.status = status;
     }
 
-    public void setExtraInfo(String extraInfo) {
-        this.extraInfo = extraInfo;
-    }
-
     public String getExtraInfo() {
         return extraInfo;
+    }
+
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
     }
 
     @Override

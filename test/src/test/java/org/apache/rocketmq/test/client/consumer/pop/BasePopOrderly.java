@@ -17,11 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.pop;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.rocketmq.client.consumer.AckResult;
 import org.apache.rocketmq.client.consumer.PopResult;
 import org.apache.rocketmq.common.attribute.CQType;
@@ -42,19 +37,25 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import static org.junit.Assert.assertEquals;
 
 @Ignore
 public class BasePopOrderly extends BasePop {
+    protected final Map<String, List<MsgRcv>> msgRecv = new ConcurrentHashMap<>();
+    protected final List<String> msgRecvSequence = new CopyOnWriteArrayList<>();
+    protected final List<Object> msgDataRecv = new CopyOnWriteArrayList<>();
     protected String topic;
     protected String group;
     protected RMQNormalProducer producer = null;
     protected RMQPopClient client = null;
     protected String brokerAddr;
     protected MessageQueue messageQueue;
-    protected final Map<String, List<MsgRcv>> msgRecv = new ConcurrentHashMap<>();
-    protected final List<String> msgRecvSequence = new CopyOnWriteArrayList<>();
-    protected final List<Object> msgDataRecv = new CopyOnWriteArrayList<>();
 
     @Before
     public void setUp() {
@@ -126,8 +127,8 @@ public class BasePopOrderly extends BasePop {
 
     protected CompletableFuture<PopResult> popMessageOrderlyAsync(long invisibleTime, int maxNums, long timeout, String attemptId) {
         return client.popMessageAsync(
-            brokerAddr, messageQueue, invisibleTime, maxNums, group, timeout, true,
-            ConsumeInitMode.MIN, true, ExpressionType.TAG, "*", attemptId);
+                brokerAddr, messageQueue, invisibleTime, maxNums, group, timeout, true,
+                ConsumeInitMode.MIN, true, ExpressionType.TAG, "*", attemptId);
     }
 
     protected CompletableFuture<AckResult> ackMessageAsync(MessageExt messageExt) {
@@ -136,7 +137,7 @@ public class BasePopOrderly extends BasePop {
 
     protected CompletableFuture<AckResult> changeInvisibleTimeAsync(MessageExt messageExt, long invisibleTime) {
         return client.changeInvisibleTimeAsync(
-            brokerAddr, BROKER1_NAME, topic, group,
-            messageExt.getProperty(MessageConst.PROPERTY_POP_CK), invisibleTime);
+                brokerAddr, BROKER1_NAME, topic, group,
+                messageExt.getProperty(MessageConst.PROPERTY_POP_CK), invisibleTime);
     }
 }

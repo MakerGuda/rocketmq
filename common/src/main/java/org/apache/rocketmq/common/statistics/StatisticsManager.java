@@ -16,6 +16,9 @@
  */
 package org.apache.rocketmq.common.statistics;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.rocketmq.common.utils.ThreadUtils;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,31 +26,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.rocketmq.common.utils.ThreadUtils;
-
 public class StatisticsManager {
 
-    /**
-     * Set of Statistics Kind Metadata
-     */
-    private Map<String, StatisticsKindMeta> kindMetaMap;
-
-    /**
-     * item names to calculate statistics brief
-     */
-    private Pair<String, long[][]>[] briefMetas;
-
+    private static final int MAX_IDLE_TIME = 10 * 60 * 1000;
     /**
      * Statistics
      */
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> statsTable
-        = new ConcurrentHashMap<>();
-
-    private static final int MAX_IDLE_TIME = 10 * 60 * 1000;
+            = new ConcurrentHashMap<>();
     private final ScheduledExecutorService executor = ThreadUtils.newSingleThreadScheduledExecutor(
-        "StatisticsManagerCleaner", true);
-
+            "StatisticsManagerCleaner", true);
+    /**
+     * Set of Statistics Kind Metadata
+     */
+    private Map<String, StatisticsKindMeta> kindMetaMap;
+    /**
+     * item names to calculate statistics brief
+     */
+    private Pair<String, long[][]>[] briefMetas;
     private StatisticsItemStateGetter statisticsItemStateGetter;
 
     public StatisticsManager() {
@@ -75,7 +71,7 @@ public class StatisticsManager {
             @Override
             public void run() {
                 Iterator<Map.Entry<String, ConcurrentHashMap<String, StatisticsItem>>> iter
-                    = statsTable.entrySet().iterator();
+                        = statsTable.entrySet().iterator();
                 while (iter.hasNext()) {
                     Map.Entry<String, ConcurrentHashMap<String, StatisticsItem>> entry = iter.next();
                     String kind = entry.getKey();
@@ -89,7 +85,7 @@ public class StatisticsManager {
                     for (StatisticsItem item : tmpItemMap.values()) {
                         // remove when expired
                         if (System.currentTimeMillis() - item.getLastTimeStamp().get() > MAX_IDLE_TIME
-                            && (statisticsItemStateGetter == null || !statisticsItemStateGetter.online(item))) {
+                                && (statisticsItemStateGetter == null || !statisticsItemStateGetter.online(item))) {
                             remove(item);
                         }
                     }

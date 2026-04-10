@@ -17,9 +17,6 @@
 package org.apache.rocketmq.tools.command.broker;
 
 
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -34,9 +31,14 @@ import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
 
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Map;
+
 public class CommitLogSetReadAheadSubCommand implements SubCommand {
     private static final String MADV_RANDOM = "1";
     private static final String MADV_NORMAL = "0";
+
     @Override
     public String commandName() {
         return "setCommitLogReadAheadMode";
@@ -66,7 +68,7 @@ public class CommitLogSetReadAheadSubCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook)
-        throws SubCommandException {
+            throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -99,7 +101,7 @@ public class CommitLogSetReadAheadSubCommand implements SubCommand {
     }
 
     protected void setAndPrint(final MQAdminExt defaultMQAdminExt, final String printPrefix, final String addr, final String mode)
-        throws InterruptedException, RemotingConnectException, UnsupportedEncodingException, RemotingTimeoutException, MQBrokerException, RemotingSendRequestException {
+            throws InterruptedException, RemotingConnectException, UnsupportedEncodingException, RemotingTimeoutException, MQBrokerException, RemotingSendRequestException {
         System.out.print(" " + printPrefix);
         System.out.printf("commitLog set readAhead mode rstStr" + defaultMQAdminExt.setCommitLogReadAheadMode(addr, mode) + "\n");
     }

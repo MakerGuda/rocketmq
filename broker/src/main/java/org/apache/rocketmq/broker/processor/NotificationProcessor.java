@@ -18,8 +18,6 @@ package org.apache.rocketmq.broker.processor;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.Map;
-import java.util.Random;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.longpolling.PollingHeader;
 import org.apache.rocketmq.broker.longpolling.PollingResult;
@@ -42,17 +40,20 @@ import org.apache.rocketmq.remoting.protocol.header.NotificationResponseHeader;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 import org.apache.rocketmq.store.exception.ConsumeQueueException;
 
+import java.util.Map;
+import java.util.Random;
+
 /**
  * Netty 请求处理器：处理与「Notification」相关的 Remoting 请求。
- * 
+ * <p>
  * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
  */
 public class NotificationProcessor implements NettyRequestProcessor {
     private static final Logger POP_LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
+    private static final String BORN_TIME = "bornTime";
     private final BrokerController brokerController;
     private final Random random = new Random(System.currentTimeMillis());
     private final PopLongPollingService popLongPollingService;
-    private static final String BORN_TIME = "bornTime";
 
     public NotificationProcessor(final BrokerController brokerController) {
         this.brokerController = brokerController;
@@ -71,9 +72,9 @@ public class NotificationProcessor implements NettyRequestProcessor {
     // When a new message is written to CommitLog, this method would be called.
     // Suspended long polling will receive notification and be wakeup.
     public void notifyMessageArriving(final String topic, final int queueId, long offset,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+                                      Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         this.popLongPollingService.notifyMessageArrivingWithRetryTopic(
-            topic, queueId, offset, tagsCode, msgStoreTime, filterBitMap, properties);
+                topic, queueId, offset, tagsCode, msgStoreTime, filterBitMap, properties);
     }
 
     public void notifyMessageArriving(final String topic, final int queueId) {
@@ -82,13 +83,13 @@ public class NotificationProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(final ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                          RemotingCommand request) throws RemotingCommandException {
         Channel channel = ctx.channel();
 
         RemotingCommand response = RemotingCommand.createResponseCommand(NotificationResponseHeader.class);
         final NotificationResponseHeader responseHeader = (NotificationResponseHeader) response.readCustomHeader();
         final NotificationRequestHeader requestHeader =
-            request.decodeCommandCustomHeader(NotificationRequestHeader.class, true);
+                request.decodeCommandCustomHeader(NotificationRequestHeader.class, true);
         if (requestHeader.getBornTime() == 0) {
             final long beginTimeMills = this.brokerController.getMessageStore().now();
             request.addExtField(BORN_TIME, String.valueOf(beginTimeMills));
@@ -119,7 +120,7 @@ public class NotificationProcessor implements NettyRequestProcessor {
 
         if (requestHeader.getQueueId() >= topicConfig.getReadQueueNums()) {
             String errorInfo = String.format("queueId[%d] is illegal, topic:[%s] topicConfig.readQueueNums:[%d] consumer:[%s]",
-                requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
+                    requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
             POP_LOGGER.warn(errorInfo);
             response.setCode(ResponseCode.INVALID_PARAMETER);
             response.setRemark(errorInfo);
@@ -172,13 +173,13 @@ public class NotificationProcessor implements NettyRequestProcessor {
     }
 
     private boolean hasMsgFromTopic(String topicName, int randomQ, NotificationRequestHeader requestHeader)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         TopicConfig topicConfig = this.brokerController.getTopicConfigManager().selectTopicConfig(topicName);
         return hasMsgFromTopic(topicConfig, randomQ, requestHeader);
     }
 
     private boolean hasMsgFromTopic(TopicConfig topicConfig, int randomQ, NotificationRequestHeader requestHeader)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         boolean hasMsg;
         if (topicConfig != null) {
             for (int i = 0; i < topicConfig.getReadQueueNums(); i++) {
@@ -218,7 +219,7 @@ public class NotificationProcessor implements NettyRequestProcessor {
             bufferOffset = this.brokerController.getConsumerOffsetManager().queryPullOffset(cid, topic, queueId);
         } else {
             bufferOffset = this.brokerController.getPopMessageProcessor()
-                .getPopBufferMergeService().getLatestOffset(topic, cid, queueId);
+                    .getPopBufferMergeService().getLatestOffset(topic, cid, queueId);
         }
 
         return bufferOffset < 0L ? offset : Math.max(bufferOffset, offset);

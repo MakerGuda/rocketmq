@@ -15,11 +15,13 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.store.index.rocksdb;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageConst;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class IndexRocksDBRecord {
     public static final String KEY_SPLIT = "@";

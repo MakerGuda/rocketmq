@@ -20,36 +20,24 @@ package org.apache.rocketmq.proxy.config;
 import com.alibaba.fastjson2.JSON;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class Configuration {
+    public static final String CONFIG_PATH_PROPERTY = "com.rocketmq.proxy.configPath";
     private final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     private final AtomicReference<ProxyConfig> proxyConfigReference = new AtomicReference<>();
     private final AtomicReference<AuthConfig> authConfigReference = new AtomicReference<>();
-    public static final String CONFIG_PATH_PROPERTY = "com.rocketmq.proxy.configPath";
-
-    public void init() throws Exception {
-        String proxyConfigData = loadJsonConfig();
-
-        ProxyConfig proxyConfig = JSON.parseObject(proxyConfigData, ProxyConfig.class);
-        proxyConfig.initData();
-        setProxyConfig(proxyConfig);
-
-        AuthConfig authConfig = JSON.parseObject(proxyConfigData, AuthConfig.class);
-        setAuthConfig(authConfig);
-        authConfig.setConfigName(proxyConfig.getProxyName());
-        authConfig.setClusterName(proxyConfig.getRocketMQClusterName());
-    }
 
     public static String loadJsonConfig() throws Exception {
         String configFileName = ProxyConfig.DEFAULT_CONFIG_FILE_NAME;
@@ -77,6 +65,19 @@ public class Configuration {
         }
 
         return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+    }
+
+    public void init() throws Exception {
+        String proxyConfigData = loadJsonConfig();
+
+        ProxyConfig proxyConfig = JSON.parseObject(proxyConfigData, ProxyConfig.class);
+        proxyConfig.initData();
+        setProxyConfig(proxyConfig);
+
+        AuthConfig authConfig = JSON.parseObject(proxyConfigData, AuthConfig.class);
+        setAuthConfig(authConfig);
+        authConfig.setConfigName(proxyConfig.getProxyName());
+        authConfig.setClusterName(proxyConfig.getRocketMQClusterName());
     }
 
     public ProxyConfig getProxyConfig() {

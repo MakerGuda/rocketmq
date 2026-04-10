@@ -77,25 +77,25 @@ public class RecallWithTraceIT extends BaseConf {
     public void testRecallTrace() throws MQBrokerException, RemotingException, InterruptedException, MQClientException {
         String msgId = MessageClientIDSetter.createUniqID();
         String recallHandle = RecallMessageHandle.HandleV1.buildHandle(topic, BROKER1_NAME,
-            String.valueOf(System.currentTimeMillis() + 30000), msgId);
+                String.valueOf(System.currentTimeMillis() + 30000), msgId);
         producer.recallMessage(topic, recallHandle);
 
         MessageQueue messageQueue = new MessageQueue(topic, BROKER1_NAME, 0);
         String brokerAddress = brokerController1.getBrokerAddr();
         AtomicReference<MessageExt> traceMessage = new AtomicReference();
         await()
-            .pollInterval(1, TimeUnit.SECONDS)
-            .atMost(15, TimeUnit.SECONDS)
-            .until(() -> {
-                PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
-                boolean found = popResult.getPopStatus().equals(PopStatus.FOUND);
-                traceMessage.set(found ? popResult.getMsgFoundList().get(0) : null);
-                return found;
-            });
+                .pollInterval(1, TimeUnit.SECONDS)
+                .atMost(15, TimeUnit.SECONDS)
+                .until(() -> {
+                    PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
+                    boolean found = popResult.getPopStatus().equals(PopStatus.FOUND);
+                    traceMessage.set(found ? popResult.getMsgFoundList().get(0) : null);
+                    return found;
+                });
 
         Assert.assertNotNull(traceMessage.get());
         TraceContext context =
-            TraceDataEncoder.decoderFromTraceDataString(new String(traceMessage.get().getBody())).get(0);
+                TraceDataEncoder.decoderFromTraceDataString(new String(traceMessage.get().getBody())).get(0);
         Assert.assertEquals(TraceType.Recall, context.getTraceType());
         Assert.assertEquals(group, context.getGroupName());
         Assert.assertTrue(context.isSuccess());

@@ -17,9 +17,6 @@
 
 package org.apache.rocketmq.test.client.rmq;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendStatus;
@@ -29,6 +26,10 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.clientinterface.AbstractMQProducer;
 import org.apache.rocketmq.test.sendresult.ResultWrapper;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 public class RMQNormalProducer extends AbstractMQProducer {
     private static Logger logger = LoggerFactory.getLogger(RMQNormalProducer.class);
@@ -47,12 +48,12 @@ public class RMQNormalProducer extends AbstractMQProducer {
     }
 
     public RMQNormalProducer(String nsAddr, String topic, String producerGroupName,
-        String producerInstanceName) {
+                             String producerInstanceName) {
         this(nsAddr, topic, producerGroupName, producerInstanceName, false);
     }
 
     public RMQNormalProducer(String nsAddr, String topic, String producerGroupName,
-        String producerInstanceName, boolean useTLS) {
+                             String producerInstanceName, boolean useTLS) {
         super(topic);
         this.producerGroupName = producerGroupName;
         this.producerInstanceName = producerInstanceName;

@@ -17,13 +17,14 @@
 
 package org.apache.rocketmq.store.queue;
 
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.store.DispatchRequest;
+import org.rocksdb.RocksDBException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.store.DispatchRequest;
-import org.rocksdb.RocksDBException;
 
 public class RocksGroupCommitService extends ServiceThread {
 

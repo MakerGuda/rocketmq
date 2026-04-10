@@ -23,8 +23,8 @@ import org.apache.rocketmq.common.resource.ResourceType;
 import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 
 @RocketMQAction(value = RequestCode.NOTIFY_CONSUMER_IDS_CHANGED, action = Action.SUB)
 public class NotifyConsumerIdsChangedRequestHeader extends RpcRequestHeader {

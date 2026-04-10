@@ -16,13 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.topic;
 
-import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -38,6 +31,9 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.admin.MQAdminUtils;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public class UpdateStaticTopicSubCommand implements SubCommand {
 
@@ -86,9 +82,8 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
     }
 
 
-
     public void executeFromFile(final CommandLine commandLine, final Options options,
-                        RPCHook rpcHook) throws SubCommandException {
+                                RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -98,7 +93,7 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
             String mapFileName = commandLine.getOptionValue('f').trim();
             String mapData = MixAll.file2String(mapFileName);
             TopicRemappingDetailWrapper wrapper = TopicRemappingDetailWrapper.decode(mapData.getBytes(StandardCharsets.UTF_8),
-                TopicRemappingDetailWrapper.class);
+                    TopicRemappingDetailWrapper.class);
             //double check the config
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, wrapper.getBrokerConfigMap());
             boolean force = false;
@@ -118,10 +113,9 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
     }
 
 
-
     @Override
     public void execute(final CommandLine commandLine, final Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         if (!commandLine.hasOption('t')) {
             ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
             return;
@@ -147,7 +141,7 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
             }
             String topic = commandLine.getOptionValue('t').trim();
 
-            ClusterInfo clusterInfo  = defaultMQAdminExt.examineBrokerClusterInfo();
+            ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
             if (clusterInfo == null
                     || clusterInfo.getClusterAddrTable().isEmpty()) {
                 throw new RuntimeException("The Cluster info is empty");
@@ -155,7 +149,7 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
             {
                 if (commandLine.hasOption("b")) {
                     String brokerStrs = commandLine.getOptionValue("b").trim();
-                    for (String broker: brokerStrs.split(",")) {
+                    for (String broker : brokerStrs.split(",")) {
                         targetBrokers.add(broker.trim());
                     }
                 } else if (commandLine.hasOption("c")) {

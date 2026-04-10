@@ -36,11 +36,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.rocketmq.common.SubscriptionGroupAttributes.PRIORITY_FACTOR_ATTRIBUTE;
@@ -63,11 +59,20 @@ public class PopPriorityIT extends BasePopNormally {
     @Parameterized.Parameters
     public static List<Object[]> params() {
         List<Object[]> result = new ArrayList<>();
-        result.add(new Object[] {false, true});
-        result.add(new Object[] {false, false});
-        result.add(new Object[] {true, true});
-        result.add(new Object[] {true, false});
+        result.add(new Object[]{false, true});
+        result.add(new Object[]{false, false});
+        result.add(new Object[]{true, true});
+        result.add(new Object[]{true, false});
         return result;
+    }
+
+    private static Message mockMessage(String topic, int priority, String key) {
+        Message msg = new Message(topic, "HW".getBytes());
+        if (priority >= 0) {
+            msg.setPriority(priority);
+        }
+        msg.setKeys(key);
+        return msg;
     }
 
     @Before
@@ -195,16 +200,16 @@ public class PopPriorityIT extends BasePopNormally {
 
         List<MessageExt> collect = new ArrayList<>();
         await()
-            .pollInterval(1, TimeUnit.SECONDS)
-            .atMost(35, TimeUnit.SECONDS)
-            .until(() -> {
-                PopResult result = popMessageAsync(Duration.ofSeconds(600).toMillis(), 32, 5000).get();
-                if (PopStatus.FOUND.equals(result.getPopStatus())) {
-                    collect.addAll(result.getMsgFoundList());
-                    return false;
-                }
-                return true;
-            });
+                .pollInterval(1, TimeUnit.SECONDS)
+                .atMost(35, TimeUnit.SECONDS)
+                .until(() -> {
+                    PopResult result = popMessageAsync(Duration.ofSeconds(600).toMillis(), 32, 5000).get();
+                    if (PopStatus.FOUND.equals(result.getPopStatus())) {
+                        collect.addAll(result.getMsgFoundList());
+                        return false;
+                    }
+                    return true;
+                });
 
         assertEquals(count, collect.size());
         assertEquals(1, collect.get(collect.size() - 1).getReconsumeTimes());
@@ -228,16 +233,16 @@ public class PopPriorityIT extends BasePopNormally {
 
         List<MessageExt> collect = new ArrayList<>();
         await()
-            .pollInterval(1, TimeUnit.SECONDS)
-            .atMost(35, TimeUnit.SECONDS)
-            .until(() -> {
-                PopResult result = popMessageAsync(Duration.ofSeconds(600).toMillis(), 32, 5000).get();
-                if (PopStatus.FOUND.equals(result.getPopStatus())) {
-                    collect.addAll(result.getMsgFoundList());
-                    return false;
-                }
-                return true;
-            });
+                .pollInterval(1, TimeUnit.SECONDS)
+                .atMost(35, TimeUnit.SECONDS)
+                .until(() -> {
+                    PopResult result = popMessageAsync(Duration.ofSeconds(600).toMillis(), 32, 5000).get();
+                    if (PopStatus.FOUND.equals(result.getPopStatus())) {
+                        collect.addAll(result.getMsgFoundList());
+                        return false;
+                    }
+                    return true;
+                });
 
         assertEquals(count, collect.size());
         assertEquals(1, collect.get(0).getReconsumeTimes());
@@ -306,14 +311,5 @@ public class PopPriorityIT extends BasePopNormally {
         assertEquals(priorityOrderAsc ? 0 : writeQueueNum / 2 - 1, msgList.get(msgList.size() - 1).getPriority());
         assertEquals(1, msgList.get(msgList.size() - 1).getReconsumeTimes());
         assertEquals(0, msgList.get(msgList.size() - 1).getQueueOffset()); // means a separate retry queue
-    }
-
-    private static Message mockMessage(String topic, int priority, String key) {
-        Message msg = new Message(topic, "HW".getBytes());
-        if (priority >= 0) {
-            msg.setPriority(priority);
-        }
-        msg.setKeys(key);
-        return msg;
     }
 }

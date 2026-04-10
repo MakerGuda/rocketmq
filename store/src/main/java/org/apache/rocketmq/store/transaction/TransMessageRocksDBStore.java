@@ -15,6 +15,20 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.store.transaction;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.message.*;
+import org.apache.rocketmq.common.topic.TopicValidator;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.config.MessageStoreConfig;
+import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
+import org.apache.rocketmq.store.stats.BrokerStatsManager;
+
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -22,49 +36,27 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageClientIDSetter;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.common.topic.TopicValidator;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.store.DefaultMessageStore;
-import org.apache.rocketmq.store.DispatchRequest;
-import org.apache.rocketmq.store.MessageStore;
-import org.apache.rocketmq.store.PutMessageResult;
-import org.apache.rocketmq.store.PutMessageStatus;
-import org.apache.rocketmq.store.StoreUtil;
-import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
-import org.apache.rocketmq.store.stats.BrokerStatsManager;
+
 import static org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage.TRANS_COLUMN_FAMILY;
 
 public class TransMessageRocksDBStore {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private static final Logger logError = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
     private static final String REMOVE_TAG = "d";
-    private static final byte[] FILL_BYTE = new byte[] {(byte) 0};
+    private static final byte[] FILL_BYTE = new byte[]{(byte) 0};
     private static final int DEFAULT_CAPACITY = 100000;
     private static final int BATCH_SIZE = 1000;
     private static final int MAX_GET_MSG_TIMES = 3;
     private static final int INITIAL = 0, RUNNING = 1, SHUTDOWN = 2;
-    private volatile int state = INITIAL;
-
     private final MessageStore messageStore;
     private final MessageStoreConfig storeConfig;
     private final MessageRocksDBStorage messageRocksDBStorage;
     private final BrokerStatsManager brokerStatsManager;
     private final SocketAddress storeHost;
+    protected BlockingQueue<TransRocksDBRecord> originTransMsgQueue;
+    private volatile int state = INITIAL;
     private ThreadLocal<ByteBuffer> bufferLocal = null;
     private TransIndexBuildService transIndexBuildService;
-    protected BlockingQueue<TransRocksDBRecord> originTransMsgQueue;
 
     public TransMessageRocksDBStore(final MessageStore messageStore, final BrokerStatsManager brokerStatsManager, final SocketAddress storeHost) {
         this.messageStore = messageStore;
@@ -287,6 +279,7 @@ public class TransMessageRocksDBStore {
     public class TransIndexBuildService extends ServiceThread {
         private final Logger log = TransMessageRocksDBStore.log;
         private List<TransRocksDBRecord> trs;
+
         @Override
         public String getServiceName() {
             return getServiceThreadName() + this.getClass().getSimpleName();

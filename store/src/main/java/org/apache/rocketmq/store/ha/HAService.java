@@ -17,15 +17,16 @@
 
 package org.apache.rocketmq.store.ha;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.remoting.protocol.body.HARuntimeInfo;
 import org.apache.rocketmq.store.CommitLog;
 import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.rocksdb.RocksDBException;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public interface HAService {
 
@@ -70,7 +71,7 @@ public interface HAService {
     /**
      * Change to slave state
      *
-     * @param newMasterAddr new master addr
+     * @param newMasterAddr  new master addr
      * @param newMasterEpoch new masterEpoch
      */
     default boolean changeToSlave(String newMasterAddr, int newMasterEpoch, Long slaveId) {
@@ -80,7 +81,7 @@ public interface HAService {
     /**
      * Change to slave state
      *
-     * @param newMasterAddr new master addr
+     * @param newMasterAddr  new master addr
      * @param newMasterEpoch new masterEpoch
      */
     default boolean changeToSlaveWhenMasterNotChange(String newMasterAddr, int newMasterEpoch) {

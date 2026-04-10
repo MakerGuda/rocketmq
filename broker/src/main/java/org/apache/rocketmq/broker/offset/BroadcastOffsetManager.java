@@ -16,16 +16,17 @@
  */
 package org.apache.rocketmq.broker.offset;
 
+import org.apache.rocketmq.broker.BrokerController;
+import org.apache.rocketmq.common.BrokerConfig;
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.store.exception.ConsumeQueueException;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.common.BrokerConfig;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.store.exception.ConsumeQueueException;
 
 /**
  * manage the offset of broadcast.
@@ -36,24 +37,31 @@ import org.apache.rocketmq.store.exception.ConsumeQueueException;
  */
 public class BroadcastOffsetManager extends ServiceThread {
     private static final String TOPIC_GROUP_SEPARATOR = "@";
-    private final BrokerController brokerController;
-    private final BrokerConfig brokerConfig;
-
     /**
      * k: topic@groupId
      * v: the pull offset of all client of all queue
      */
     protected final ConcurrentHashMap<String /* topic@groupId */, BroadcastOffsetData> offsetStoreMap =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
+    private final BrokerController brokerController;
+    private final BrokerConfig brokerConfig;
 
     public BroadcastOffsetManager(BrokerController brokerController) {
         this.brokerController = brokerController;
         this.brokerConfig = brokerController.getBrokerConfig();
     }
 
+    /**
+     * @param group group of users
+     * @return the groupId used to commit offset
+     */
+    private static String broadcastGroupId(String group) {
+        return group + TOPIC_GROUP_SEPARATOR + "broadcast";
+    }
+
     public void updateOffset(String topic, String group, int queueId, long offset, String clientId, boolean fromProxy) {
         BroadcastOffsetData broadcastOffsetData = offsetStoreMap.computeIfAbsent(
-            buildKey(topic, group), key -> new BroadcastOffsetData(topic, group));
+                buildKey(topic, group), key -> new BroadcastOffsetData(topic, group));
 
         broadcastOffsetData.clientOffsetStore.compute(clientId, (clientIdKey, broadcastTimedOffsetStore) -> {
             if (broadcastTimedOffsetStore == null) {
@@ -76,7 +84,7 @@ public class BroadcastOffsetManager extends ServiceThread {
      * @return -1 means no init offset, use the queueOffset in pullRequestHeader
      */
     public Long queryInitOffset(String topic, String groupId, int queueId, String clientId, long requestOffset,
-        boolean fromProxy) throws ConsumeQueueException {
+                                boolean fromProxy) throws ConsumeQueueException {
 
         BroadcastOffsetData broadcastOffsetData = offsetStoreMap.get(buildKey(topic, groupId));
         if (broadcastOffsetData == null) {
@@ -107,14 +115,14 @@ public class BroadcastOffsetManager extends ServiceThread {
     }
 
     private long getOffset(BroadcastTimedOffsetStore offsetStore, String topic, String groupId, int queueId)
-        throws ConsumeQueueException {
+            throws ConsumeQueueException {
         long storeOffset = -1;
         if (offsetStore != null) {
             storeOffset = offsetStore.offsetStore.readOffset(queueId);
         }
         if (storeOffset < 0) {
             storeOffset =
-                brokerController.getConsumerOffsetManager().queryOffset(broadcastGroupId(groupId), topic, queueId);
+                    brokerController.getConsumerOffsetManager().queryOffset(broadcastGroupId(groupId), topic, queueId);
         }
         if (storeOffset < 0) {
             if (this.brokerController.getMessageStore().checkInMemByConsumeOffset(topic, queueId, 0, 1)) {
@@ -142,25 +150,25 @@ public class BroadcastOffsetManager extends ServiceThread {
 
             for (String clientId : broadcastOffsetData.clientOffsetStore.keySet()) {
                 broadcastOffsetData.clientOffsetStore
-                    .computeIfPresent(clientId, (clientIdKey, broadcastTimedOffsetStore) -> {
-                        long interval = System.currentTimeMillis() - broadcastTimedOffsetStore.timestamp;
-                        boolean clientIsOnline = brokerController.getConsumerManager().findChannel(broadcastOffsetData.group, clientId) != null;
-                        if (clientIsOnline || interval < Duration.ofSeconds(brokerConfig.getBroadcastOffsetExpireSecond()).toMillis()) {
-                            Set<Integer> queueSet = broadcastTimedOffsetStore.offsetStore.queueList();
-                            for (Integer queue : queueSet) {
-                                long offset = broadcastTimedOffsetStore.offsetStore.readOffset(queue);
-                                offset = Math.min(queueMinOffset.getOrDefault(queue, offset), offset);
-                                queueMinOffset.put(queue, offset);
+                        .computeIfPresent(clientId, (clientIdKey, broadcastTimedOffsetStore) -> {
+                            long interval = System.currentTimeMillis() - broadcastTimedOffsetStore.timestamp;
+                            boolean clientIsOnline = brokerController.getConsumerManager().findChannel(broadcastOffsetData.group, clientId) != null;
+                            if (clientIsOnline || interval < Duration.ofSeconds(brokerConfig.getBroadcastOffsetExpireSecond()).toMillis()) {
+                                Set<Integer> queueSet = broadcastTimedOffsetStore.offsetStore.queueList();
+                                for (Integer queue : queueSet) {
+                                    long offset = broadcastTimedOffsetStore.offsetStore.readOffset(queue);
+                                    offset = Math.min(queueMinOffset.getOrDefault(queue, offset), offset);
+                                    queueMinOffset.put(queue, offset);
+                                }
                             }
-                        }
-                        if (clientIsOnline && interval >= Duration.ofSeconds(brokerConfig.getBroadcastOffsetExpireMaxSecond()).toMillis()) {
-                            return null;
-                        }
-                        if (!clientIsOnline && interval >= Duration.ofSeconds(brokerConfig.getBroadcastOffsetExpireSecond()).toMillis()) {
-                            return null;
-                        }
-                        return broadcastTimedOffsetStore;
-                    });
+                            if (clientIsOnline && interval >= Duration.ofSeconds(brokerConfig.getBroadcastOffsetExpireMaxSecond()).toMillis()) {
+                                return null;
+                            }
+                            if (!clientIsOnline && interval >= Duration.ofSeconds(brokerConfig.getBroadcastOffsetExpireSecond()).toMillis()) {
+                                return null;
+                            }
+                            return broadcastTimedOffsetStore;
+                        });
             }
 
             offsetStoreMap.computeIfPresent(k, (key, broadcastOffsetDataVal) -> {
@@ -171,21 +179,13 @@ public class BroadcastOffsetManager extends ServiceThread {
             });
 
             queueMinOffset.forEach((queueId, offset) ->
-                this.brokerController.getConsumerOffsetManager().commitOffset("BroadcastOffset",
-                broadcastGroupId(broadcastOffsetData.group), broadcastOffsetData.topic, queueId, offset));
+                    this.brokerController.getConsumerOffsetManager().commitOffset("BroadcastOffset",
+                            broadcastGroupId(broadcastOffsetData.group), broadcastOffsetData.topic, queueId, offset));
         }
     }
 
     private String buildKey(String topic, String group) {
         return topic + TOPIC_GROUP_SEPARATOR + group;
-    }
-
-    /**
-     * @param group group of users
-     * @return the groupId used to commit offset
-     */
-    private static String broadcastGroupId(String group) {
-        return group + TOPIC_GROUP_SEPARATOR + "broadcast";
     }
 
     @Override
@@ -220,19 +220,17 @@ public class BroadcastOffsetManager extends ServiceThread {
     public static class BroadcastTimedOffsetStore {
 
         /**
+         * the pulled offset of each queue
+         */
+        private final BroadcastOffsetStore offsetStore;
+        /**
          * the timeStamp of last update occurred
          */
         private volatile long timestamp;
-
         /**
          * mark the offset of this client is updated by proxy or not
          */
         private volatile boolean fromProxy;
-
-        /**
-         * the pulled offset of each queue
-         */
-        private final BroadcastOffsetStore offsetStore;
 
         public BroadcastTimedOffsetStore(boolean fromProxy) {
             this.timestamp = System.currentTimeMillis();

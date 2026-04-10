@@ -17,14 +17,7 @@
 
 package org.apache.rocketmq.proxy.grpc.interceptor;
 
-import io.grpc.ForwardingServerCall;
-import io.grpc.ForwardingServerCallListener;
-import io.grpc.Metadata;
-import io.grpc.ServerCall;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -34,9 +27,9 @@ public class GlobalExceptionInterceptor implements ServerInterceptor {
 
     @Override
     public <R, W> ServerCall.Listener<R> interceptCall(
-        ServerCall<R, W> call,
-        Metadata headers,
-        ServerCallHandler<R, W> next
+            ServerCall<R, W> call,
+            Metadata headers,
+            ServerCallHandler<R, W> next
     ) {
         final ServerCall<R, W> serverCall = new ClosableServerCall<>(call);
         ServerCall.Listener<R> delegate = next.startCall(serverCall, headers);
@@ -110,7 +103,7 @@ public class GlobalExceptionInterceptor implements ServerInterceptor {
     }
 
     private static class ClosableServerCall<R, W> extends
-        ForwardingServerCall.SimpleForwardingServerCall<R, W> {
+            ForwardingServerCall.SimpleForwardingServerCall<R, W> {
         private boolean closeCalled = false;
 
         ClosableServerCall(ServerCall<R, W> delegate) {

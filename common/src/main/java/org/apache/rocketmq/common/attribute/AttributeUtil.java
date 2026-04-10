@@ -19,18 +19,20 @@ package org.apache.rocketmq.common.attribute;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 public class AttributeUtil {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
+
     public static Map<String, String> alterCurrentAttributes(boolean create, Map<String, Attribute> all,
-        ImmutableMap<String, String> currentAttributes, ImmutableMap<String, String> newAttributes) {
+                                                             ImmutableMap<String, String> currentAttributes, ImmutableMap<String, String> newAttributes) {
 
         Map<String, String> init = new HashMap<>();
         Map<String, String> add = new HashMap<>();

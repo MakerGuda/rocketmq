@@ -16,10 +16,6 @@
  */
 package org.apache.rocketmq.store;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
@@ -27,9 +23,8 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.store.logfile.MappedFile;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.Supplier;
 
 public class MultiPathMappedFileQueue extends MappedFileQueue {
 
@@ -37,15 +32,16 @@ public class MultiPathMappedFileQueue extends MappedFileQueue {
     private final Supplier<Set<String>> fullStorePathsSupplier;
 
     public MultiPathMappedFileQueue(MessageStoreConfig messageStoreConfig, int mappedFileSize,
-        AllocateMappedFileService allocateMappedFileService,
-        Supplier<Set<String>> fullStorePathsSupplier) {
+                                    AllocateMappedFileService allocateMappedFileService,
+                                    Supplier<Set<String>> fullStorePathsSupplier) {
         this(messageStoreConfig, mappedFileSize, allocateMappedFileService, fullStorePathsSupplier, null);
     }
+
     public MultiPathMappedFileQueue(MessageStoreConfig messageStoreConfig, int mappedFileSize,
                                     AllocateMappedFileService allocateMappedFileService,
                                     Supplier<Set<String>> fullStorePathsSupplier, RunningFlags runningFlags) {
         super(messageStoreConfig.getStorePathCommitLog(), mappedFileSize, allocateMappedFileService, runningFlags,
-              messageStoreConfig.isWriteWithoutMmap());
+                messageStoreConfig.isWriteWithoutMmap());
         this.config = messageStoreConfig;
         this.fullStorePathsSupplier = fullStorePathsSupplier;
     }

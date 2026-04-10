@@ -17,9 +17,10 @@
 
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.List;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
+import java.util.List;
 
 public class QueryConsumeQueueResponseBody extends RemotingSerializable {
 

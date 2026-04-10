@@ -65,13 +65,13 @@ public class LmqBrokerStatsManager extends BrokerStatsManager {
 
     @Override
     public void recordDiskFallBehindTime(final String group, final String topic, final int queueId,
-        final long fallBehind) {
+                                         final long fallBehind) {
         super.recordDiskFallBehindTime(getAdjustedGroup(group), getAdjustedTopic(topic), queueId, fallBehind);
     }
 
     @Override
     public void recordDiskFallBehindSize(final String group, final String topic, final int queueId,
-        final long fallBehind) {
+                                         final long fallBehind) {
         super.recordDiskFallBehindSize(getAdjustedGroup(group), getAdjustedTopic(topic), queueId, fallBehind);
     }
 

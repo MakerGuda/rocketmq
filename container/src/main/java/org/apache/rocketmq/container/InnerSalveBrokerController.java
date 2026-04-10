@@ -28,9 +28,9 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 public class InnerSalveBrokerController extends InnerBrokerController {
 
     public InnerSalveBrokerController(final BrokerContainer brokerContainer,
-        final BrokerConfig brokerConfig,
-        final MessageStoreConfig storeConfig,
-        final AuthConfig authConfig) {
+                                      final BrokerConfig brokerConfig,
+                                      final MessageStoreConfig storeConfig,
+                                      final AuthConfig authConfig) {
         super(brokerContainer, brokerConfig, storeConfig, authConfig);
         // Check configs
         checkSlaveBrokerConfig();

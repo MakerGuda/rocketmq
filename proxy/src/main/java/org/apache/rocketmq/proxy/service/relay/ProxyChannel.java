@@ -17,19 +17,8 @@
 
 package org.apache.rocketmq.proxy.service.relay;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelId;
-import io.netty.channel.ChannelMetadata;
-import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.channel.DefaultChannelPromise;
-import io.netty.channel.EventLoop;
+import io.netty.channel.*;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageDecoder;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -47,6 +36,11 @@ import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequest
 import org.apache.rocketmq.remoting.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerRunningInfoRequestHeader;
 
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+
 public abstract class ProxyChannel extends SimpleChannel {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     protected final SocketAddress remoteSocketAddress;
@@ -55,7 +49,7 @@ public abstract class ProxyChannel extends SimpleChannel {
     protected final ProxyRelayService proxyRelayService;
 
     protected ProxyChannel(ProxyRelayService proxyRelayService, Channel parent, String remoteAddress,
-        String localAddress) {
+                           String localAddress) {
         super(parent, remoteAddress, localAddress);
         this.proxyRelayService = proxyRelayService;
         this.remoteSocketAddress = NetworkUtil.string2SocketAddress(remoteAddress);
@@ -63,7 +57,7 @@ public abstract class ProxyChannel extends SimpleChannel {
     }
 
     protected ProxyChannel(ProxyRelayService proxyRelayService, Channel parent, ChannelId id, String remoteAddress,
-        String localAddress) {
+                           String localAddress) {
         super(parent, id, remoteAddress, localAddress);
         this.proxyRelayService = proxyRelayService;
         this.remoteSocketAddress = NetworkUtil.string2SocketAddress(remoteAddress);
@@ -77,8 +71,8 @@ public abstract class ProxyChannel extends SimpleChannel {
         try {
             if (msg instanceof RemotingCommand) {
                 ProxyContext context = ProxyContext.createForInner(this.getClass())
-                    .setRemoteAddress(remoteAddress)
-                    .setLocalAddress(localAddress);
+                        .setRemoteAddress(remoteAddress)
+                        .setLocalAddress(localAddress);
                 RemotingCommand command = (RemotingCommand) msg;
                 if (command.getExtFields() == null) {
                     command.setExtFields(new HashMap<>());
@@ -101,7 +95,7 @@ public abstract class ProxyChannel extends SimpleChannel {
                         ConsumeMessageDirectlyResultRequestHeader header = (ConsumeMessageDirectlyResultRequestHeader) command.readCustomHeader();
                         MessageExt messageExt = MessageDecoder.decode(ByteBuffer.wrap(command.getBody()), true, false, false);
                         processFuture = this.processConsumeMessageDirectly(command, header, messageExt,
-                            this.proxyRelayService.processConsumeMessageDirectly(context, command, header));
+                                this.proxyRelayService.processConsumeMessageDirectly(context, command, header));
                         break;
                     }
                     default:
@@ -117,31 +111,31 @@ public abstract class ProxyChannel extends SimpleChannel {
 
         DefaultChannelPromise promise = new DefaultChannelPromise(this, GlobalEventExecutor.INSTANCE);
         processFuture.thenAccept(ignore -> promise.setSuccess())
-            .exceptionally(t -> {
-                promise.setFailure(t);
-                return null;
-            });
+                .exceptionally(t -> {
+                    promise.setFailure(t);
+                    return null;
+                });
         return promise;
     }
 
     protected abstract CompletableFuture<Void> processOtherMessage(Object msg);
 
     protected abstract CompletableFuture<Void> processCheckTransaction(
-        CheckTransactionStateRequestHeader header,
-        MessageExt messageExt,
-        TransactionData transactionData,
-        CompletableFuture<ProxyRelayResult<Void>> responseFuture);
+            CheckTransactionStateRequestHeader header,
+            MessageExt messageExt,
+            TransactionData transactionData,
+            CompletableFuture<ProxyRelayResult<Void>> responseFuture);
 
     protected abstract CompletableFuture<Void> processGetConsumerRunningInfo(
-        RemotingCommand command,
-        GetConsumerRunningInfoRequestHeader header,
-        CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> responseFuture);
+            RemotingCommand command,
+            GetConsumerRunningInfoRequestHeader header,
+            CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> responseFuture);
 
     protected abstract CompletableFuture<Void> processConsumeMessageDirectly(
-        RemotingCommand command,
-        ConsumeMessageDirectlyResultRequestHeader header,
-        MessageExt messageExt,
-        CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> responseFuture);
+            RemotingCommand command,
+            ConsumeMessageDirectlyResultRequestHeader header,
+            MessageExt messageExt,
+            CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> responseFuture);
 
     @Override
     public ChannelConfig config() {

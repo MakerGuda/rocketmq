@@ -18,21 +18,6 @@
 package org.apache.rocketmq.test.container;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.rocketmq.broker.BrokerController;
@@ -43,11 +28,7 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.TransactionCheckListener;
 import org.apache.rocketmq.client.producer.TransactionListener;
 import org.apache.rocketmq.client.producer.TransactionMQProducer;
-import org.apache.rocketmq.common.BrokerConfig;
-import org.apache.rocketmq.common.BrokerIdentity;
-import org.apache.rocketmq.common.MQVersion;
-import org.apache.rocketmq.common.TopicConfig;
-import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.*;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.common.namesrv.NamesrvConfig;
 import org.apache.rocketmq.container.BrokerContainer;
@@ -71,6 +52,17 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.awaitility.Awaitility.await;
 
 /**
@@ -79,21 +71,19 @@ import static org.awaitility.Awaitility.await;
  * <li>BrokerB contains three replicas</li>
  */
 public class ContainerIntegrationTestBase {
-    private static final AtomicBoolean CLUSTER_SET_UP = new AtomicBoolean(false);
-    private static final List<File> TMP_FILE_LIST = new ArrayList<>();
-    private static final Random RANDOM = new Random();
-    protected static String nsAddr;
-
     protected static final String THREE_REPLICAS_TOPIC = "SEND_MESSAGE_TEST_TOPIC_THREE_REPLICAS";
-
-    protected static List<BrokerContainer> brokerContainerList = new ArrayList<>();
-    protected static List<NamesrvController> namesrvControllers = new ArrayList<>();
-
     protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
     protected static final int COMMIT_LOG_SIZE = 128 * 1024;
     protected static final int INDEX_NUM = 1000;
     protected static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
-
+    private static final AtomicBoolean CLUSTER_SET_UP = new AtomicBoolean(false);
+    private static final List<File> TMP_FILE_LIST = new ArrayList<>();
+    private static final Random RANDOM = new Random();
+    private final static Logger LOG = LoggerFactory.getLogger(ContainerIntegrationTestBase.class);
+    private static final Set<Integer> PORTS_IN_USE = new HashSet<>();
+    protected static String nsAddr;
+    protected static List<BrokerContainer> brokerContainerList = new ArrayList<>();
+    protected static List<NamesrvController> namesrvControllers = new ArrayList<>();
     protected static BrokerContainer brokerContainer1;
     protected static BrokerContainer brokerContainer2;
     protected static BrokerContainer brokerContainer3;
@@ -101,14 +91,9 @@ public class ContainerIntegrationTestBase {
     protected static BrokerController master2With3Replicas;
     protected static BrokerController master3With3Replicas;
     protected static NamesrvController namesrvController;
-
     protected static DefaultMQAdminExt defaultMQAdminExt;
-
-    private final static Logger LOG = LoggerFactory.getLogger(ContainerIntegrationTestBase.class);
-    private static ConcurrentMap<BrokerConfig, MessageStoreConfig> slaveStoreConfigCache = new ConcurrentHashMap<>();
-
     protected static ConcurrentMap<BrokerConfigLite, BrokerController> isolatedBrokers = new ConcurrentHashMap<>();
-    private static final Set<Integer> PORTS_IN_USE = new HashSet<>();
+    private static ConcurrentMap<BrokerConfig, MessageStoreConfig> slaveStoreConfigCache = new ConcurrentHashMap<>();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -273,12 +258,12 @@ public class ContainerIntegrationTestBase {
         namesrvController.getRemotingServer().registerProcessor(RequestCode.REGISTER_BROKER, new NettyRequestProcessor() {
             @Override
             public RemotingCommand processRequest(final ChannelHandlerContext ctx,
-                final RemotingCommand request) throws Exception {
+                                                  final RemotingCommand request) throws Exception {
                 final RegisterBrokerRequestHeader requestHeader = (RegisterBrokerRequestHeader) request.decodeCommandCustomHeader(RegisterBrokerRequestHeader.class);
                 final BrokerConfigLite liteConfig = new BrokerConfigLite(requestHeader.getClusterName(),
-                    requestHeader.getBrokerName(),
-                    requestHeader.getBrokerAddr(),
-                    requestHeader.getBrokerId());
+                        requestHeader.getBrokerName(),
+                        requestHeader.getBrokerAddr(),
+                        requestHeader.getBrokerId());
                 if (isolatedBrokers.containsKey(liteConfig)) {
                     // return response with SYSTEM_ERROR
                     return RemotingCommand.createResponseCommand(null);
@@ -329,7 +314,7 @@ public class ContainerIntegrationTestBase {
     }
 
     public static BrokerController createAndAddMaster(BrokerContainer brokerContainer,
-        BrokerGroupConfig brokerGroupConfig, int brokerIndex) throws Exception {
+                                                      BrokerGroupConfig brokerGroupConfig, int brokerIndex) throws Exception {
         BrokerConfig brokerConfig = new BrokerConfig();
         MessageStoreConfig storeConfig = new MessageStoreConfig();
         brokerConfig.setBrokerName(BROKER_NAME_PREFIX + brokerIndex);
@@ -386,7 +371,7 @@ public class ContainerIntegrationTestBase {
     }
 
     protected static TransactionMQProducer createTransactionProducer(String producerGroup,
-        TransactionCheckListener transactionCheckListener) {
+                                                                     TransactionCheckListener transactionCheckListener) {
         TransactionMQProducer producer = new TransactionMQProducer(producerGroup);
         producer.setInstanceName(UUID.randomUUID().toString());
         producer.setNamesrvAddr(nsAddr);
@@ -395,7 +380,7 @@ public class ContainerIntegrationTestBase {
     }
 
     protected static TransactionMQProducer createTransactionProducer(String producerGroup,
-        TransactionListener transactionListener) {
+                                                                     TransactionListener transactionListener) {
         TransactionMQProducer producer = new TransactionMQProducer(producerGroup);
         producer.setInstanceName(UUID.randomUUID().toString());
         producer.setNamesrvAddr(nsAddr);
@@ -418,7 +403,7 @@ public class ContainerIntegrationTestBase {
     }
 
     protected static void createAndAddSlave(int slaveBrokerId, BrokerContainer brokerContainer,
-        BrokerController master) {
+                                            BrokerController master) {
         BrokerConfig slaveBrokerConfig = new BrokerConfig();
         slaveBrokerConfig.setBrokerName(master.getBrokerConfig().getBrokerName());
         slaveBrokerConfig.setBrokerId(slaveBrokerId);
@@ -469,43 +454,43 @@ public class ContainerIntegrationTestBase {
     }
 
     protected static void removeSlaveBroker(int slaveBrokerId, BrokerContainer brokerContainer,
-        BrokerController master) throws Exception {
+                                            BrokerController master) throws Exception {
         BrokerIdentity brokerIdentity = new BrokerIdentity(master.getBrokerConfig().getBrokerClusterName(),
-            master.getBrokerConfig().getBrokerName(), slaveBrokerId);
+                master.getBrokerConfig().getBrokerName(), slaveBrokerId);
 
         brokerContainer.removeBroker(brokerIdentity);
     }
 
     protected static void awaitUntilSlaveOK() {
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> {
-                boolean isOk = master1With3Replicas.getMessageStore().getHaService().getConnectionCount().get() == 2
-                    && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3;
-                for (HAConnection haConnection : master1With3Replicas.getMessageStore().getHaService().getConnectionList()) {
-                    isOk &= haConnection.getCurrentState().equals(HAConnectionState.TRANSFER);
-                }
-                return isOk;
-            });
+                .until(() -> {
+                    boolean isOk = master1With3Replicas.getMessageStore().getHaService().getConnectionCount().get() == 2
+                            && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3;
+                    for (HAConnection haConnection : master1With3Replicas.getMessageStore().getHaService().getConnectionList()) {
+                        isOk &= haConnection.getCurrentState().equals(HAConnectionState.TRANSFER);
+                    }
+                    return isOk;
+                });
 
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> {
-                boolean isOk = master2With3Replicas.getMessageStore().getHaService().getConnectionCount().get() == 2
-                    && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3;
-                for (HAConnection haConnection : master2With3Replicas.getMessageStore().getHaService().getConnectionList()) {
-                    isOk &= haConnection.getCurrentState().equals(HAConnectionState.TRANSFER);
-                }
-                return isOk;
-            });
+                .until(() -> {
+                    boolean isOk = master2With3Replicas.getMessageStore().getHaService().getConnectionCount().get() == 2
+                            && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3;
+                    for (HAConnection haConnection : master2With3Replicas.getMessageStore().getHaService().getConnectionList()) {
+                        isOk &= haConnection.getCurrentState().equals(HAConnectionState.TRANSFER);
+                    }
+                    return isOk;
+                });
 
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> {
-                boolean isOk = master3With3Replicas.getMessageStore().getHaService().getConnectionCount().get() == 2
-                    && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3;
-                for (HAConnection haConnection : master3With3Replicas.getMessageStore().getHaService().getConnectionList()) {
-                    isOk &= haConnection.getCurrentState().equals(HAConnectionState.TRANSFER);
-                }
-                return isOk;
-            });
+                .until(() -> {
+                    boolean isOk = master3With3Replicas.getMessageStore().getHaService().getConnectionCount().get() == 2
+                            && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3;
+                    for (HAConnection haConnection : master3With3Replicas.getMessageStore().getHaService().getConnectionList()) {
+                        isOk &= haConnection.getCurrentState().equals(HAConnectionState.TRANSFER);
+                    }
+                    return isOk;
+                });
 
         try {
             Thread.sleep(2000);
@@ -518,38 +503,38 @@ public class ContainerIntegrationTestBase {
         final BrokerConfig config = brokerController.getBrokerConfig();
 
         BrokerConfigLite liteConfig = new BrokerConfigLite(config.getBrokerClusterName(),
-            config.getBrokerName(),
-            brokerController.getBrokerAddr(),
-            config.getBrokerId());
+                config.getBrokerName(),
+                brokerController.getBrokerAddr(),
+                config.getBrokerId());
 
         // Reject register requests from the specific broker
         isolatedBrokers.putIfAbsent(liteConfig, brokerController);
 
         // UnRegister the specific broker immediately
         namesrvController.getRouteInfoManager().unregisterBroker(liteConfig.getClusterName(),
-            liteConfig.getBrokerAddr(),
-            liteConfig.getBrokerName(),
-            liteConfig.getBrokerId());
+                liteConfig.getBrokerAddr(),
+                liteConfig.getBrokerName(),
+                liteConfig.getBrokerId());
     }
 
     protected static void cancelIsolatedBroker(BrokerController brokerController) {
         final BrokerConfig config = brokerController.getBrokerConfig();
 
         BrokerConfigLite liteConfig = new BrokerConfigLite(config.getBrokerClusterName(),
-            config.getBrokerName(),
-            brokerController.getBrokerAddr(),
-            config.getBrokerId());
+                config.getBrokerName(),
+                brokerController.getBrokerAddr(),
+                config.getBrokerId());
 
         isolatedBrokers.remove(liteConfig);
         brokerController.registerBrokerAll(true, false, true);
 
         await().atMost(Duration.ofMinutes(1)).until(() -> namesrvController.getRouteInfoManager()
-            .getBrokerMemberGroup(liteConfig.getClusterName(), liteConfig.brokerName).getBrokerAddrs()
-            .containsKey(liteConfig.getBrokerId()));
+                .getBrokerMemberGroup(liteConfig.getClusterName(), liteConfig.brokerName).getBrokerAddrs()
+                .containsKey(liteConfig.getBrokerId()));
     }
 
     protected static InnerSalveBrokerController getSlaveFromContainerByName(BrokerContainer brokerContainer,
-        String brokerName) {
+                                                                            String brokerName) {
         InnerSalveBrokerController targetSlave = null;
         for (InnerSalveBrokerController slave : brokerContainer.getSlaveBrokers()) {
             if (slave.getBrokerConfig().getBrokerName().equals(brokerName)) {
@@ -579,6 +564,13 @@ public class ContainerIntegrationTestBase {
         return targetMqSet;
     }
 
+    public static ConfigContext buildConfigContext(BrokerConfig brokerConfig, MessageStoreConfig messageStoreConfig) {
+        return new ConfigContext.Builder()
+                .brokerConfig(brokerConfig)
+                .messageStoreConfig(messageStoreConfig)
+                .build();
+    }
+
     public static class BrokerGroupConfig {
         int totalReplicas = 3;
         int minReplicas = 1;
@@ -592,7 +584,7 @@ public class ContainerIntegrationTestBase {
         }
 
         public BrokerGroupConfig(final int totalReplicas, final int minReplicas, final int inSyncReplicas,
-            final boolean autoReplicas, boolean enableSlaveActingMaster, boolean slaveReadEnable) {
+                                 final boolean autoReplicas, boolean enableSlaveActingMaster, boolean slaveReadEnable) {
             this.totalReplicas = totalReplicas;
             this.minReplicas = minReplicas;
             this.inSyncReplicas = inSyncReplicas;
@@ -609,7 +601,7 @@ public class ContainerIntegrationTestBase {
         private long brokerId;
 
         public BrokerConfigLite(final String clusterName, final String brokerName, final String brokerAddr,
-            final long brokerId) {
+                                final long brokerId) {
             this.clusterName = clusterName;
             this.brokerName = brokerName;
             this.brokerAddr = brokerAddr;
@@ -643,28 +635,21 @@ public class ContainerIntegrationTestBase {
             final BrokerConfigLite lite = (BrokerConfigLite) o;
 
             return new EqualsBuilder()
-                .append(clusterName, lite.clusterName)
-                .append(brokerName, lite.brokerName)
-                .append(brokerAddr, lite.brokerAddr)
-                .append(brokerId, lite.brokerId)
-                .isEquals();
+                    .append(clusterName, lite.clusterName)
+                    .append(brokerName, lite.brokerName)
+                    .append(brokerAddr, lite.brokerAddr)
+                    .append(brokerId, lite.brokerId)
+                    .isEquals();
         }
 
         @Override
         public int hashCode() {
             return new HashCodeBuilder(17, 37)
-                .append(clusterName)
-                .append(brokerName)
-                .append(brokerAddr)
-                .append(brokerId)
-                .toHashCode();
+                    .append(clusterName)
+                    .append(brokerName)
+                    .append(brokerAddr)
+                    .append(brokerId)
+                    .toHashCode();
         }
-    }
-
-    public static ConfigContext buildConfigContext(BrokerConfig brokerConfig, MessageStoreConfig messageStoreConfig) {
-        return new ConfigContext.Builder()
-            .brokerConfig(brokerConfig)
-            .messageStoreConfig(messageStoreConfig)
-            .build();
     }
 }

@@ -17,12 +17,6 @@
 package org.apache.rocketmq.common.namesrv;
 
 import com.google.common.base.Strings;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Map;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -30,6 +24,9 @@ import org.apache.rocketmq.common.help.FAQUrl;
 import org.apache.rocketmq.common.utils.HttpTinyClient;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.*;
 
 public class DefaultTopAddressing implements TopAddressing {
 
@@ -112,16 +109,14 @@ public class DefaultTopAddressing implements TopAddressing {
             if (null != para && para.size() > 0) {
                 if (!UtilAll.isBlank(this.unitName)) {
                     url.append("-").append(this.unitName).append("?nofix=1&");
-                }
-                else {
+                } else {
                     url.append("?");
                 }
                 for (Map.Entry<String, String> entry : this.para.entrySet()) {
                     url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
                 }
                 url = new StringBuilder(url.substring(0, url.length() - 1));
-            }
-            else {
+            } else {
                 if (!UtilAll.isBlank(this.unitName)) {
                     url.append("-").append(this.unitName).append("?nofix=1");
                 }
@@ -146,7 +141,7 @@ public class DefaultTopAddressing implements TopAddressing {
 
         if (verbose) {
             String errorMsg =
-                "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
+                    "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
             errorMsg += FAQUrl.suggestTodo(FAQUrl.NAME_SERVER_ADDR_NOT_EXIST_URL);
 
             LOGGER.warn(errorMsg);

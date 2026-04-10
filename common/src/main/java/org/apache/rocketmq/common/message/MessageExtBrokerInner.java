@@ -17,12 +17,12 @@
 package org.apache.rocketmq.common.message;
 
 import com.google.common.base.Strings;
-import java.nio.ByteBuffer;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicFilterType;
 import org.apache.rocketmq.common.utils.MessageUtils;
+
+import java.nio.ByteBuffer;
 
 public class MessageExtBrokerInner extends MessageExt {
     private static final long serialVersionUID = 7256001576878700634L;
@@ -35,22 +35,24 @@ public class MessageExtBrokerInner extends MessageExt {
 
     private MessageVersion version = MessageVersion.MESSAGE_VERSION_V1;
 
-    public ByteBuffer getEncodedBuff() {
-        return encodedBuff;
-    }
-
-    public void setEncodedBuff(ByteBuffer encodedBuff) {
-        this.encodedBuff = encodedBuff;
-    }
-
     public static long tagsString2tagsCode(final TopicFilterType filter, final String tags) {
-        if (Strings.isNullOrEmpty(tags)) { return 0; }
+        if (Strings.isNullOrEmpty(tags)) {
+            return 0;
+        }
 
         return tags.hashCode();
     }
 
     public static long tagsString2tagsCode(final String tags) {
         return tagsString2tagsCode(null, tags);
+    }
+
+    public ByteBuffer getEncodedBuff() {
+        return encodedBuff;
+    }
+
+    public void setEncodedBuff(ByteBuffer encodedBuff) {
+        this.encodedBuff = encodedBuff;
     }
 
     public String getPropertiesString() {
@@ -108,6 +110,6 @@ public class MessageExtBrokerInner extends MessageExt {
 
     public boolean needDispatchLMQ() {
         return StringUtils.isNoneBlank(getProperty(MessageConst.PROPERTY_INNER_MULTI_DISPATCH))
-            && MixAll.topicAllowsLMQ(getTopic());
+                && MixAll.topicAllowsLMQ(getTopic());
     }
 }

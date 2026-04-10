@@ -20,11 +20,7 @@ package org.apache.rocketmq.proxy.remoting.channel;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.google.common.base.MoreObjects;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelMetadata;
+import io.netty.channel.*;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.utils.ExceptionUtils;
@@ -69,16 +65,35 @@ public class RemotingChannel extends ProxyChannel implements RemoteChannelConver
     private final Set<SubscriptionData> subscriptionData;
 
     public RemotingChannel(RemotingProxyOutClient remotingProxyOutClient, ProxyRelayService proxyRelayService,
-        Channel parent,
-        String clientId, Set<SubscriptionData> subscriptionData) {
+                           Channel parent,
+                           String clientId, Set<SubscriptionData> subscriptionData) {
         super(proxyRelayService, parent, parent.id(),
-            NetworkUtil.socketAddress2String(parent.remoteAddress()),
-            NetworkUtil.socketAddress2String(parent.localAddress()));
+                NetworkUtil.socketAddress2String(parent.remoteAddress()),
+                NetworkUtil.socketAddress2String(parent.localAddress()));
         this.remotingProxyOutClient = remotingProxyOutClient;
         this.clientId = clientId;
         this.remoteAddress = NetworkUtil.socketAddress2String(parent.remoteAddress());
         this.localAddress = NetworkUtil.socketAddress2String(parent.localAddress());
         this.subscriptionData = subscriptionData;
+    }
+
+    public static Set<SubscriptionData> parseChannelExtendAttribute(Channel channel) {
+        if (ChannelHelper.getChannelProtocolType(channel).equals(ChannelProtocolType.REMOTING) &&
+                channel instanceof ChannelExtendAttributeGetter) {
+            String attr = ((ChannelExtendAttributeGetter) channel).getChannelExtendAttribute();
+            if (attr == null) {
+                return null;
+            }
+
+            try {
+                return JSON.parseObject(attr, new TypeReference<Set<SubscriptionData>>() {
+                });
+            } catch (Exception e) {
+                log.error("convert remoting extend attribute to subscriptionDataSet failed. data:{}", attr, e);
+                return null;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -119,8 +134,8 @@ public class RemotingChannel extends ProxyChannel implements RemoteChannelConver
 
     @Override
     protected CompletableFuture<Void> processCheckTransaction(CheckTransactionStateRequestHeader header,
-        MessageExt messageExt, TransactionData transactionData,
-        CompletableFuture<ProxyRelayResult<Void>> responseFuture) {
+                                                              MessageExt messageExt, TransactionData transactionData,
+                                                              CompletableFuture<ProxyRelayResult<Void>> responseFuture) {
         CompletableFuture<Void> writeFuture = new CompletableFuture<>();
         try {
             CheckTransactionStateRequestHeader requestHeader = new CheckTransactionStateRequestHeader();
@@ -152,25 +167,25 @@ public class RemotingChannel extends ProxyChannel implements RemoteChannelConver
 
     @Override
     protected CompletableFuture<Void> processGetConsumerRunningInfo(RemotingCommand command,
-        GetConsumerRunningInfoRequestHeader header,
-        CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> responseFuture) {
+                                                                    GetConsumerRunningInfoRequestHeader header,
+                                                                    CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> responseFuture) {
         try {
             RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_CONSUMER_RUNNING_INFO, header);
             this.remotingProxyOutClient.invokeToClient(this.parent(), request, DEFAULT_MQ_CLIENT_TIMEOUT)
-                .thenAccept(response -> {
-                    if (response.getCode() == ResponseCode.SUCCESS) {
-                        ConsumerRunningInfo consumerRunningInfo = ConsumerRunningInfo.decode(response.getBody(), ConsumerRunningInfo.class);
-                        responseFuture.complete(new ProxyRelayResult<>(ResponseCode.SUCCESS, "", consumerRunningInfo));
-                    } else {
-                        String errMsg = String.format("get consumer running info failed, code:%s remark:%s", response.getCode(), response.getRemark());
-                        RuntimeException e = new RuntimeException(errMsg);
-                        responseFuture.completeExceptionally(e);
-                    }
-                })
-                .exceptionally(t -> {
-                    responseFuture.completeExceptionally(ExceptionUtils.getRealException(t));
-                    return null;
-                });
+                    .thenAccept(response -> {
+                        if (response.getCode() == ResponseCode.SUCCESS) {
+                            ConsumerRunningInfo consumerRunningInfo = ConsumerRunningInfo.decode(response.getBody(), ConsumerRunningInfo.class);
+                            responseFuture.complete(new ProxyRelayResult<>(ResponseCode.SUCCESS, "", consumerRunningInfo));
+                        } else {
+                            String errMsg = String.format("get consumer running info failed, code:%s remark:%s", response.getCode(), response.getRemark());
+                            RuntimeException e = new RuntimeException(errMsg);
+                            responseFuture.completeExceptionally(e);
+                        }
+                    })
+                    .exceptionally(t -> {
+                        responseFuture.completeExceptionally(ExceptionUtils.getRealException(t));
+                        return null;
+                    });
             return CompletableFuture.completedFuture(null);
         } catch (Throwable t) {
             responseFuture.completeExceptionally(t);
@@ -180,27 +195,27 @@ public class RemotingChannel extends ProxyChannel implements RemoteChannelConver
 
     @Override
     protected CompletableFuture<Void> processConsumeMessageDirectly(RemotingCommand command,
-        ConsumeMessageDirectlyResultRequestHeader header, MessageExt messageExt,
-        CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> responseFuture) {
+                                                                    ConsumeMessageDirectlyResultRequestHeader header, MessageExt messageExt,
+                                                                    CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> responseFuture) {
         try {
             RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONSUME_MESSAGE_DIRECTLY, header);
             request.setBody(RemotingConverter.getInstance().convertMsgToBytes(messageExt));
 
             this.remotingProxyOutClient.invokeToClient(this.parent(), request, DEFAULT_MQ_CLIENT_TIMEOUT)
-                .thenAccept(response -> {
-                    if (response.getCode() == ResponseCode.SUCCESS) {
-                        ConsumeMessageDirectlyResult result = ConsumeMessageDirectlyResult.decode(response.getBody(), ConsumeMessageDirectlyResult.class);
-                        responseFuture.complete(new ProxyRelayResult<>(ResponseCode.SUCCESS, "", result));
-                    } else {
-                        String errMsg = String.format("consume message directly failed, code:%s remark:%s", response.getCode(), response.getRemark());
-                        RuntimeException e = new RuntimeException(errMsg);
-                        responseFuture.completeExceptionally(e);
-                    }
-                })
-                .exceptionally(t -> {
-                    responseFuture.completeExceptionally(ExceptionUtils.getRealException(t));
-                    return null;
-                });
+                    .thenAccept(response -> {
+                        if (response.getCode() == ResponseCode.SUCCESS) {
+                            ConsumeMessageDirectlyResult result = ConsumeMessageDirectlyResult.decode(response.getBody(), ConsumeMessageDirectlyResult.class);
+                            responseFuture.complete(new ProxyRelayResult<>(ResponseCode.SUCCESS, "", result));
+                        } else {
+                            String errMsg = String.format("consume message directly failed, code:%s remark:%s", response.getCode(), response.getRemark());
+                            RuntimeException e = new RuntimeException(errMsg);
+                            responseFuture.completeExceptionally(e);
+                        }
+                    })
+                    .exceptionally(t -> {
+                        responseFuture.completeExceptionally(ExceptionUtils.getRealException(t));
+                        return null;
+                    });
             return CompletableFuture.completedFuture(null);
         } catch (Throwable t) {
             responseFuture.completeExceptionally(t);
@@ -220,43 +235,24 @@ public class RemotingChannel extends ProxyChannel implements RemoteChannelConver
         return JSON.toJSONString(this.subscriptionData);
     }
 
-    public static Set<SubscriptionData> parseChannelExtendAttribute(Channel channel) {
-        if (ChannelHelper.getChannelProtocolType(channel).equals(ChannelProtocolType.REMOTING) &&
-            channel instanceof ChannelExtendAttributeGetter) {
-            String attr = ((ChannelExtendAttributeGetter) channel).getChannelExtendAttribute();
-            if (attr == null) {
-                return null;
-            }
-
-            try {
-                return JSON.parseObject(attr, new TypeReference<Set<SubscriptionData>>() {
-                });
-            } catch (Exception e) {
-                log.error("convert remoting extend attribute to subscriptionDataSet failed. data:{}", attr, e);
-                return null;
-            }
-        }
-        return null;
-    }
-
     @Override
     public RemoteChannel toRemoteChannel() {
         return new RemoteChannel(
-            ConfigurationManager.getProxyConfig().getLocalServeAddr(),
-            this.getRemoteAddress(),
-            this.getLocalAddress(),
-            ChannelProtocolType.REMOTING,
-            this.getChannelExtendAttribute());
+                ConfigurationManager.getProxyConfig().getLocalServeAddr(),
+                this.getRemoteAddress(),
+                this.getLocalAddress(),
+                ChannelProtocolType.REMOTING,
+                this.getChannelExtendAttribute());
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("parent", parent())
-            .add("clientId", clientId)
-            .add("remoteAddress", remoteAddress)
-            .add("localAddress", localAddress)
-            .add("subscriptionData", subscriptionData)
-            .toString();
+                .add("parent", parent())
+                .add("clientId", clientId)
+                .add("remoteAddress", remoteAddress)
+                .add("localAddress", localAddress)
+                .add("subscriptionData", subscriptionData)
+                .toString();
     }
 }

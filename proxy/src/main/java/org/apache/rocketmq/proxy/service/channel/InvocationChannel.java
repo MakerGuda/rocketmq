@@ -18,12 +18,13 @@
 package org.apache.rocketmq.proxy.service.channel;
 
 import io.netty.channel.ChannelFuture;
+import org.apache.rocketmq.proxy.config.ConfigurationManager;
+import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import org.apache.rocketmq.proxy.config.ConfigurationManager;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
 public class InvocationChannel extends SimpleChannel {
     protected final ConcurrentMap<Integer, InvocationContextInterface> inFlightRequestMap;

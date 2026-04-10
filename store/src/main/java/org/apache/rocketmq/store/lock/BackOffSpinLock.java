@@ -26,15 +26,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BackOffSpinLock implements AdaptiveBackOffSpinLock {
 
-    private AtomicBoolean putMessageSpinLock = new AtomicBoolean(true);
-
-    private int optimalDegree;
-
     private final static int INITIAL_DEGREE = 1000;
-
     private final static int MAX_OPTIMAL_DEGREE = 10000;
-
     private final List<AtomicInteger> numberOfRetreat;
+    private AtomicBoolean putMessageSpinLock = new AtomicBoolean(true);
+    private int optimalDegree;
 
     public BackOffSpinLock() {
         this.optimalDegree = INITIAL_DEGREE;

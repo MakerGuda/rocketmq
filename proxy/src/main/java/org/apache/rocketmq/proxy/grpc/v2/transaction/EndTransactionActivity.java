@@ -16,12 +16,7 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2.transaction;
 
-import apache.rocketmq.v2.Code;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.EndTransactionResponse;
-import apache.rocketmq.v2.TransactionResolution;
-import apache.rocketmq.v2.TransactionSource;
-import java.util.concurrent.CompletableFuture;
+import apache.rocketmq.v2.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.grpc.v2.AbstractMessagingActivity;
@@ -32,10 +27,12 @@ import org.apache.rocketmq.proxy.grpc.v2.common.ResponseBuilder;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.processor.TransactionStatus;
 
+import java.util.concurrent.CompletableFuture;
+
 public class EndTransactionActivity extends AbstractMessagingActivity {
 
     public EndTransactionActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
+                                  GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
     }
 
@@ -60,16 +57,16 @@ public class EndTransactionActivity extends AbstractMessagingActivity {
                     break;
             }
             future = this.messagingProcessor.endTransaction(
-                ctx,
-                request.getTopic().getName(),
-                request.getTransactionId(),
-                request.getMessageId(),
-                request.getTopic().getName(),
-                transactionStatus,
-                request.getSource().equals(TransactionSource.SOURCE_SERVER_CHECK))
-                .thenApply(r -> EndTransactionResponse.newBuilder()
-                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                    .build());
+                            ctx,
+                            request.getTopic().getName(),
+                            request.getTransactionId(),
+                            request.getMessageId(),
+                            request.getTopic().getName(),
+                            transactionStatus,
+                            request.getSource().equals(TransactionSource.SOURCE_SERVER_CHECK))
+                    .thenApply(r -> EndTransactionResponse.newBuilder()
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                            .build());
         } catch (Throwable t) {
             future.completeExceptionally(t);
         }

@@ -38,35 +38,9 @@ public class OffsetNotFoundIT extends BaseConf {
 
     private OffsetRpcHook offsetRpcHook = new OffsetRpcHook();
 
-    static class OffsetRpcHook implements RPCHook {
-
-        private boolean throwException = false;
-
-        private boolean addSetZeroOfNotFound = false;
-
-        @Override
-        public void doBeforeRequest(String remoteAddr, RemotingCommand request) {
-
-            if (request.getCode() == RequestCode.QUERY_CONSUMER_OFFSET) {
-                if (throwException) {
-                    throw new RuntimeException("Stop by rpc hook");
-                }
-                if (addSetZeroOfNotFound) {
-                    request.getExtFields().put("setZeroIfNotFound", "false");
-                }
-            }
-        }
-
-        @Override
-        public void doAfterResponse(String remoteAddr, RemotingCommand request,
-            RemotingCommand response) {
-
-        }
-    }
-
     @Before
     public void setUp() {
-        for (BrokerController brokerController: brokerControllerList) {
+        for (BrokerController brokerController : brokerControllerList) {
             brokerController.registerServerRPCHook(offsetRpcHook);
         }
 
@@ -99,11 +73,10 @@ public class OffsetNotFoundIT extends BaseConf {
         consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), 15000);
         Assert.assertEquals(producer.getAllMsgBody().size(), consumer.getListener().getAllMsgBody().size());
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
         consumer.shutdown();
     }
-
 
     @Test
     public void testOffsetNotFoundException() {
@@ -123,12 +96,38 @@ public class OffsetNotFoundIT extends BaseConf {
             consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), 15000);
             Assert.assertEquals(producer.getAllMsgBody().size(), consumer.getListener().getAllMsgBody().size());
             assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-                consumer.getListener().getAllMsgBody()))
-                .containsExactlyElementsIn(producer.getAllMsgBody());
+                    consumer.getListener().getAllMsgBody()))
+                    .containsExactlyElementsIn(producer.getAllMsgBody());
             consumer.shutdown();
         } finally {
             offsetRpcHook.addSetZeroOfNotFound = false;
         }
 
+    }
+
+    static class OffsetRpcHook implements RPCHook {
+
+        private boolean throwException = false;
+
+        private boolean addSetZeroOfNotFound = false;
+
+        @Override
+        public void doBeforeRequest(String remoteAddr, RemotingCommand request) {
+
+            if (request.getCode() == RequestCode.QUERY_CONSUMER_OFFSET) {
+                if (throwException) {
+                    throw new RuntimeException("Stop by rpc hook");
+                }
+                if (addSetZeroOfNotFound) {
+                    request.getExtFields().put("setZeroIfNotFound", "false");
+                }
+            }
+        }
+
+        @Override
+        public void doAfterResponse(String remoteAddr, RemotingCommand request,
+                                    RemotingCommand response) {
+
+        }
     }
 }

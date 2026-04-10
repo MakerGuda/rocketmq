@@ -62,8 +62,8 @@ public class ReceiptHandleGroupKey {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("channelId", getChannelId())
-            .add("group", group)
-            .toString();
+                .add("channelId", getChannelId())
+                .add("group", group)
+                .toString();
     }
 }

@@ -18,6 +18,7 @@
 package org.apache.rocketmq.proxy.common;
 
 import io.netty.channel.Channel;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,17 +51,12 @@ public class ProxyContext {
         return (T) this.value.get(key);
     }
 
-    public ProxyContext setLocalAddress(String localAddress) {
-        this.withVal(ContextVariable.LOCAL_ADDRESS, localAddress);
-        return this;
-    }
-
     public String getLocalAddress() {
         return this.getVal(ContextVariable.LOCAL_ADDRESS);
     }
 
-    public ProxyContext setRemoteAddress(String remoteAddress) {
-        this.withVal(ContextVariable.REMOTE_ADDRESS, remoteAddress);
+    public ProxyContext setLocalAddress(String localAddress) {
+        this.withVal(ContextVariable.LOCAL_ADDRESS, localAddress);
         return this;
     }
 
@@ -68,8 +64,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.REMOTE_ADDRESS);
     }
 
-    public ProxyContext setClientID(String clientID) {
-        this.withVal(ContextVariable.CLIENT_ID, clientID);
+    public ProxyContext setRemoteAddress(String remoteAddress) {
+        this.withVal(ContextVariable.REMOTE_ADDRESS, remoteAddress);
         return this;
     }
 
@@ -77,8 +73,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.CLIENT_ID);
     }
 
-    public ProxyContext setChannel(Channel channel) {
-        this.withVal(ContextVariable.CHANNEL, channel);
+    public ProxyContext setClientID(String clientID) {
+        this.withVal(ContextVariable.CLIENT_ID, clientID);
         return this;
     }
 
@@ -86,8 +82,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.CHANNEL);
     }
 
-    public ProxyContext setLanguage(String language) {
-        this.withVal(ContextVariable.LANGUAGE, language);
+    public ProxyContext setChannel(Channel channel) {
+        this.withVal(ContextVariable.CHANNEL, channel);
         return this;
     }
 
@@ -95,8 +91,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.LANGUAGE);
     }
 
-    public ProxyContext setClientVersion(String clientVersion) {
-        this.withVal(ContextVariable.CLIENT_VERSION, clientVersion);
+    public ProxyContext setLanguage(String language) {
+        this.withVal(ContextVariable.LANGUAGE, language);
         return this;
     }
 
@@ -104,8 +100,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.CLIENT_VERSION);
     }
 
-    public ProxyContext setRemainingMs(Long remainingMs) {
-        this.withVal(ContextVariable.REMAINING_MS, remainingMs);
+    public ProxyContext setClientVersion(String clientVersion) {
+        this.withVal(ContextVariable.CLIENT_VERSION, clientVersion);
         return this;
     }
 
@@ -113,8 +109,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.REMAINING_MS);
     }
 
-    public ProxyContext setAction(String action) {
-        this.withVal(ContextVariable.ACTION, action);
+    public ProxyContext setRemainingMs(Long remainingMs) {
+        this.withVal(ContextVariable.REMAINING_MS, remainingMs);
         return this;
     }
 
@@ -122,8 +118,8 @@ public class ProxyContext {
         return this.getVal(ContextVariable.ACTION);
     }
 
-    public ProxyContext setProtocolType(String protocol) {
-        this.withVal(ContextVariable.PROTOCOL_TYPE, protocol);
+    public ProxyContext setAction(String action) {
+        this.withVal(ContextVariable.ACTION, action);
         return this;
     }
 
@@ -131,13 +127,18 @@ public class ProxyContext {
         return this.getVal(ContextVariable.PROTOCOL_TYPE);
     }
 
-    public ProxyContext setNamespace(String namespace) {
-        this.withVal(ContextVariable.NAMESPACE, namespace);
+    public ProxyContext setProtocolType(String protocol) {
+        this.withVal(ContextVariable.PROTOCOL_TYPE, protocol);
         return this;
     }
 
     public String getNamespace() {
         return this.getVal(ContextVariable.NAMESPACE);
+    }
+
+    public ProxyContext setNamespace(String namespace) {
+        this.withVal(ContextVariable.NAMESPACE, namespace);
+        return this;
     }
 
 }

@@ -35,33 +35,32 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * <b>RocksDBTopicConfigManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
- * 
+ * <p>
  * 继承关系：<code>TopicConfigManager</code>。
  */
 public class RocksDBTopicConfigManager extends TopicConfigManager {
     private static final String VERSION_COLUMN_FAMILY = "topicVersion";
     private static final String TOPIC_COLUMN_FAMILY = "topic";
-
-    protected transient RocksDBConfigManager rocksDBConfigManager;
     private final boolean useSingleRocksDBForAllConfigs;
     private final String storePathRootDir;
+    protected transient RocksDBConfigManager rocksDBConfigManager;
 
     public RocksDBTopicConfigManager(BrokerController brokerController, boolean useSingleRocksDB,
-        String storePathRootDir) {
+                                     String storePathRootDir) {
         super(brokerController, false);
 
         this.useSingleRocksDBForAllConfigs = useSingleRocksDB;
         this.storePathRootDir = StringUtils.isBlank(storePathRootDir) ?
-            brokerController.getMessageStoreConfig().getStorePathRootDir() : storePathRootDir;
+                brokerController.getMessageStoreConfig().getStorePathRootDir() : storePathRootDir;
 
         long flushInterval = brokerController.getMessageStoreConfig().getMemTableFlushIntervalMs();
         CompressionType compressionType =
-            CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
+                CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
         String rocksDBPath = rocksdbConfigFilePath(storePathRootDir, useSingleRocksDB);
 
         this.rocksDBConfigManager = useSingleRocksDB ? new RocksDBConfigManager(rocksDBPath, flushInterval,
-            compressionType, TOPIC_COLUMN_FAMILY, VERSION_COLUMN_FAMILY) : new RocksDBConfigManager(rocksDBPath,
-            flushInterval, compressionType);
+                compressionType, TOPIC_COLUMN_FAMILY, VERSION_COLUMN_FAMILY) : new RocksDBConfigManager(rocksDBPath,
+                flushInterval, compressionType);
     }
 
     public RocksDBTopicConfigManager(BrokerController brokerController, boolean useSingleRocksDBForAllConfigs) {
@@ -232,10 +231,10 @@ public class RocksDBTopicConfigManager extends TopicConfigManager {
         try {
             long memTableFlushIntervalMs = brokerController.getMessageStoreConfig().getMemTableFlushIntervalMs();
             org.rocksdb.CompressionType compressionType =
-                org.rocksdb.CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
+                    org.rocksdb.CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
 
             separateRocksDBConfigManager = new RocksDBConfigManager(separateRocksDBPath, memTableFlushIntervalMs,
-                compressionType);
+                    compressionType);
 
             // Initialize in read-only mode
             if (!separateRocksDBConfigManager.init(true)) {

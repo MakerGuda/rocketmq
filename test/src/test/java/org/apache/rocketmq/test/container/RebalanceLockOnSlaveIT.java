@@ -17,11 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
@@ -36,6 +31,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -80,6 +81,16 @@ public class RebalanceLockOnSlaveIT extends ContainerIntegrationTestBase {
         }
     }
 
+    private static int targetTopicMqCount(Set<MessageQueue> mqSet, String topic) {
+        int count = 0;
+        for (MessageQueue mq : mqSet) {
+            if (mq.getTopic().equals(topic)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     @Test
     public void lockFromSlave() throws Exception {
         awaitUntilSlaveOK();
@@ -99,7 +110,7 @@ public class RebalanceLockOnSlaveIT extends ContainerIntegrationTestBase {
 
         mqConsumerThreeReplica3.getDefaultMQPushConsumerImpl().getmQClientFactory().updateTopicRouteInfoFromNameServer(THREE_REPLICAS_TOPIC);
         FindBrokerResult result = mqConsumerThreeReplica3.getDefaultMQPushConsumerImpl().getmQClientFactory().findBrokerAddressInSubscribe(
-            master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true);
+                master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true);
         assertThat(result).isNotNull();
 
         for (MessageQueue mq : mqSet) {
@@ -155,12 +166,12 @@ public class RebalanceLockOnSlaveIT extends ContainerIntegrationTestBase {
         mqConsumerThreeReplica2.getDefaultMQPushConsumerImpl().getmQClientFactory().updateTopicRouteInfoFromNameServer(THREE_REPLICAS_TOPIC);
 
         assertThat(mqConsumerThreeReplica1.getDefaultMQPushConsumerImpl().getmQClientFactory().findBrokerAddressInSubscribe(
-            master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true)).isNotNull();
+                master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true)).isNotNull();
 
         mqConsumerThreeReplica2.getDefaultMQPushConsumerImpl().getmQClientFactory().findBrokerAddressInSubscribe(
-            master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true);
+                master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true);
         assertThat(mqConsumerThreeReplica2.getDefaultMQPushConsumerImpl().getmQClientFactory().findBrokerAddressInSubscribe(
-            master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true)).isNotNull();
+                master3With3Replicas.getBrokerConfig().getBrokerName(), MixAll.MASTER_ID, true)).isNotNull();
 
         mqConsumerThreeReplica1.getDefaultMQPushConsumerImpl().doRebalance();
         mqConsumerThreeReplica2.getDefaultMQPushConsumerImpl().doRebalance();
@@ -192,18 +203,8 @@ public class RebalanceLockOnSlaveIT extends ContainerIntegrationTestBase {
         mqConsumerThreeReplica2.shutdown();
 
         await().atMost(100, TimeUnit.SECONDS).until(() ->
-            mqConsumerThreeReplica1.getDefaultMQPushConsumerImpl().getServiceState() == ServiceState.SHUTDOWN_ALREADY &&
-                mqConsumerThreeReplica2.getDefaultMQPushConsumerImpl().getServiceState() == ServiceState.SHUTDOWN_ALREADY
+                mqConsumerThreeReplica1.getDefaultMQPushConsumerImpl().getServiceState() == ServiceState.SHUTDOWN_ALREADY &&
+                        mqConsumerThreeReplica2.getDefaultMQPushConsumerImpl().getServiceState() == ServiceState.SHUTDOWN_ALREADY
         );
-    }
-
-    private static int targetTopicMqCount(Set<MessageQueue> mqSet, String topic) {
-        int count = 0;
-        for (MessageQueue mq : mqSet) {
-            if (mq.getTopic().equals(topic)) {
-                count++;
-            }
-        }
-        return count;
     }
 }

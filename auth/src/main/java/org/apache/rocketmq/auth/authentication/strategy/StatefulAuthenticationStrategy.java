@@ -18,8 +18,6 @@ package org.apache.rocketmq.auth.authentication.strategy;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authentication.context.AuthenticationContext;
 import org.apache.rocketmq.auth.authentication.context.DefaultAuthenticationContext;
@@ -28,6 +26,9 @@ import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.constant.CommonConstants;
 
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 public class StatefulAuthenticationStrategy extends AbstractAuthenticationStrategy {
 
     protected Cache<String, Pair<Boolean, AuthenticationException>> authCache;
@@ -35,9 +36,9 @@ public class StatefulAuthenticationStrategy extends AbstractAuthenticationStrate
     public StatefulAuthenticationStrategy(AuthConfig authConfig, Supplier<?> metadataService) {
         super(authConfig, metadataService);
         this.authCache = Caffeine.newBuilder()
-            .expireAfterWrite(authConfig.getStatefulAuthenticationCacheExpiredSecond(), TimeUnit.SECONDS)
-            .maximumSize(authConfig.getStatefulAuthenticationCacheMaxNum())
-            .build();
+                .expireAfterWrite(authConfig.getStatefulAuthenticationCacheExpiredSecond(), TimeUnit.SECONDS)
+                .maximumSize(authConfig.getStatefulAuthenticationCacheMaxNum())
+                .build();
     }
 
     @Override

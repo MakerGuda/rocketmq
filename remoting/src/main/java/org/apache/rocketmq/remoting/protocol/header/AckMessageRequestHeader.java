@@ -47,28 +47,28 @@ public class AckMessageRequestHeader extends TopicQueueRequestHeader {
     public void checkFields() throws RemotingCommandException {
     }
 
-    public void setOffset(Long offset) {
-        this.offset = offset;
-    }
-
     public Long getOffset() {
         return offset;
+    }
+
+    public void setOffset(Long offset) {
+        this.offset = offset;
     }
 
     public String getConsumerGroup() {
         return consumerGroup;
     }
 
-    public void setExtraInfo(String extraInfo) {
-        this.extraInfo = extraInfo;
+    public void setConsumerGroup(String consumerGroup) {
+        this.consumerGroup = consumerGroup;
     }
 
     public String getExtraInfo() {
         return extraInfo;
     }
 
-    public void setConsumerGroup(String consumerGroup) {
-        this.consumerGroup = consumerGroup;
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
     }
 
     public String getTopic() {
@@ -90,11 +90,11 @@ public class AckMessageRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("extraInfo", extraInfo)
-            .add("offset", offset)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("extraInfo", extraInfo)
+                .add("offset", offset)
+                .toString();
     }
 }

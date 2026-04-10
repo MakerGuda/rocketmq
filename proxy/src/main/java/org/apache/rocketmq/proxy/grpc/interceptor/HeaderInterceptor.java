@@ -18,15 +18,10 @@
 package org.apache.rocketmq.proxy.grpc.interceptor;
 
 import com.google.common.net.HostAndPort;
-import io.grpc.Attributes;
-import io.grpc.Grpc;
-import io.grpc.Metadata;
-import io.grpc.ServerCall;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
+import io.grpc.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.common.constant.HAProxyConstants;
 import org.apache.rocketmq.common.constant.GrpcConstants;
+import org.apache.rocketmq.common.constant.HAProxyConstants;
 import org.apache.rocketmq.proxy.common.utils.GrpcUtils;
 import org.apache.rocketmq.proxy.grpc.constant.AttributeKeys;
 
@@ -36,9 +31,9 @@ import java.net.SocketAddress;
 public class HeaderInterceptor implements ServerInterceptor {
     @Override
     public <R, W> ServerCall.Listener<R> interceptCall(
-        ServerCall<R, W> call,
-        Metadata headers,
-        ServerCallHandler<R, W> next
+            ServerCall<R, W> call,
+            Metadata headers,
+            ServerCallHandler<R, W> next
     ) {
         String remoteAddress = getProxyProtocolAddress(call.getAttributes());
         if (StringUtils.isBlank(remoteAddress)) {
@@ -73,9 +68,9 @@ public class HeaderInterceptor implements ServerInterceptor {
         if (socketAddress instanceof InetSocketAddress) {
             InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
             return HostAndPort.fromParts(
-                inetSocketAddress.getAddress()
-                    .getHostAddress(),
-                inetSocketAddress.getPort()
+                    inetSocketAddress.getAddress()
+                            .getHostAddress(),
+                    inetSocketAddress.getPort()
             ).toString();
         }
 

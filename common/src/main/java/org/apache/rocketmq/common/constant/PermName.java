@@ -64,7 +64,7 @@ public class PermName {
     public static boolean isValid(final int perm) {
         return perm >= 0 && perm < PERM_PRIORITY;
     }
-    
+
     public static boolean isPriority(final int perm) {
         return (perm & PERM_PRIORITY) == PERM_PRIORITY;
     }

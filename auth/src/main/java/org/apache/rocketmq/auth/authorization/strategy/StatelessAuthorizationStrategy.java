@@ -16,9 +16,10 @@
  */
 package org.apache.rocketmq.auth.authorization.strategy;
 
-import java.util.function.Supplier;
 import org.apache.rocketmq.auth.authorization.context.AuthorizationContext;
 import org.apache.rocketmq.auth.config.AuthConfig;
+
+import java.util.function.Supplier;
 
 public class StatelessAuthorizationStrategy extends AbstractAuthorizationStrategy {
 

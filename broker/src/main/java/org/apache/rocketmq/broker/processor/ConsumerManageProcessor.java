@@ -17,7 +17,6 @@
 package org.apache.rocketmq.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.util.List;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.client.ConsumerGroupInfo;
 import org.apache.rocketmq.broker.offset.ConsumerOffsetManager;
@@ -30,13 +29,7 @@ import org.apache.rocketmq.remoting.netty.NettyRequestProcessor;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
-import org.apache.rocketmq.remoting.protocol.header.GetConsumerListByGroupRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetConsumerListByGroupResponseBody;
-import org.apache.rocketmq.remoting.protocol.header.GetConsumerListByGroupResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.QueryConsumerOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.QueryConsumerOffsetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.UpdateConsumerOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.UpdateConsumerOffsetResponseHeader;
+import org.apache.rocketmq.remoting.protocol.header.*;
 import org.apache.rocketmq.remoting.protocol.statictopic.LogicQueueMappingItem;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingContext;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingDetail;
@@ -45,11 +38,13 @@ import org.apache.rocketmq.remoting.rpc.RpcClientUtils;
 import org.apache.rocketmq.remoting.rpc.RpcRequest;
 import org.apache.rocketmq.remoting.rpc.RpcResponse;
 
+import java.util.List;
+
 import static org.apache.rocketmq.remoting.protocol.RemotingCommand.buildErrorResponse;
 
 /**
  * Netty 请求处理器：处理与「Consumer Manage」相关的 Remoting 请求。
- * 
+ * <p>
  * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
  */
 public class ConsumerManageProcessor implements NettyRequestProcessor {
@@ -62,7 +57,7 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         switch (request.getCode()) {
             case RequestCode.GET_CONSUMER_LIST_BY_GROUP:
                 return this.getConsumerListByGroup(ctx, request);
@@ -82,16 +77,16 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
     }
 
     public RemotingCommand getConsumerListByGroup(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         final RemotingCommand response =
-            RemotingCommand.createResponseCommand(GetConsumerListByGroupResponseHeader.class);
+                RemotingCommand.createResponseCommand(GetConsumerListByGroupResponseHeader.class);
         final GetConsumerListByGroupRequestHeader requestHeader =
-            (GetConsumerListByGroupRequestHeader) request
-                .decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
+                (GetConsumerListByGroupRequestHeader) request
+                        .decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
 
         ConsumerGroupInfo consumerGroupInfo =
-            this.brokerController.getConsumerManager().getConsumerGroupInfo(
-                requestHeader.getConsumerGroup());
+                this.brokerController.getConsumerManager().getConsumerGroupInfo(
+                        requestHeader.getConsumerGroup());
         if (consumerGroupInfo != null) {
             List<String> clientIds = consumerGroupInfo.getAllClientId();
             if (!clientIds.isEmpty()) {
@@ -103,11 +98,11 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
                 return response;
             } else {
                 LOGGER.warn("getAllClientId failed, {} {}", requestHeader.getConsumerGroup(),
-                    RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
+                        RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
             }
         } else {
             LOGGER.warn("getConsumerGroupInfo failed, {} {}", requestHeader.getConsumerGroup(),
-                RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
+                    RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
         }
 
         response.setCode(ResponseCode.SYSTEM_ERROR);
@@ -116,7 +111,7 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
     }
 
     public RemotingCommand rewriteRequestForStaticTopic(final UpdateConsumerOffsetRequestHeader requestHeader,
-        final TopicQueueMappingContext mappingContext) {
+                                                        final TopicQueueMappingContext mappingContext) {
         try {
             if (mappingContext.getMappingDetail() == null) {
                 return null;
@@ -147,17 +142,17 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand updateConsumerOffset(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
 
         final RemotingCommand response =
-            RemotingCommand.createResponseCommand(UpdateConsumerOffsetResponseHeader.class);
+                RemotingCommand.createResponseCommand(UpdateConsumerOffsetResponseHeader.class);
 
         final UpdateConsumerOffsetRequestHeader requestHeader =
-            (UpdateConsumerOffsetRequestHeader)
-                request.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
+                (UpdateConsumerOffsetRequestHeader)
+                        request.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
 
         TopicQueueMappingContext mappingContext =
-            this.brokerController.getTopicQueueMappingManager().buildTopicQueueMappingContext(requestHeader);
+                this.brokerController.getTopicQueueMappingManager().buildTopicQueueMappingContext(requestHeader);
 
         RemotingCommand rewriteResult = rewriteRequestForStaticTopic(requestHeader, mappingContext);
         if (rewriteResult != null) {
@@ -200,20 +195,20 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
                 response.setCode(ResponseCode.SUCCESS);
                 response.setRemark("Offset has been previously reset");
                 LOGGER.info("Update consumer offset is rejected because of previous offset-reset. Group={}, " +
-                    "Topic={}, QueueId={}, Offset={}", group, topic, queueId, offset);
+                        "Topic={}, QueueId={}, Offset={}", group, topic, queueId, offset);
                 return response;
             }
         }
 
         this.brokerController.getConsumerOffsetManager().commitOffset(
-            RemotingHelper.parseChannelRemoteAddr(ctx.channel()), group, topic, queueId, offset);
+                RemotingHelper.parseChannelRemoteAddr(ctx.channel()), group, topic, queueId, offset);
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
         return response;
     }
 
     public RemotingCommand rewriteRequestForStaticTopic(QueryConsumerOffsetRequestHeader requestHeader,
-        TopicQueueMappingContext mappingContext) {
+                                                        TopicQueueMappingContext mappingContext) {
         try {
             if (mappingContext.getMappingDetail() == null) {
                 return null;
@@ -224,7 +219,7 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
             }
             List<LogicQueueMappingItem> mappingItemList = mappingContext.getMappingItemList();
             if (mappingItemList.size() == 1
-                && mappingItemList.get(0).getLogicOffset() == 0) {
+                    && mappingItemList.get(0).getLogicOffset() == 0) {
                 //as physical, just let it go
                 mappingContext.setCurrentItem(mappingItemList.get(0));
                 requestHeader.setQueueId(mappingContext.getLeaderItem().getQueueId());
@@ -289,8 +284,8 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
     }
 
     public RemotingCommand rewriteResponseForStaticTopic(final QueryConsumerOffsetRequestHeader requestHeader,
-        final QueryConsumerOffsetResponseHeader responseHeader,
-        final TopicQueueMappingContext mappingContext, final int code) {
+                                                         final QueryConsumerOffsetResponseHeader responseHeader,
+                                                         final TopicQueueMappingContext mappingContext, final int code) {
         try {
             if (mappingContext.getMappingDetail() == null) {
                 return null;
@@ -308,14 +303,14 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand queryConsumerOffset(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         final RemotingCommand response =
-            RemotingCommand.createResponseCommand(QueryConsumerOffsetResponseHeader.class);
+                RemotingCommand.createResponseCommand(QueryConsumerOffsetResponseHeader.class);
         final QueryConsumerOffsetResponseHeader responseHeader =
-            (QueryConsumerOffsetResponseHeader) response.readCustomHeader();
+                (QueryConsumerOffsetResponseHeader) response.readCustomHeader();
         final QueryConsumerOffsetRequestHeader requestHeader =
-            (QueryConsumerOffsetRequestHeader) request
-                .decodeCommandCustomHeader(QueryConsumerOffsetRequestHeader.class);
+                (QueryConsumerOffsetRequestHeader) request
+                        .decodeCommandCustomHeader(QueryConsumerOffsetRequestHeader.class);
 
         TopicQueueMappingContext mappingContext = this.brokerController.getTopicQueueMappingManager().buildTopicQueueMappingContext(requestHeader);
         RemotingCommand rewriteResult = rewriteRequestForStaticTopic(requestHeader, mappingContext);
@@ -324,8 +319,8 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
         }
 
         long offset =
-            this.brokerController.getConsumerOffsetManager().queryOffset(
-                requestHeader.getConsumerGroup(), requestHeader.getTopic(), requestHeader.getQueueId());
+                this.brokerController.getConsumerOffsetManager().queryOffset(
+                        requestHeader.getConsumerGroup(), requestHeader.getTopic(), requestHeader.getQueueId());
 
         if (offset >= 0) {
             responseHeader.setOffset(offset);
@@ -333,14 +328,14 @@ public class ConsumerManageProcessor implements NettyRequestProcessor {
             response.setRemark(null);
         } else {
             long minOffset =
-                this.brokerController.getMessageStore().getMinOffsetInQueue(requestHeader.getTopic(),
-                    requestHeader.getQueueId());
+                    this.brokerController.getMessageStore().getMinOffsetInQueue(requestHeader.getTopic(),
+                            requestHeader.getQueueId());
             if (requestHeader.getSetZeroIfNotFound() != null && Boolean.FALSE.equals(requestHeader.getSetZeroIfNotFound())) {
                 response.setCode(ResponseCode.QUERY_NOT_FOUND);
                 response.setRemark("Not found, do not set to zero, maybe this group boot first");
             } else if (minOffset <= 0
-                && this.brokerController.getMessageStore().checkInMemByConsumeOffset(
-                requestHeader.getTopic(), requestHeader.getQueueId(), 0, 1)) {
+                    && this.brokerController.getMessageStore().checkInMemByConsumeOffset(
+                    requestHeader.getTopic(), requestHeader.getQueueId(), 0, 1)) {
                 responseHeader.setOffset(0L);
                 response.setCode(ResponseCode.SUCCESS);
                 response.setRemark(null);

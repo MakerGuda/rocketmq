@@ -29,7 +29,7 @@ public class WaitNotifyObject {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
     protected final ConcurrentHashMap<Long/* thread id */, AtomicBoolean/* notified */> waitingThreadTable =
-        new ConcurrentHashMap<>(16);
+            new ConcurrentHashMap<>(16);
 
     protected AtomicBoolean hasNotified = new AtomicBoolean(false);
 

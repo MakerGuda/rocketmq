@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -33,18 +28,21 @@ import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteBatch;
 
-import static org.apache.rocketmq.common.config.AbstractRocksDBStorage.CTRL_0;
-import static org.apache.rocketmq.common.config.AbstractRocksDBStorage.CTRL_1;
-import static org.apache.rocketmq.common.config.AbstractRocksDBStorage.CTRL_2;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.apache.rocketmq.common.config.AbstractRocksDBStorage.*;
 
 /**
  * We use RocksDBConsumeQueueTable to store cqUnit.
  */
 public class RocksDBConsumeQueueTable {
+    public static final int CQ_UNIT_SIZE = 8 + 4 + 8 + 8;
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private static final Logger ROCKSDB_LOG = LoggerFactory.getLogger(LoggerName.ROCKSDB_LOGGER_NAME);
     private static final Logger ERROR_LOG = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
-
     /**
      * Rocksdb ConsumeQueue's store unit. Format:
      *
@@ -72,8 +70,6 @@ public class RocksDBConsumeQueueTable {
     private static final int PHY_MSG_LEN_OFFSET = 8;
     private static final int MSG_TAG_HASHCODE_OFFSET = 12;
     private static final int MSG_STORE_TIME_SIZE_OFFSET = 20;
-    public static final int CQ_UNIT_SIZE = 8 + 4 + 8 + 8;
-
     /**
      * ┌─────────────────────────┬───────────┬───────────┬───────────┬───────────┬───────────────────────┐
      * │ Topic Bytes Array Size  │  CTRL_1   │  CTRL_1   │  QueueId  │  CTRL_1   │  ConsumeQueue Offset  │
@@ -100,12 +96,18 @@ public class RocksDBConsumeQueueTable {
         this.messageStore = messageStore;
     }
 
+    public static Pair<ByteBuffer, ByteBuffer> getCQByteBufferPair() {
+        ByteBuffer cqKey = ByteBuffer.allocateDirect(RocksDBConsumeQueueStore.MAX_KEY_LEN);
+        ByteBuffer cqValue = ByteBuffer.allocateDirect(CQ_UNIT_SIZE);
+        return new Pair<>(cqKey, cqValue);
+    }
+
     public void load() {
         this.defaultCFH = this.rocksDBStorage.getDefaultCFHandle();
     }
 
     public void buildAndPutCQByteBuffer(final Pair<ByteBuffer, ByteBuffer> cqBBPair, final DispatchEntry request,
-        final WriteBatch writeBatch) throws RocksDBException {
+                                        final WriteBatch writeBatch) throws RocksDBException {
         final ByteBuffer cqKey = cqBBPair.getObject1();
         buildCQKeyByteBuffer(cqKey, request.topic, request.queueId, request.queueOffset);
 
@@ -165,6 +167,7 @@ public class RocksDBConsumeQueueTable {
 
     /**
      * When topic is deleted, we clean up its CqUnit in rocksdb.
+     *
      * @param topic
      * @param queueId
      * @throws RocksDBException
@@ -180,7 +183,7 @@ public class RocksDBConsumeQueueTable {
     }
 
     public long binarySearchInCQByTime(String topic, int queueId, long high, long low, long timestamp,
-        long minPhysicOffset, BoundaryType boundaryType) throws RocksDBException {
+                                       long minPhysicOffset, BoundaryType boundaryType) throws RocksDBException {
         long result = -1L;
         long targetOffset = -1L, leftOffset = -1L, rightOffset = -1L;
         long ceiling = high, floor = low;
@@ -222,7 +225,7 @@ public class RocksDBConsumeQueueTable {
             ByteBuffer byteBuffer = getCQInKV(topic, queueId, midOffset);
             if (byteBuffer == null) {
                 ERROR_LOG.warn("binarySearchInCQByTimeStamp Failed. topic: {}, queueId: {}, timestamp: {}, result: null",
-                    topic, queueId, timestamp);
+                        topic, queueId, timestamp);
                 low = midOffset + 1;
                 continue;
             }
@@ -306,7 +309,7 @@ public class RocksDBConsumeQueueTable {
     }
 
     public PhyAndCQOffset binarySearchInCQ(String topic, int queueId, long high, long low, long targetPhyOffset,
-        boolean min) throws RocksDBException {
+                                           boolean min) throws RocksDBException {
         long resultCQOffset = -1L;
         long resultPhyOffset = -1L;
         while (high >= low) {
@@ -323,7 +326,7 @@ public class RocksDBConsumeQueueTable {
             final long phyOffset = byteBuffer.getLong(PHY_OFFSET_OFFSET);
             if (phyOffset == targetPhyOffset) {
                 if (min) {
-                    resultCQOffset =  midCQOffset;
+                    resultCQOffset = midCQOffset;
                     resultPhyOffset = phyOffset;
                 }
                 break;
@@ -342,12 +345,6 @@ public class RocksDBConsumeQueueTable {
             }
         }
         return new PhyAndCQOffset(resultPhyOffset, resultCQOffset);
-    }
-
-    public static Pair<ByteBuffer, ByteBuffer> getCQByteBufferPair() {
-        ByteBuffer cqKey = ByteBuffer.allocateDirect(RocksDBConsumeQueueStore.MAX_KEY_LEN);
-        ByteBuffer cqValue = ByteBuffer.allocateDirect(CQ_UNIT_SIZE);
-        return new Pair<>(cqKey, cqValue);
     }
 
     private ByteBuffer buildCQKeyByteBuffer(final byte[] topicBytes, final int queueId, final long cqOffset) {
@@ -372,7 +369,7 @@ public class RocksDBConsumeQueueTable {
     }
 
     private void buildCQValueByteBuffer0(final ByteBuffer byteBuffer, final long phyOffset, final int msgSize,
-        final long tagsCode, final long storeTimestamp) {
+                                         final long tagsCode, final long storeTimestamp) {
         byteBuffer.putLong(phyOffset).putInt(msgSize).putLong(tagsCode).putLong(storeTimestamp);
         byteBuffer.flip();
     }

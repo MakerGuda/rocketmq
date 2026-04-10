@@ -17,13 +17,13 @@
 
 package org.apache.rocketmq.test.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.listener.AbstractListener;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,7 +31,7 @@ public class MQWait {
     private static Logger logger = LoggerFactory.getLogger(MQWait.class);
 
     public static boolean waitConsumeAll(int timeoutMills, Collection<Object> allSendMsgs,
-        AbstractListener... listeners) {
+                                         AbstractListener... listeners) {
         boolean recvAll = false;
         long startTime = System.currentTimeMillis();
         Collection<Object> noDupMsgs = new ArrayList<Object>();
@@ -41,7 +41,7 @@ public class MQWait {
                 try {
                     for (AbstractListener listener : listeners) {
                         Collection<Object> recvMsgs = Collections
-                            .synchronizedCollection(listener.getAllUndupMsgBody());
+                                .synchronizedCollection(listener.getAllUndupMsgBody());
                         noDupMsgs.addAll(VerifyUtils.getFilterdMessage(allSendMsgs, recvMsgs));
                     }
                 } catch (Exception e) {
@@ -57,8 +57,8 @@ public class MQWait {
                 TestUtil.waitForMonment(500);
             } else {
                 logger.error(String.format(
-                    "timeout but still not receive all messages,expectSize[%s],realSize[%s]",
-                    allSendMsgs.size(), noDupMsgs.size()));
+                        "timeout but still not receive all messages,expectSize[%s],realSize[%s]",
+                        allSendMsgs.size(), noDupMsgs.size()));
                 break;
             }
         }

@@ -21,11 +21,11 @@ public interface LatencyFaultTolerance<T> {
     /**
      * Update brokers' states, to decide if they are good or not.
      *
-     * @param name Broker's name.
-     * @param currentLatency Current message sending process's latency.
+     * @param name                 Broker's name.
+     * @param currentLatency       Current message sending process's latency.
      * @param notAvailableDuration Corresponding not available time, ms. The broker will be not available until it
-     * spends such time.
-     * @param reachable To decide if this broker is reachable or not.
+     *                             spends such time.
+     * @param reachable            To decide if this broker is reachable or not.
      */
     void updateFaultItem(final T name, final long currentLatency, final long notAvailableDuration,
                          final boolean reachable);
@@ -91,16 +91,16 @@ public interface LatencyFaultTolerance<T> {
     void setDetectInterval(final int detectInterval);
 
     /**
-     * Use it to set the detector work or not.
-     *
-     * @param startDetectorEnable set the detector's work status
-     */
-    void setStartDetectorEnable(final boolean startDetectorEnable);
-
-    /**
      * Use it to judge if the detector enabled.
      *
      * @return is the detector should be started.
      */
     boolean isStartDetectorEnable();
+
+    /**
+     * Use it to set the detector work or not.
+     *
+     * @param startDetectorEnable set the detector's work status
+     */
+    void setStartDetectorEnable(final boolean startDetectorEnable);
 }

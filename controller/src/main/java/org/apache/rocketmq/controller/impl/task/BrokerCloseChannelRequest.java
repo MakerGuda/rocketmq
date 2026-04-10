@@ -61,9 +61,9 @@ public class BrokerCloseChannelRequest implements CommandCustomHeader {
     @Override
     public String toString() {
         return "BrokerCloseChannelRequest{" +
-            "clusterName='" + clusterName + '\'' +
-            ", brokerName='" + brokerName + '\'' +
-            ", brokerId=" + brokerId +
-            '}';
+                "clusterName='" + clusterName + '\'' +
+                ", brokerName='" + brokerName + '\'' +
+                ", brokerId=" + brokerId +
+                '}';
     }
 }

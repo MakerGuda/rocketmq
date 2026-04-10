@@ -34,11 +34,6 @@ public class RegisterBrokerToControllerResponseHeader implements CommandCustomHe
 
     private Integer syncStateSetEpoch;
 
-    @Override
-    public void checkFields() throws RemotingCommandException {
-
-    }
-
     public RegisterBrokerToControllerResponseHeader() {
     }
 
@@ -47,51 +42,56 @@ public class RegisterBrokerToControllerResponseHeader implements CommandCustomHe
         this.brokerName = brokerName;
     }
 
-    public void setMasterBrokerId(Long masterBrokerId) {
-        this.masterBrokerId = masterBrokerId;
-    }
+    @Override
+    public void checkFields() throws RemotingCommandException {
 
-    public void setMasterAddress(String masterAddress) {
-        this.masterAddress = masterAddress;
-    }
-
-    public void setMasterEpoch(Integer masterEpoch) {
-        this.masterEpoch = masterEpoch;
-    }
-
-    public void setSyncStateSetEpoch(Integer syncStateSetEpoch) {
-        this.syncStateSetEpoch = syncStateSetEpoch;
     }
 
     public Integer getMasterEpoch() {
         return masterEpoch;
     }
 
+    public void setMasterEpoch(Integer masterEpoch) {
+        this.masterEpoch = masterEpoch;
+    }
+
     public Integer getSyncStateSetEpoch() {
         return syncStateSetEpoch;
+    }
+
+    public void setSyncStateSetEpoch(Integer syncStateSetEpoch) {
+        this.syncStateSetEpoch = syncStateSetEpoch;
     }
 
     public String getClusterName() {
         return clusterName;
     }
 
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
     public String getBrokerName() {
         return brokerName;
+    }
+
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 
     public Long getMasterBrokerId() {
         return masterBrokerId;
     }
 
+    public void setMasterBrokerId(Long masterBrokerId) {
+        this.masterBrokerId = masterBrokerId;
+    }
+
     public String getMasterAddress() {
         return masterAddress;
     }
 
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;
+    public void setMasterAddress(String masterAddress) {
+        this.masterAddress = masterAddress;
     }
 }

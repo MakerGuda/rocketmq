@@ -16,10 +16,11 @@
  */
 package org.apache.rocketmq.common.topic;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class TopicValidator {
 
@@ -158,24 +159,6 @@ public class TopicValidator {
         return new ValidateResult(true, "");
     }
 
-    public static class ValidateResult {
-        private final boolean valid;
-        private final String remark;
-
-        public ValidateResult(boolean valid, String remark) {
-            this.valid = valid;
-            this.remark = remark;
-        }
-
-        public boolean isValid() {
-            return valid;
-        }
-
-        public String getRemark() {
-            return remark;
-        }
-    }
-
     public static boolean isSystemTopic(String topic) {
         return SYSTEM_TOPIC_SET.contains(topic) || topic.startsWith(SYSTEM_TOPIC_PREFIX);
     }
@@ -194,5 +177,23 @@ public class TopicValidator {
 
     public static Set<String> getNotAllowedSendTopicSet() {
         return NOT_ALLOWED_SEND_TOPIC_SET;
+    }
+
+    public static class ValidateResult {
+        private final boolean valid;
+        private final String remark;
+
+        public ValidateResult(boolean valid, String remark) {
+            this.valid = valid;
+            this.remark = remark;
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        public String getRemark() {
+            return remark;
+        }
     }
 }

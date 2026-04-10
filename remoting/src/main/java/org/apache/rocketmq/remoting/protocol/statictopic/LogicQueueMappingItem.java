@@ -58,10 +58,10 @@ public class LogicQueueMappingItem extends RemotingSerializable {
             return logicOffset;
         }
         if (endOffset >= startOffset
-            && endOffset < physicalQueueOffset) {
+                && endOffset < physicalQueueOffset) {
             return logicOffset + (endOffset - startOffset);
         }
-        return  logicOffset + (physicalQueueOffset - startOffset);
+        return logicOffset + (physicalQueueOffset - startOffset);
     }
 
     public long computeStaticQueueOffsetStrictly(long physicalQueueOffset) {
@@ -70,11 +70,11 @@ public class LogicQueueMappingItem extends RemotingSerializable {
         if (physicalQueueOffset < startOffset) {
             return logicOffset;
         }
-        return  logicOffset + (physicalQueueOffset - startOffset);
+        return logicOffset + (physicalQueueOffset - startOffset);
     }
 
     public long computePhysicalQueueOffset(long staticQueueOffset) {
-        return  (staticQueueOffset - logicOffset) + startOffset;
+        return (staticQueueOffset - logicOffset) + startOffset;
     }
 
     public long computeMaxStaticQueueOffset() {
@@ -84,6 +84,7 @@ public class LogicQueueMappingItem extends RemotingSerializable {
             return logicOffset;
         }
     }
+
     public boolean checkIfEndOffsetDecided() {
         //if the endOffset == startOffset, then the item should be deleted
         return endOffset > startOffset;
@@ -101,66 +102,65 @@ public class LogicQueueMappingItem extends RemotingSerializable {
         return gen;
     }
 
-    public int getQueueId() {
-        return queueId;
-    }
-
-    public String getBname() {
-        return bname;
-    }
-
-    public long getLogicOffset() {
-        return logicOffset;
-    }
-
-    public long getStartOffset() {
-        return startOffset;
-    }
-
-    public long getEndOffset() {
-        return endOffset;
-    }
-
-    public long getTimeOfStart() {
-        return timeOfStart;
-    }
-
-    public long getTimeOfEnd() {
-        return timeOfEnd;
-    }
-
-    public void setLogicOffset(long logicOffset) {
-        this.logicOffset = logicOffset;
-    }
-
-    public void setEndOffset(long endOffset) {
-        this.endOffset = endOffset;
-    }
-
-    public void setTimeOfStart(long timeOfStart) {
-        this.timeOfStart = timeOfStart;
-    }
-
-    public void setTimeOfEnd(long timeOfEnd) {
-        this.timeOfEnd = timeOfEnd;
-    }
-
     public void setGen(int gen) {
         this.gen = gen;
+    }
+
+    public int getQueueId() {
+        return queueId;
     }
 
     public void setQueueId(int queueId) {
         this.queueId = queueId;
     }
 
+    public String getBname() {
+        return bname;
+    }
+
     public void setBname(String bname) {
         this.bname = bname;
+    }
+
+    public long getLogicOffset() {
+        return logicOffset;
+    }
+
+    public void setLogicOffset(long logicOffset) {
+        this.logicOffset = logicOffset;
+    }
+
+    public long getStartOffset() {
+        return startOffset;
     }
 
     public void setStartOffset(long startOffset) {
         this.startOffset = startOffset;
     }
 
+    public long getEndOffset() {
+        return endOffset;
+    }
+
+    public void setEndOffset(long endOffset) {
+        this.endOffset = endOffset;
+    }
+
+    public long getTimeOfStart() {
+        return timeOfStart;
+    }
+
+    public void setTimeOfStart(long timeOfStart) {
+        this.timeOfStart = timeOfStart;
+    }
+
+    public long getTimeOfEnd() {
+        return timeOfEnd;
+    }
+
+    public void setTimeOfEnd(long timeOfEnd) {
+        this.timeOfEnd = timeOfEnd;
+    }
 
     @Override
     public boolean equals(Object o) {

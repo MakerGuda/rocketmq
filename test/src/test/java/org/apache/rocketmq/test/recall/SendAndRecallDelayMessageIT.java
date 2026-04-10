@@ -17,13 +17,6 @@
 
 package org.apache.rocketmq.test.recall;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.consumer.PopResult;
 import org.apache.rocketmq.client.consumer.PopStatus;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -45,6 +38,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
+
 @RunWith(Parameterized.class)
 public class SendAndRecallDelayMessageIT extends BaseConf {
 
@@ -62,9 +63,14 @@ public class SendAndRecallDelayMessageIT extends BaseConf {
     @Parameterized.Parameters
     public static List<Object[]> params() {
         List<Object[]> result = new ArrayList<>();
-        result.add(new Object[] {false});
-        result.add(new Object[] {true});
+        result.add(new Object[]{false});
+        result.add(new Object[]{true});
         return result;
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        shutdown();
     }
 
     @Before
@@ -75,11 +81,6 @@ public class SendAndRecallDelayMessageIT extends BaseConf {
         producer = getProducer(NAMESRV_ADDR, initTopic);
         popConsumer = ConsumerFactory.getRMQPopConsumer(NAMESRV_ADDR, consumerGroup, initTopic, "*", new RMQNormalListener());
         mqClients.add(popConsumer);
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        shutdown();
     }
 
     @Test
@@ -98,13 +99,13 @@ public class SendAndRecallDelayMessageIT extends BaseConf {
         }
 
         await()
-            .pollInterval(1, TimeUnit.SECONDS)
-            .atMost(delaySecond + 15, TimeUnit.SECONDS)
-            .until(() -> {
-                PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
-                processPopResult(recvList, popResult);
-                return recvList.size() == sendList.size();
-            });
+                .pollInterval(1, TimeUnit.SECONDS)
+                .atMost(delaySecond + 15, TimeUnit.SECONDS)
+                .until(() -> {
+                    PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
+                    processPopResult(recvList, popResult);
+                    return recvList.size() == sendList.size();
+                });
     }
 
     @Test
@@ -130,13 +131,13 @@ public class SendAndRecallDelayMessageIT extends BaseConf {
         assertEquals(sendList.size() - 2, recallCount); // one normal and one delay-level message
         try {
             await()
-                .pollInterval(1, TimeUnit.SECONDS)
-                .atMost(delaySecond + 15, TimeUnit.SECONDS)
-                .until(() -> {
-                    PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
-                    processPopResult(recvList, popResult);
-                    return recvList.size() == sendList.size();
-                });
+                    .pollInterval(1, TimeUnit.SECONDS)
+                    .atMost(delaySecond + 15, TimeUnit.SECONDS)
+                    .until(() -> {
+                        PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
+                        processPopResult(recvList, popResult);
+                        return recvList.size() == sendList.size();
+                    });
         } catch (Exception e) {
         }
         assertEquals(sendList.size() - recallCount, recvList.size());
@@ -163,9 +164,9 @@ public class SendAndRecallDelayMessageIT extends BaseConf {
             SendResult sendResult = producer.getProducer().send(message);
             if (sendResult.getRecallHandle() != null) {
                 RecallMessageHandle.HandleV1 handleEntity =
-                    (RecallMessageHandle.HandleV1) RecallMessageHandle.decodeHandle(sendResult.getRecallHandle());
+                        (RecallMessageHandle.HandleV1) RecallMessageHandle.decodeHandle(sendResult.getRecallHandle());
                 String collisionHandle = RecallMessageHandle.HandleV1.buildHandle(collisionTopic,
-                    handleEntity.getBrokerName(), handleEntity.getTimestampStr(), handleEntity.getMessageId());
+                        handleEntity.getBrokerName(), handleEntity.getTimestampStr(), handleEntity.getMessageId());
                 String messageId = producer.getProducer().recallMessage(collisionTopic, collisionHandle);
                 assertEquals(sendResult.getMsgId(), messageId);
                 recallCount += 1;
@@ -175,13 +176,13 @@ public class SendAndRecallDelayMessageIT extends BaseConf {
 
         try {
             await()
-                .pollInterval(1, TimeUnit.SECONDS)
-                .atMost(delaySecond + 15, TimeUnit.SECONDS)
-                .until(() -> {
-                    PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
-                    processPopResult(recvList, popResult);
-                    return recvList.size() == sendList.size();
-                });
+                    .pollInterval(1, TimeUnit.SECONDS)
+                    .atMost(delaySecond + 15, TimeUnit.SECONDS)
+                    .until(() -> {
+                        PopResult popResult = popConsumer.pop(brokerAddress, messageQueue, 60 * 1000, -1);
+                        processPopResult(recvList, popResult);
+                        return recvList.size() == sendList.size();
+                    });
         } catch (Exception e) {
         }
         assertEquals(sendList.size(), recvList.size());

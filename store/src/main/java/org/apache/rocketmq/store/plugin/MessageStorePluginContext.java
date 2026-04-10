@@ -25,15 +25,15 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
 public class MessageStorePluginContext {
+    private final Configuration configuration;
     private MessageStoreConfig messageStoreConfig;
     private BrokerStatsManager brokerStatsManager;
     private MessageArrivingListener messageArrivingListener;
     private BrokerConfig brokerConfig;
-    private final Configuration configuration;
 
     public MessageStorePluginContext(MessageStoreConfig messageStoreConfig,
-        BrokerStatsManager brokerStatsManager, MessageArrivingListener messageArrivingListener,
-        BrokerConfig brokerConfig, Configuration configuration) {
+                                     BrokerStatsManager brokerStatsManager, MessageArrivingListener messageArrivingListener,
+                                     BrokerConfig brokerConfig, Configuration configuration) {
         super();
         this.messageStoreConfig = messageStoreConfig;
         this.brokerStatsManager = brokerStatsManager;

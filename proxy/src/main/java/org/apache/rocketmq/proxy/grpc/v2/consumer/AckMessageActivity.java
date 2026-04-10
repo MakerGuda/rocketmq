@@ -16,16 +16,7 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2.consumer;
 
-import apache.rocketmq.v2.AckMessageEntry;
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.AckMessageResponse;
-import apache.rocketmq.v2.AckMessageResultEntry;
-import apache.rocketmq.v2.Code;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import apache.rocketmq.v2.*;
 import org.apache.rocketmq.client.consumer.AckResult;
 import org.apache.rocketmq.client.consumer.AckStatus;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
@@ -41,10 +32,16 @@ import org.apache.rocketmq.proxy.processor.BatchAckResult;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.service.message.ReceiptHandleMessage;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+
 public class AckMessageActivity extends AbstractMessagingActivity {
 
     public AckMessageActivity(MessagingProcessor messagingProcessor, GrpcClientSettingsManager grpcClientSettingsManager,
-        GrpcChannelManager grpcChannelManager) {
+                              GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
     }
 
@@ -74,24 +71,24 @@ public class AckMessageActivity extends AbstractMessagingActivity {
             handleMessageList.add(new ReceiptHandleMessage(ReceiptHandle.decode(handleString), ackMessageEntry.getMessageId()));
         }
         return this.messagingProcessor.batchAckMessage(ctx, handleMessageList, group, topic)
-            .thenApply(batchAckResultList -> {
-                AckMessageResponse.Builder responseBuilder = AckMessageResponse.newBuilder();
-                Set<Code> responseCodes = new HashSet<>();
-                for (BatchAckResult batchAckResult : batchAckResultList) {
-                    AckMessageResultEntry entry = convertToAckMessageResultEntry(batchAckResult);
-                    responseBuilder.addEntries(entry);
-                    responseCodes.add(entry.getStatus().getCode());
-                }
-                setAckResponseStatus(responseBuilder, responseCodes);
-                return responseBuilder.build();
-            });
+                .thenApply(batchAckResultList -> {
+                    AckMessageResponse.Builder responseBuilder = AckMessageResponse.newBuilder();
+                    Set<Code> responseCodes = new HashSet<>();
+                    for (BatchAckResult batchAckResult : batchAckResultList) {
+                        AckMessageResultEntry entry = convertToAckMessageResultEntry(batchAckResult);
+                        responseBuilder.addEntries(entry);
+                        responseCodes.add(entry.getStatus().getCode());
+                    }
+                    setAckResponseStatus(responseBuilder, responseCodes);
+                    return responseBuilder.build();
+                });
     }
 
     protected AckMessageResultEntry convertToAckMessageResultEntry(BatchAckResult batchAckResult) {
         ReceiptHandleMessage handleMessage = batchAckResult.getReceiptHandleMessage();
         AckMessageResultEntry.Builder resultBuilder = AckMessageResultEntry.newBuilder()
-            .setMessageId(handleMessage.getMessageId())
-            .setReceiptHandle(handleMessage.getReceiptHandle().getReceiptHandle());
+                .setMessageId(handleMessage.getMessageId())
+                .setReceiptHandle(handleMessage.getReceiptHandle().getReceiptHandle());
         if (batchAckResult.getProxyException() != null) {
             resultBuilder.setStatus(ResponseBuilder.getInstance().buildStatus(batchAckResult.getProxyException()));
         } else {
@@ -125,7 +122,7 @@ public class AckMessageActivity extends AbstractMessagingActivity {
                 entryList.add(entryResult);
             }
             AckMessageResponse.Builder responseBuilder = AckMessageResponse.newBuilder()
-                .addAllEntries(entryList);
+                    .addAllEntries(entryList);
             setAckResponseStatus(responseBuilder, responseCodes);
             resultFuture.complete(responseBuilder.build());
         });
@@ -133,17 +130,17 @@ public class AckMessageActivity extends AbstractMessagingActivity {
     }
 
     protected CompletableFuture<AckMessageResultEntry> processAckMessage(ProxyContext ctx, String group, String topic, AckMessageRequest request,
-        AckMessageEntry ackMessageEntry) {
+                                                                         AckMessageEntry ackMessageEntry) {
         CompletableFuture<AckMessageResultEntry> future = new CompletableFuture<>();
 
         try {
             String handleString = this.getHandleString(ctx, group, request, ackMessageEntry);
             CompletableFuture<AckResult> ackResultFuture = this.messagingProcessor.ackMessage(
-                ctx,
-                ReceiptHandle.decode(handleString),
-                ackMessageEntry.getMessageId(),
-                group,
-                topic
+                    ctx,
+                    ReceiptHandle.decode(handleString),
+                    ackMessageEntry.getMessageId(),
+                    group,
+                    topic
             );
             ackResultFuture.thenAccept(result -> {
                 future.complete(convertToAckMessageResultEntry(ctx, ackMessageEntry, result));
@@ -159,26 +156,26 @@ public class AckMessageActivity extends AbstractMessagingActivity {
 
     protected AckMessageResultEntry convertToAckMessageResultEntry(ProxyContext ctx, AckMessageEntry ackMessageEntry, Throwable throwable) {
         return AckMessageResultEntry.newBuilder()
-            .setStatus(ResponseBuilder.getInstance().buildStatus(throwable))
-            .setMessageId(ackMessageEntry.getMessageId())
-            .setReceiptHandle(ackMessageEntry.getReceiptHandle())
-            .build();
+                .setStatus(ResponseBuilder.getInstance().buildStatus(throwable))
+                .setMessageId(ackMessageEntry.getMessageId())
+                .setReceiptHandle(ackMessageEntry.getReceiptHandle())
+                .build();
     }
 
     protected AckMessageResultEntry convertToAckMessageResultEntry(ProxyContext ctx, AckMessageEntry ackMessageEntry,
-        AckResult ackResult) {
+                                                                   AckResult ackResult) {
         if (AckStatus.OK.equals(ackResult.getStatus())) {
             return AckMessageResultEntry.newBuilder()
-                .setMessageId(ackMessageEntry.getMessageId())
-                .setReceiptHandle(ackMessageEntry.getReceiptHandle())
-                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                .build();
+                    .setMessageId(ackMessageEntry.getMessageId())
+                    .setReceiptHandle(ackMessageEntry.getReceiptHandle())
+                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                    .build();
         }
         return AckMessageResultEntry.newBuilder()
-            .setMessageId(ackMessageEntry.getMessageId())
-            .setReceiptHandle(ackMessageEntry.getReceiptHandle())
-            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.INTERNAL_SERVER_ERROR, "ack failed: status is abnormal"))
-            .build();
+                .setMessageId(ackMessageEntry.getMessageId())
+                .setReceiptHandle(ackMessageEntry.getReceiptHandle())
+                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.INTERNAL_SERVER_ERROR, "ack failed: status is abnormal"))
+                .build();
     }
 
     protected void setAckResponseStatus(AckMessageResponse.Builder responseBuilder, Set<Code> responseCodes) {

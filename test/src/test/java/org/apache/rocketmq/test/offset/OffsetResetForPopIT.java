@@ -18,22 +18,15 @@
 package org.apache.rocketmq.test.offset;
 
 import com.google.common.collect.Lists;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.client.consumer.PopResult;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
-import org.apache.rocketmq.remoting.protocol.admin.ConsumeStats;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.admin.ConsumeStats;
 import org.apache.rocketmq.test.base.BaseConf;
 import org.apache.rocketmq.test.client.rmq.RMQNormalProducer;
 import org.apache.rocketmq.test.client.rmq.RMQPopConsumer;
@@ -46,6 +39,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.awaitility.Awaitility.await;
 
@@ -88,14 +89,14 @@ public class OffsetResetForPopIT extends BaseConf {
         adminExt.createAndUpdateTopicConfig(brokerAddress, topicConfig);
 
         await().atMost(30, TimeUnit.SECONDS).until(
-            () -> MQAdminTestUtils.checkTopicExist(adminExt, topic));
+                () -> MQAdminTestUtils.checkTopicExist(adminExt, topic));
     }
 
     private void resetOffsetInner(long resetOffset) {
         try {
             // reset offset by queue
             adminExt.resetOffsetByQueueId(brokerController1.getBrokerAddr(),
-                consumer.getConsumerGroup(), consumer.getTopic(), 0, resetOffset);
+                    consumer.getConsumerGroup(), consumer.getTopic(), 0, resetOffset);
         } catch (Exception ignore) {
         }
     }
@@ -103,7 +104,7 @@ public class OffsetResetForPopIT extends BaseConf {
     private void ackMessageSync(MessageExt messageExt) {
         try {
             consumer.ackAsync(brokerController1.getBrokerAddr(),
-                messageExt.getProperty(MessageConst.PROPERTY_POP_CK)).get();
+                    messageExt.getProperty(MessageConst.PROPERTY_POP_CK)).get();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -156,12 +157,12 @@ public class OffsetResetForPopIT extends BaseConf {
         // ack old msg, expect has no effect
         ackMessageSync(popResult1.getMsgFoundList());
         Assert.assertTrue(brokerController1.getConsumerOrderInfoManager()
-            .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
+                .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
 
         // ack new msg
         ackMessageSync(popResult2.getMsgFoundList());
         Assert.assertFalse(brokerController1.getConsumerOrderInfoManager()
-            .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
+                .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
     }
 
     @Test
@@ -177,12 +178,12 @@ public class OffsetResetForPopIT extends BaseConf {
         PopResult popResult = consumer.popOrderly(brokerController1.getBrokerAddr(), mq);
         Assert.assertEquals(messageCount - resetOffset, popResult.getMsgFoundList().size());
         Assert.assertTrue(brokerController1.getConsumerOrderInfoManager()
-            .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
+                .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
 
         ackMessageSync(popResult.getMsgFoundList());
         TimeUnit.SECONDS.sleep(1);
         Assert.assertFalse(brokerController1.getConsumerOrderInfoManager()
-            .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
+                .checkBlock(null, topic, group, 0, RMQPopConsumer.DEFAULT_INVISIBLE_TIME));
     }
 
     @Test
@@ -232,13 +233,13 @@ public class OffsetResetForPopIT extends BaseConf {
     }
 
     private void testResetOffsetWhilePop(int targetCount, boolean resetFuture, boolean needAck,
-        int... resetOffset) {
+                                         int... resetOffset) {
         brokerController1.getBrokerConfig().setEnablePopBufferMerge(true);
         producer.send(10);
 
         // max pop one message per request
         consumer =
-            new RMQPopConsumer(NAMESRV_ADDR, topic, "*", group, new RMQNormalListener(), 1);
+                new RMQPopConsumer(NAMESRV_ADDR, topic, "*", group, new RMQNormalListener(), 1);
 
         MessageQueue mq = new MessageQueue(topic, BROKER1_NAME, 0);
         AtomicInteger counter = new AtomicInteger(0);
@@ -280,31 +281,31 @@ public class OffsetResetForPopIT extends BaseConf {
     @Test
     public void testResetFutureOffsetWhilePopOrderlyAndAck() {
         testResetOffsetWhilePopOrderly(1,
-            Lists.newArrayList(0, 5, 6, 7, 8, 9), Lists.newArrayList(5), 6);
+                Lists.newArrayList(0, 5, 6, 7, 8, 9), Lists.newArrayList(5), 6);
     }
 
     @Test
     public void testMultipleResetFutureOffsetWhilePopOrderlyAndAck() {
         testResetOffsetWhilePopOrderly(1,
-            Lists.newArrayList(0, 5, 6, 7, 8, 9), Lists.newArrayList(3, 5), 6);
+                Lists.newArrayList(0, 5, 6, 7, 8, 9), Lists.newArrayList(3, 5), 6);
     }
 
     @Test
     public void testResetOffsetWhilePopOrderlyAndAck() {
         testResetOffsetWhilePopOrderly(5,
-            Lists.newArrayList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-            Lists.newArrayList(3), 12);
+                Lists.newArrayList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                Lists.newArrayList(3), 12);
     }
 
     @Test
     public void testMultipleResetOffsetWhilePopOrderlyAndAck() {
         testResetOffsetWhilePopOrderly(5,
-            Lists.newArrayList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-            Lists.newArrayList(3, 1), 14);
+                Lists.newArrayList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                Lists.newArrayList(3, 1), 14);
     }
 
     private void testResetOffsetWhilePopOrderly(int targetCount, List<Integer> expectMsgReceive,
-        List<Integer> resetOffset, int expectCount) {
+                                                List<Integer> resetOffset, int expectCount) {
         brokerController1.getBrokerConfig().setEnablePopBufferMerge(true);
         for (int i = 0; i < 10; i++) {
             Message msg = new Message(topic, (String.valueOf(i)).getBytes());

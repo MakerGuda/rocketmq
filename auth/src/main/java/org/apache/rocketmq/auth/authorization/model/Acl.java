@@ -17,13 +17,14 @@
 package org.apache.rocketmq.auth.authorization.model;
 
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.auth.authentication.model.Subject;
 import org.apache.rocketmq.auth.authorization.enums.Decision;
 import org.apache.rocketmq.auth.authorization.enums.PolicyType;
 import org.apache.rocketmq.common.action.Action;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Acl {
 
@@ -43,7 +44,7 @@ public class Acl {
     }
 
     public static Acl of(Subject subject, List<Resource> resources, List<Action> actions, Environment environment,
-        Decision decision) {
+                         Decision decision) {
         Acl acl = new Acl();
         acl.setSubject(subject);
         Policy policy = Policy.of(resources, actions, environment, decision);

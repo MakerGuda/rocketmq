@@ -37,18 +37,18 @@ public class ReceiptHandleProcessor extends AbstractProcessor {
         super(messagingProcessor, serviceManager);
         StateEventListener<RenewEvent> eventListener = event -> {
             ProxyContext context = createContext(event.getEventType().name())
-                .setChannel(event.getKey().getChannel());
+                    .setChannel(event.getKey().getChannel());
             MessageReceiptHandle messageReceiptHandle = event.getMessageReceiptHandle();
             ReceiptHandle handle = ReceiptHandle.decode(messageReceiptHandle.getReceiptHandleStr());
             messagingProcessor.changeInvisibleTime(context, handle, messageReceiptHandle.getMessageId(),
-                    messageReceiptHandle.getGroup(), messageReceiptHandle.getTopic(), event.getRenewTime())
-                .whenComplete((v, t) -> {
-                    if (t != null) {
-                        event.getFuture().completeExceptionally(t);
-                        return;
-                    }
-                    event.getFuture().complete(v);
-                });
+                            messageReceiptHandle.getGroup(), messageReceiptHandle.getTopic(), event.getRenewTime())
+                    .whenComplete((v, t) -> {
+                        if (t != null) {
+                            event.getFuture().completeExceptionally(t);
+                            return;
+                        }
+                        event.getFuture().complete(v);
+                    });
         };
         this.receiptHandleManager = new DefaultReceiptHandleManager(serviceManager.getMetadataService(), serviceManager.getConsumerManager(), eventListener);
         this.appendStartAndShutdown(receiptHandleManager);

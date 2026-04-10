@@ -60,7 +60,7 @@ public class QueryMsgByIdIT extends BaseConf {
         Assert.assertEquals("Not all are sent", msgSize, producer.getAllUndupMsgBody().size());
         consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), CONSUME_TIME);
         Assert.assertEquals("Not all are consumed", 0, VerifyUtils.verify(producer.getAllMsgBody(),
-            consumer.getListener().getAllMsgBody()));
+                consumer.getListener().getAllMsgBody()));
 
         MessageExt recvMsg = (MessageExt) consumer.getListener().getFirstMsg();
         MessageExt queryMsg = null;

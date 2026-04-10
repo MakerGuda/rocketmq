@@ -32,6 +32,6 @@ public interface ElectPolicy {
      * @return new master's broker id
      */
     Long elect(String clusterName, String brokerName, Set<Long> syncStateBrokers, Set<Long> allReplicaBrokers,
-        Long oldMaster, Long brokerId);
+               Long oldMaster, Long brokerId);
 
 }

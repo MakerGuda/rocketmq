@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.tools.command.ha;
 
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -31,6 +30,8 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Set;
 
 public class HAStatusSubCommand implements SubCommand {
 
@@ -93,7 +94,7 @@ public class HAStatusSubCommand implements SubCommand {
     }
 
     private void innerExec(CommandLine commandLine, Options options,
-        DefaultMQAdminExt defaultMQAdminExt) throws Exception {
+                           DefaultMQAdminExt defaultMQAdminExt) throws Exception {
         if (commandLine.hasOption('b')) {
             String addr = commandLine.getOptionValue('b').trim();
             this.printStatus(addr, defaultMQAdminExt);
@@ -116,24 +117,24 @@ public class HAStatusSubCommand implements SubCommand {
 
         if (haRuntimeInfo.isMaster()) {
             System.out.printf("\n#MasterAddr\t%s\n#MasterCommitLogMaxOffset\t%d\n#SlaveNum\t%d\n#InSyncSlaveNum\t%d\n", brokerAddr,
-                haRuntimeInfo.getMasterCommitLogMaxOffset(), haRuntimeInfo.getHaConnectionInfo().size(), haRuntimeInfo.getInSyncSlaveNums());
+                    haRuntimeInfo.getMasterCommitLogMaxOffset(), haRuntimeInfo.getHaConnectionInfo().size(), haRuntimeInfo.getInSyncSlaveNums());
             System.out.printf("%-32s  %-16s %16s %16s %16s %16s\n",
-                "#SlaveAddr",
-                "#SlaveAckOffset",
-                "#Diff",
-                "#TransferSpeed(KB/s)",
-                "#Status",
-                "#TransferFromWhere"
+                    "#SlaveAddr",
+                    "#SlaveAckOffset",
+                    "#Diff",
+                    "#TransferSpeed(KB/s)",
+                    "#Status",
+                    "#TransferFromWhere"
             );
 
             for (HAConnectionRuntimeInfo cInfo : haRuntimeInfo.getHaConnectionInfo()) {
                 System.out.printf("%-32s  %-16d %16d %16.2f %16s %16d\n",
-                    cInfo.getAddr(),
-                    cInfo.getSlaveAckOffset(),
-                    cInfo.getDiff(),
-                    cInfo.getTransferredByteInSecond() / 1024.0,
-                    cInfo.isInSync() ? "OK" : "Fall Behind",
-                    cInfo.getTransferFromWhere());
+                        cInfo.getAddr(),
+                        cInfo.getSlaveAckOffset(),
+                        cInfo.getDiff(),
+                        cInfo.getTransferredByteInSecond() / 1024.0,
+                        cInfo.isInSync() ? "OK" : "Fall Behind",
+                        cInfo.getTransferFromWhere());
             }
         } else {
             HAClientRuntimeInfo haClientRuntimeInfo = haRuntimeInfo.getHaClientRuntimeInfo();

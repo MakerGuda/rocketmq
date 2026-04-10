@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.proxy.service.relay;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.service.transaction.TransactionService;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
@@ -24,6 +23,8 @@ import org.apache.rocketmq.remoting.protocol.body.ConsumeMessageDirectlyResult;
 import org.apache.rocketmq.remoting.protocol.body.ConsumerRunningInfo;
 import org.apache.rocketmq.remoting.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerRunningInfoRequestHeader;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * not implement yet
@@ -36,15 +37,15 @@ public class ClusterProxyRelayService extends AbstractProxyRelayService {
 
     @Override
     public CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> processGetConsumerRunningInfo(
-        ProxyContext context, RemotingCommand command,
-        GetConsumerRunningInfoRequestHeader header) {
+            ProxyContext context, RemotingCommand command,
+            GetConsumerRunningInfoRequestHeader header) {
         return null;
     }
 
     @Override
     public CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> processConsumeMessageDirectly(
-        ProxyContext context, RemotingCommand command,
-        ConsumeMessageDirectlyResultRequestHeader header) {
+            ProxyContext context, RemotingCommand command,
+            ConsumeMessageDirectlyResultRequestHeader header) {
         return null;
     }
 }

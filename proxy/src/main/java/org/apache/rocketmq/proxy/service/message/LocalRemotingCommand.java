@@ -16,10 +16,11 @@
  */
 package org.apache.rocketmq.proxy.service.message;
 
-import java.util.HashMap;
 import org.apache.rocketmq.remoting.CommandCustomHeader;
 import org.apache.rocketmq.remoting.protocol.LanguageCode;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.util.HashMap;
 
 public class LocalRemotingCommand extends RemotingCommand {
 

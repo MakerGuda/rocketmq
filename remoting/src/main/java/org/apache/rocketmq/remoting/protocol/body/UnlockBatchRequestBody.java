@@ -18,10 +18,11 @@
 package org.apache.rocketmq.remoting.protocol.body;
 
 import com.google.common.base.MoreObjects;
-import java.util.HashSet;
-import java.util.Set;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class UnlockBatchRequestBody extends RemotingSerializable {
     private String consumerGroup;
@@ -64,10 +65,10 @@ public class UnlockBatchRequestBody extends RemotingSerializable {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("clientId", clientId)
-            .add("onlyThisBroker", onlyThisBroker)
-            .add("mqSet", mqSet)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("clientId", clientId)
+                .add("onlyThisBroker", onlyThisBroker)
+                .add("mqSet", mqSet)
+                .toString();
     }
 }

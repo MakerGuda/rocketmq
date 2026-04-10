@@ -17,13 +17,14 @@
 package org.apache.rocketmq.store.metrics;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import java.util.List;
-import java.util.function.Supplier;
-import org.apache.rocketmq.common.Pair;
-import org.apache.rocketmq.store.MessageStore;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.ViewBuilder;
+import org.apache.rocketmq.common.Pair;
+import org.apache.rocketmq.store.MessageStore;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Store metrics manager interface for different message store implementations.
@@ -37,7 +38,7 @@ public interface StoreMetricsManager {
      *
      * @param meter                     OpenTelemetry meter
      * @param attributesBuilderSupplier Metrics attributes builder supplier
-     * @param messageStore             The message store instance
+     * @param messageStore              The message store instance
      */
     void init(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier, MessageStore messageStore);
 

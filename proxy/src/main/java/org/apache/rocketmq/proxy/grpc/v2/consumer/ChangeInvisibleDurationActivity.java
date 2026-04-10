@@ -20,7 +20,6 @@ import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
 import apache.rocketmq.v2.ChangeInvisibleDurationResponse;
 import apache.rocketmq.v2.Code;
 import com.google.protobuf.util.Durations;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.client.consumer.AckResult;
 import org.apache.rocketmq.client.consumer.AckStatus;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
@@ -32,15 +31,17 @@ import org.apache.rocketmq.proxy.grpc.v2.common.GrpcClientSettingsManager;
 import org.apache.rocketmq.proxy.grpc.v2.common.ResponseBuilder;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 
+import java.util.concurrent.CompletableFuture;
+
 public class ChangeInvisibleDurationActivity extends AbstractMessagingActivity {
 
     public ChangeInvisibleDurationActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
+                                           GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
     }
 
     public CompletableFuture<ChangeInvisibleDurationResponse> changeInvisibleDuration(ProxyContext ctx,
-        ChangeInvisibleDurationRequest request) {
+                                                                                      ChangeInvisibleDurationRequest request) {
         CompletableFuture<ChangeInvisibleDurationResponse> future = new CompletableFuture<>();
 
         try {
@@ -55,12 +56,12 @@ public class ChangeInvisibleDurationActivity extends AbstractMessagingActivity {
                 receiptHandle = ReceiptHandle.decode(messageReceiptHandle.getReceiptHandleStr());
             }
             return this.messagingProcessor.changeInvisibleTime(
-                ctx,
-                receiptHandle,
-                request.getMessageId(),
-                group,
-                request.getTopic().getName(),
-                Durations.toMillis(request.getInvisibleDuration())
+                    ctx,
+                    receiptHandle,
+                    request.getMessageId(),
+                    group,
+                    request.getTopic().getName(),
+                    Durations.toMillis(request.getInvisibleDuration())
             ).thenApply(ackResult -> convertToChangeInvisibleDurationResponse(ctx, request, ackResult));
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -69,15 +70,15 @@ public class ChangeInvisibleDurationActivity extends AbstractMessagingActivity {
     }
 
     protected ChangeInvisibleDurationResponse convertToChangeInvisibleDurationResponse(ProxyContext ctx,
-        ChangeInvisibleDurationRequest request, AckResult ackResult) {
+                                                                                       ChangeInvisibleDurationRequest request, AckResult ackResult) {
         if (AckStatus.OK.equals(ackResult.getStatus())) {
             return ChangeInvisibleDurationResponse.newBuilder()
-                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                .setReceiptHandle(ackResult.getExtraInfo())
-                .build();
+                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                    .setReceiptHandle(ackResult.getExtraInfo())
+                    .build();
         }
         return ChangeInvisibleDurationResponse.newBuilder()
-            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.INTERNAL_SERVER_ERROR, "changeInvisibleDuration failed: status is abnormal"))
-            .build();
+                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.INTERNAL_SERVER_ERROR, "changeInvisibleDuration failed: status is abnormal"))
+                .build();
     }
 }

@@ -20,9 +20,9 @@ package org.apache.rocketmq.broker.filter;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.filter.util.BitsArray;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.filter.util.BitsArray;
 import org.apache.rocketmq.store.CommitLogDispatcher;
 import org.apache.rocketmq.store.DispatchRequest;
 
@@ -31,7 +31,7 @@ import java.util.Iterator;
 
 /**
  * Calculate bit map of filter.
- *
+ * <p>
  * Broker 子系统组件 <b>CommitLogDispatcherCalcBitMap</b>（Commit Log Dispatcher Calc Bit Map）。
  */
 public class CommitLogDispatcherCalcBitMap implements CommitLogDispatcher {
@@ -62,7 +62,7 @@ public class CommitLogDispatcherCalcBitMap implements CommitLogDispatcher {
 
             Iterator<ConsumerFilterData> iterator = filterDatas.iterator();
             BitsArray filterBitMap = BitsArray.create(
-                this.consumerFilterManager.getBloomFilter().getM()
+                    this.consumerFilterManager.getBloomFilter().getM()
             );
 
             long startTime = System.currentTimeMillis();
@@ -93,8 +93,8 @@ public class CommitLogDispatcherCalcBitMap implements CommitLogDispatcher {
                 // eval true
                 if (ret != null && ret instanceof Boolean && (Boolean) ret) {
                     consumerFilterManager.getBloomFilter().hashTo(
-                        filterData.getBloomFilterData(),
-                        filterBitMap
+                            filterData.getBloomFilterData(),
+                            filterBitMap
                     );
                 }
             }

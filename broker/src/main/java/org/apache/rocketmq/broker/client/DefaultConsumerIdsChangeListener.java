@@ -17,6 +17,13 @@
 package org.apache.rocketmq.broker.client;
 
 import io.netty.channel.Channel;
+import org.apache.rocketmq.broker.BrokerController;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.ThreadUtils;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.utils.ThreadUtils;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
 /**
  * 监听器 <b>DefaultConsumerIdsChangeListener</b>，在注册点被触发时接收事件并执行回调逻辑。
@@ -40,12 +40,10 @@ public class DefaultConsumerIdsChangeListener implements ConsumerIdsChangeListen
     private final BrokerController brokerController;
     private final int cacheSize = 8096;
 
-    private final ScheduledExecutorService scheduledExecutorService =  ThreadUtils.newScheduledThreadPool(1,
-        ThreadUtils.newGenericThreadFactory("DefaultConsumerIdsChangeListener", true));
-
-    private ConcurrentHashMap<String,List<Channel>> consumerChannelMap = new ConcurrentHashMap<>(cacheSize);
-
+    private final ScheduledExecutorService scheduledExecutorService = ThreadUtils.newScheduledThreadPool(1,
+            ThreadUtils.newGenericThreadFactory("DefaultConsumerIdsChangeListener", true));
     private final ConcurrentHashMap<String, NotifyTaskControl> activeGroupNotifyMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, List<Channel>> consumerChannelMap = new ConcurrentHashMap<>(cacheSize);
 
     public DefaultConsumerIdsChangeListener(BrokerController brokerController) {
         this.brokerController = brokerController;
@@ -57,7 +55,7 @@ public class DefaultConsumerIdsChangeListener implements ConsumerIdsChangeListen
                     notifyConsumerChange();
                 } catch (Exception e) {
                     log.error(
-                        "DefaultConsumerIdsChangeListen#notifyConsumerChange: unexpected error occurs", e);
+                            "DefaultConsumerIdsChangeListen#notifyConsumerChange: unexpected error occurs", e);
                 }
             }
         }, 30, 15, TimeUnit.SECONDS);
@@ -138,7 +136,7 @@ public class DefaultConsumerIdsChangeListener implements ConsumerIdsChangeListen
                 }
             } catch (Exception e) {
                 log.error("Failed to notify consumer when some consumers changed, consumerId to notify: {}",
-                    consumerId, e);
+                        consumerId, e);
             }
         }
     }

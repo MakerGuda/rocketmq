@@ -16,22 +16,17 @@
  */
 package org.apache.rocketmq.store.logfile;
 
+import org.apache.rocketmq.common.message.MessageExtBatch;
+import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.config.FlushDiskType;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
-import org.apache.rocketmq.common.message.MessageExtBatch;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.store.AppendMessageCallback;
-import org.apache.rocketmq.store.AppendMessageResult;
-import org.apache.rocketmq.store.CompactionAppendMsgCallback;
-import org.apache.rocketmq.store.PutMessageContext;
-import org.apache.rocketmq.store.RunningFlags;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
-import org.apache.rocketmq.store.TransientStorePool;
-import org.apache.rocketmq.store.config.FlushDiskType;
 
 public interface MappedFile {
     /**
@@ -81,8 +76,8 @@ public interface MappedFile {
     /**
      * Appends a message object to the current {@code MappedFile} with a specific call back.
      *
-     * @param message a message to append
-     * @param messageCallback the specific call back to execute the real append action
+     * @param message           a message to append
+     * @param messageCallback   the specific call back to execute the real append action
      * @param putMessageContext
      * @return the append result
      */
@@ -91,8 +86,8 @@ public interface MappedFile {
     /**
      * Appends a batch message object to the current {@code MappedFile} with a specific call back.
      *
-     * @param message a message to append
-     * @param messageCallback the specific call back to execute the real append action
+     * @param message           a message to append
+     * @param messageCallback   the specific call back to execute the real append action
      * @param putMessageContext
      * @return the append result
      */
@@ -131,7 +126,7 @@ public interface MappedFile {
      * Appends a raw message data represents by a byte array to the current {@code MappedFile},
      * starting at the given offset in the array.
      *
-     * @param data the byte array to append
+     * @param data   the byte array to append
      * @param offset the offset within the array of the first byte to be read
      * @param length the number of bytes to be read from the given array
      * @return true if success; false otherwise.
@@ -165,7 +160,7 @@ public interface MappedFile {
      * Selects a slice of the mapped byte buffer's sub-region behind the mapped file,
      * starting at the given position.
      *
-     * @param pos the given position
+     * @param pos  the given position
      * @param size the size of the returned sub-region
      * @return a {@code SelectMappedBufferResult} instance contains the selected slice
      */
@@ -211,8 +206,8 @@ public interface MappedFile {
     /**
      * Get data from a certain pos offset with size byte
      *
-     * @param pos a certain pos offset to get data
-     * @param size the size of data
+     * @param pos        a certain pos offset to get data
+     * @param size       the size of data
      * @param byteBuffer the data
      * @return true if with data; false if no data;
      */
@@ -314,6 +309,7 @@ public interface MappedFile {
 
     /**
      * Warm up the mapped bytebuffer
+     *
      * @param type
      * @param pages
      */
@@ -343,6 +339,7 @@ public interface MappedFile {
 
     /**
      * Get the underlying file
+     *
      * @return
      */
     File getFile();
@@ -354,20 +351,23 @@ public interface MappedFile {
 
     /**
      * move the file to the parent directory
+     *
      * @throws IOException
      */
     void moveToParent() throws IOException;
 
     /**
      * Get the last flush time
+     *
      * @return
      */
     long getLastFlushTime();
 
     /**
      * Init mapped file
-     * @param fileName file name
-     * @param fileSize file size
+     *
+     * @param fileName           file name
+     * @param fileSize           file size
      * @param transientStorePool transient store pool
      * @throws IOException
      */
@@ -377,8 +377,9 @@ public interface MappedFile {
 
     /**
      * Check mapped file is loaded to memory with given position and size
+     *
      * @param position start offset of data
-     * @param size data size
+     * @param size     data size
      * @return data is resided in memory or not
      */
     boolean isLoaded(long position, int size);

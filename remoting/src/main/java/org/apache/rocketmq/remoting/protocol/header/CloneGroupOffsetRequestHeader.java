@@ -81,10 +81,10 @@ public class CloneGroupOffsetRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("srcGroup", srcGroup)
-            .add("destGroup", destGroup)
-            .add("topic", topic)
-            .add("offline", offline)
-            .toString();
+                .add("srcGroup", srcGroup)
+                .add("destGroup", destGroup)
+                .add("topic", topic)
+                .add("offline", offline)
+                .toString();
     }
 }

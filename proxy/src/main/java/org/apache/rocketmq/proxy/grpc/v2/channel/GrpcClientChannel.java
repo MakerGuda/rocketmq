@@ -16,11 +16,7 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2.channel;
 
-import apache.rocketmq.v2.PrintThreadStackTraceCommand;
-import apache.rocketmq.v2.RecoverOrphanedTransactionCommand;
-import apache.rocketmq.v2.Settings;
-import apache.rocketmq.v2.TelemetryCommand;
-import apache.rocketmq.v2.VerifyMessageCommand;
+import apache.rocketmq.v2.*;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ComparisonChain;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -30,9 +26,6 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelId;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
@@ -57,6 +50,10 @@ import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequest
 import org.apache.rocketmq.remoting.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerRunningInfoRequestHeader;
 
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class GrpcClientChannel extends ProxyChannel implements ChannelExtendAttributeGetter, RemoteChannelConverter {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
 
@@ -68,32 +65,18 @@ public class GrpcClientChannel extends ProxyChannel implements ChannelExtendAttr
     private final String clientId;
 
     public GrpcClientChannel(ProxyRelayService proxyRelayService, GrpcClientSettingsManager grpcClientSettingsManager,
-        GrpcChannelManager grpcChannelManager, ProxyContext ctx, String clientId) {
+                             GrpcChannelManager grpcChannelManager, ProxyContext ctx, String clientId) {
         super(proxyRelayService, null, new GrpcChannelId(clientId),
-            ctx.getRemoteAddress(),
-            ctx.getLocalAddress());
+                ctx.getRemoteAddress(),
+                ctx.getLocalAddress());
         this.grpcChannelManager = grpcChannelManager;
         this.grpcClientSettingsManager = grpcClientSettingsManager;
         this.clientId = clientId;
     }
 
-    @Override
-    public String getChannelExtendAttribute() {
-        Settings settings = this.grpcClientSettingsManager.getRawClientSettings(this.clientId);
-        if (settings == null) {
-            return null;
-        }
-        try {
-            return JsonFormat.printer().print(settings);
-        } catch (InvalidProtocolBufferException e) {
-            log.error("convert settings to json data failed. settings:{}", settings, e);
-        }
-        return null;
-    }
-
     public static Settings parseChannelExtendAttribute(Channel channel) {
         if (ChannelHelper.getChannelProtocolType(channel).equals(ChannelProtocolType.GRPC_V2) &&
-            channel instanceof ChannelExtendAttributeGetter) {
+                channel instanceof ChannelExtendAttributeGetter) {
             String attr = ((ChannelExtendAttributeGetter) channel).getChannelExtendAttribute();
             if (attr == null) {
                 return null;
@@ -112,47 +95,27 @@ public class GrpcClientChannel extends ProxyChannel implements ChannelExtendAttr
     }
 
     @Override
-    public RemoteChannel toRemoteChannel() {
-        return new RemoteChannel(
-            ConfigurationManager.getProxyConfig().getLocalServeAddr(),
-            this.getRemoteAddress(),
-            this.getLocalAddress(),
-            ChannelProtocolType.GRPC_V2,
-            this.getChannelExtendAttribute());
+    public String getChannelExtendAttribute() {
+        Settings settings = this.grpcClientSettingsManager.getRawClientSettings(this.clientId);
+        if (settings == null) {
+            return null;
+        }
+        try {
+            return JsonFormat.printer().print(settings);
+        } catch (InvalidProtocolBufferException e) {
+            log.error("convert settings to json data failed. settings:{}", settings, e);
+        }
+        return null;
     }
 
-    protected static class GrpcChannelId implements ChannelId {
-
-        private final String clientId;
-
-        public GrpcChannelId(String clientId) {
-            this.clientId = clientId;
-        }
-
-        @Override
-        public String asShortText() {
-            return this.clientId;
-        }
-
-        @Override
-        public String asLongText() {
-            return this.clientId;
-        }
-
-        @Override
-        public int compareTo(ChannelId o) {
-            if (this == o) {
-                return 0;
-            }
-            if (o instanceof GrpcChannelId) {
-                GrpcChannelId other = (GrpcChannelId) o;
-                return ComparisonChain.start()
-                    .compare(this.clientId, other.clientId)
-                    .result();
-            }
-
-            return asLongText().compareTo(o.asLongText());
-        }
+    @Override
+    public RemoteChannel toRemoteChannel() {
+        return new RemoteChannel(
+                ConfigurationManager.getProxyConfig().getLocalServeAddr(),
+                this.getRemoteAddress(),
+                this.getLocalAddress(),
+                ChannelProtocolType.GRPC_V2,
+                this.getChannelExtendAttribute());
     }
 
     public void setClientObserver(StreamObserver<TelemetryCommand> future) {
@@ -189,15 +152,15 @@ public class GrpcClientChannel extends ProxyChannel implements ChannelExtendAttr
 
     @Override
     protected CompletableFuture<Void> processCheckTransaction(CheckTransactionStateRequestHeader header,
-        MessageExt messageExt, TransactionData transactionData, CompletableFuture<ProxyRelayResult<Void>> responseFuture) {
+                                                              MessageExt messageExt, TransactionData transactionData, CompletableFuture<ProxyRelayResult<Void>> responseFuture) {
         CompletableFuture<Void> writeFuture = new CompletableFuture<>();
         try {
             this.writeTelemetryCommand(TelemetryCommand.newBuilder()
-                .setRecoverOrphanedTransactionCommand(RecoverOrphanedTransactionCommand.newBuilder()
-                    .setTransactionId(transactionData.getTransactionId())
-                    .setMessage(GrpcConverter.getInstance().buildMessage(messageExt))
-                    .build())
-                .build());
+                    .setRecoverOrphanedTransactionCommand(RecoverOrphanedTransactionCommand.newBuilder()
+                            .setTransactionId(transactionData.getTransactionId())
+                            .setMessage(GrpcConverter.getInstance().buildMessage(messageExt))
+                            .build())
+                    .build());
             responseFuture.complete(null);
             writeFuture.complete(null);
         } catch (Throwable t) {
@@ -209,29 +172,29 @@ public class GrpcClientChannel extends ProxyChannel implements ChannelExtendAttr
 
     @Override
     protected CompletableFuture<Void> processGetConsumerRunningInfo(RemotingCommand command,
-        GetConsumerRunningInfoRequestHeader header,
-        CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> responseFuture) {
+                                                                    GetConsumerRunningInfoRequestHeader header,
+                                                                    CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> responseFuture) {
         if (Objects.isNull(header) || !header.isJstackEnable()) {
             return CompletableFuture.completedFuture(null);
         }
         this.writeTelemetryCommand(TelemetryCommand.newBuilder()
-            .setPrintThreadStackTraceCommand(PrintThreadStackTraceCommand.newBuilder()
-                .setNonce(this.grpcChannelManager.addResponseFuture(responseFuture))
-                .build())
-            .build());
+                .setPrintThreadStackTraceCommand(PrintThreadStackTraceCommand.newBuilder()
+                        .setNonce(this.grpcChannelManager.addResponseFuture(responseFuture))
+                        .build())
+                .build());
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     protected CompletableFuture<Void> processConsumeMessageDirectly(RemotingCommand command,
-        ConsumeMessageDirectlyResultRequestHeader header,
-        MessageExt messageExt, CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> responseFuture) {
+                                                                    ConsumeMessageDirectlyResultRequestHeader header,
+                                                                    MessageExt messageExt, CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> responseFuture) {
         this.writeTelemetryCommand(TelemetryCommand.newBuilder()
-            .setVerifyMessageCommand(VerifyMessageCommand.newBuilder()
-                .setNonce(this.grpcChannelManager.addResponseFuture(responseFuture))
-                .setMessage(GrpcConverter.getInstance().buildMessage(messageExt))
-                .build())
-            .build());
+                .setVerifyMessageCommand(VerifyMessageCommand.newBuilder()
+                        .setNonce(this.grpcChannelManager.addResponseFuture(responseFuture))
+                        .setMessage(GrpcConverter.getInstance().buildMessage(messageExt))
+                        .build())
+                .build());
         return CompletableFuture.completedFuture(null);
     }
 
@@ -263,9 +226,43 @@ public class GrpcClientChannel extends ProxyChannel implements ChannelExtendAttr
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("clientId", clientId)
-            .add("remoteAddress", getRemoteAddress())
-            .add("localAddress", getLocalAddress())
-            .toString();
+                .add("clientId", clientId)
+                .add("remoteAddress", getRemoteAddress())
+                .add("localAddress", getLocalAddress())
+                .toString();
+    }
+
+    protected static class GrpcChannelId implements ChannelId {
+
+        private final String clientId;
+
+        public GrpcChannelId(String clientId) {
+            this.clientId = clientId;
+        }
+
+        @Override
+        public String asShortText() {
+            return this.clientId;
+        }
+
+        @Override
+        public String asLongText() {
+            return this.clientId;
+        }
+
+        @Override
+        public int compareTo(ChannelId o) {
+            if (this == o) {
+                return 0;
+            }
+            if (o instanceof GrpcChannelId) {
+                GrpcChannelId other = (GrpcChannelId) o;
+                return ComparisonChain.start()
+                        .compare(this.clientId, other.clientId)
+                        .result();
+            }
+
+            return asLongText().compareTo(o.asLongText());
+        }
     }
 }

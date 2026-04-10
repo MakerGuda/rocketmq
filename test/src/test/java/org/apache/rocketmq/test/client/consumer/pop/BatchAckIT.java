@@ -17,13 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.pop;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import org.apache.rocketmq.client.consumer.AckResult;
 import org.apache.rocketmq.client.consumer.AckStatus;
 import org.apache.rocketmq.client.consumer.PopResult;
@@ -42,6 +35,14 @@ import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
@@ -147,13 +148,13 @@ public class BatchAckIT extends BasePop {
 
     private CompletableFuture<PopResult> popMessageAsync() {
         return client.popMessageAsync(
-            brokerAddr, messageQueue, Duration.ofSeconds(3).toMillis(), 30, group, 3000, false,
-            ConsumeInitMode.MIN, false, ExpressionType.TAG, "*");
+                brokerAddr, messageQueue, Duration.ofSeconds(3).toMillis(), 30, group, 3000, false,
+                ConsumeInitMode.MIN, false, ExpressionType.TAG, "*");
     }
 
     private CompletableFuture<PopResult> popMessageOrderlyAsync() {
         return client.popMessageAsync(
-            brokerAddr, messageQueue, Duration.ofSeconds(3).toMillis(), 30, group, 3000, false,
-            ConsumeInitMode.MIN, true, ExpressionType.TAG, "*", null);
+                brokerAddr, messageQueue, Duration.ofSeconds(3).toMillis(), 30, group, 3000, false,
+                ConsumeInitMode.MIN, true, ExpressionType.TAG, "*", null);
     }
 }

@@ -20,13 +20,6 @@ package org.apache.rocketmq.broker.longpolling;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.KeyBuilder;
@@ -47,43 +40,47 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.store.ConsumeQueueExt;
 import org.apache.rocketmq.store.MessageFilter;
 
-import static org.apache.rocketmq.broker.longpolling.PollingResult.NOT_POLLING;
-import static org.apache.rocketmq.broker.longpolling.PollingResult.POLLING_FULL;
-import static org.apache.rocketmq.broker.longpolling.PollingResult.POLLING_SUC;
-import static org.apache.rocketmq.broker.longpolling.PollingResult.POLLING_TIMEOUT;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.apache.rocketmq.broker.longpolling.PollingResult.*;
 
 /**
  * 后台服务线程 <b>PopLongPollingService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
- * 
+ * <p>
  * 继承关系：<code>ServiceThread</code>。
  */
 public class PopLongPollingService extends ServiceThread {
 
     private static final Logger POP_LOGGER =
-        LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
+            LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
     private final BrokerController brokerController;
     private final NettyRequestProcessor processor;
     private final Cache<String, ConcurrentHashMap<String, Byte>> topicCidMap;
     private final Cache<String, ConcurrentSkipListSet<PopRequest>> pollingMap;
-    private long lastCleanTime = 0;
-
     private final AtomicLong totalPollingNum = new AtomicLong(0);
     private final boolean notifyLast;
+    private long lastCleanTime = 0;
 
     public PopLongPollingService(BrokerController brokerController, NettyRequestProcessor processor,
-        boolean notifyLast) {
+                                 boolean notifyLast) {
         this.brokerController = brokerController;
         this.processor = processor;
         // 100000 topic default,  100000 lru topic + cid + qid
         this.topicCidMap = Caffeine.newBuilder()
-            .maximumSize(this.brokerController.getBrokerConfig().getPopPollingMapSize() * 2L)
-            .expireAfterAccess(this.brokerController.getBrokerConfig().getPopPollingMapExpireTimeSeconds(), TimeUnit.SECONDS)
-            .build();
+                .maximumSize(this.brokerController.getBrokerConfig().getPopPollingMapSize() * 2L)
+                .expireAfterAccess(this.brokerController.getBrokerConfig().getPopPollingMapExpireTimeSeconds(), TimeUnit.SECONDS)
+                .build();
 
         this.pollingMap = Caffeine.newBuilder()
-            .maximumSize(this.brokerController.getBrokerConfig().getPopPollingMapSize())
-            .expireAfterAccess(this.brokerController.getBrokerConfig().getPopPollingMapExpireTimeSeconds(), TimeUnit.SECONDS)
-            .build();
+                .maximumSize(this.brokerController.getBrokerConfig().getPopPollingMapSize())
+                .expireAfterAccess(this.brokerController.getBrokerConfig().getPopPollingMapExpireTimeSeconds(), TimeUnit.SECONDS)
+                .build();
         this.notifyLast = notifyLast;
     }
 
@@ -143,8 +140,8 @@ public class PopLongPollingService extends ServiceThread {
 
                 if (i >= 100) {
                     POP_LOGGER.info("pollingMapSize={},tmpTotalSize={},atomicTotalSize={},diffSize={}",
-                        pollingMap.estimatedSize(), tmpTotalPollingNum, totalPollingNum.get(),
-                        Math.abs(totalPollingNum.get() - tmpTotalPollingNum));
+                            pollingMap.estimatedSize(), tmpTotalPollingNum, totalPollingNum.get(),
+                            Math.abs(totalPollingNum.get() - tmpTotalPollingNum));
                     totalPollingNum.set(tmpTotalPollingNum);
                     i = 0;
                 }
@@ -175,7 +172,7 @@ public class PopLongPollingService extends ServiceThread {
     }
 
     public void notifyMessageArrivingWithRetryTopic(final String topic, final int queueId, long offset,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+                                                    Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         if (NamespaceUtil.isRetryTopic(topic)) {
             notifyMessageArrivingFromRetry(topic, queueId, tagsCode, msgStoreTime, filterBitMap, properties);
         } else {
@@ -184,7 +181,7 @@ public class PopLongPollingService extends ServiceThread {
     }
 
     private void notifyMessageArrivingFromRetry(String topic, int queueId, Long tagsCode, long msgStoreTime, byte[] filterBitMap,
-        Map<String, String> properties) {
+                                                Map<String, String> properties) {
         String prefix = MixAll.RETRY_GROUP_TOPIC_PREFIX;
         String originGroup = properties.get(MessageConst.PROPERTY_ORIGIN_GROUP);
         // In the case of pop consumption, there is no long polling hanging on the retry topic, so the wake-up is skipped.
@@ -204,7 +201,7 @@ public class PopLongPollingService extends ServiceThread {
     }
 
     public void notifyMessageArriving(final String topic, final int queueId, long offset,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+                                      Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         ConcurrentHashMap<String, Byte> cids = topicCidMap.getIfPresent(topic);
         if (cids == null) {
             return;
@@ -220,17 +217,17 @@ public class PopLongPollingService extends ServiceThread {
     }
 
     public boolean notifyMessageArriving(final String topic, final int queueId, final String cid,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+                                         Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         return notifyMessageArriving(topic, queueId, cid, false, tagsCode, msgStoreTime, filterBitMap, properties, null);
     }
 
     public boolean notifyMessageArriving(final String topic, final int queueId, final String cid, boolean force,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+                                         Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         return notifyMessageArriving(topic, queueId, cid, force, tagsCode, msgStoreTime, filterBitMap, properties, null);
     }
 
     public boolean notifyMessageArriving(final String topic, final int queueId, final String cid, boolean force,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties, CommandCallback callback) {
+                                         Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties, CommandCallback callback) {
         ConcurrentSkipListSet<PopRequest> remotingCommands = pollingMap.getIfPresent(KeyBuilder.buildPollingKey(topic, cid, queueId));
         if (remotingCommands == null || remotingCommands.isEmpty()) {
             return false;
@@ -243,7 +240,7 @@ public class PopLongPollingService extends ServiceThread {
 
         if (!force && popRequest.getMessageFilter() != null && popRequest.getSubscriptionData() != null) {
             boolean match = popRequest.getMessageFilter().isMatchedByConsumeQueue(tagsCode,
-                new ConsumeQueueExt.CqExtUnit(tagsCode, msgStoreTime, filterBitMap));
+                    new ConsumeQueueExt.CqExtUnit(tagsCode, msgStoreTime, filterBitMap));
             if (match && properties != null) {
                 match = popRequest.getMessageFilter().isMatchedByCommitLog(null, properties);
             }
@@ -301,7 +298,7 @@ public class PopLongPollingService extends ServiceThread {
         };
 
         this.brokerController.getPullMessageExecutor().submit(
-            new RequestTask(run, request.getChannel(), request.getRemotingCommand()));
+                new RequestTask(run, request.getChannel(), request.getRemotingCommand()));
         return true;
     }
 
@@ -312,12 +309,12 @@ public class PopLongPollingService extends ServiceThread {
      * @return
      */
     public PollingResult polling(final ChannelHandlerContext ctx, RemotingCommand remotingCommand,
-        final PollingHeader requestHeader) {
+                                 final PollingHeader requestHeader) {
         return this.polling(ctx, remotingCommand, requestHeader, null, null);
     }
 
     public PollingResult polling(final ChannelHandlerContext ctx, RemotingCommand remotingCommand,
-        final PollingHeader requestHeader, SubscriptionData subscriptionData, MessageFilter messageFilter) {
+                                 final PollingHeader requestHeader, SubscriptionData subscriptionData, MessageFilter messageFilter) {
         if (requestHeader.getPollTime() <= 0 || this.isStopped()) {
             return NOT_POLLING;
         }
@@ -338,7 +335,7 @@ public class PopLongPollingService extends ServiceThread {
             return POLLING_TIMEOUT;
         }
         String key = KeyBuilder.buildPollingKey(requestHeader.getTopic(), requestHeader.getConsumerGroup(),
-            requestHeader.getQueueId());
+                requestHeader.getQueueId());
         ConcurrentSkipListSet<PopRequest> queue = pollingMap.get(key, k -> new ConcurrentSkipListSet<>(PopRequest.COMPARATOR));
         int size = queue.size();
         if (size > brokerController.getBrokerConfig().getPopPollingSize()) {

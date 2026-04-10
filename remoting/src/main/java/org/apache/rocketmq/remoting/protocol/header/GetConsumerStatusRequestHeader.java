@@ -25,8 +25,8 @@ import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.annotation.CFNullable;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
 
 @RocketMQAction(value = RequestCode.INVOKE_BROKER_TO_GET_CONSUMER_STATUS, action = Action.GET)
 public class GetConsumerStatusRequestHeader extends TopicRequestHeader {
@@ -70,9 +70,9 @@ public class GetConsumerStatusRequestHeader extends TopicRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("topic", topic)
-            .add("group", group)
-            .add("clientAddr", clientAddr)
-            .toString();
+                .add("topic", topic)
+                .add("group", group)
+                .add("clientAddr", clientAddr)
+                .toString();
     }
 }

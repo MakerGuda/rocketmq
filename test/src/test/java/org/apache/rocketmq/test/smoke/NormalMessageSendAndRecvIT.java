@@ -39,6 +39,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -76,28 +77,28 @@ public class NormalMessageSendAndRecvIT extends BaseConf {
         AtomicReference<List<MessageQueue>> messageQueueList = new AtomicReference<>();
         AtomicReference<ConsumeStats> consumeStats = new AtomicReference<>();
         Awaitility.await().atMost(Duration.ofSeconds(120))
-            .until(() -> {
-                try {
-                    consumeStats.set(defaultMQAdminExt.examineConsumeStats(group));
-                    messageQueueList.set(producer.getProducer().fetchPublishMessageQueues(topic));
-                    return !messageQueueList.get().isEmpty() && null != consumeStats.get()
-                        && consumeStats.get().getOffsetTable().keySet().containsAll(messageQueueList.get());
-                } catch (MQClientException e) {
-                    logger.debug("Exception raised while checking producer and consumer are started", e);
-                }
-                return false;
-            });
+                .until(() -> {
+                    try {
+                        consumeStats.set(defaultMQAdminExt.examineConsumeStats(group));
+                        messageQueueList.set(producer.getProducer().fetchPublishMessageQueues(topic));
+                        return !messageQueueList.get().isEmpty() && null != consumeStats.get()
+                                && consumeStats.get().getOffsetTable().keySet().containsAll(messageQueueList.get());
+                    } catch (MQClientException e) {
+                        logger.debug("Exception raised while checking producer and consumer are started", e);
+                    }
+                    return false;
+                });
 
         int msgSize = 10;
         for (MessageQueue messageQueue : messageQueueList.get()) {
             producer.send(msgSize, messageQueue);
         }
         Assert.assertEquals("Not all sent succeeded", msgSize * messageQueueList.get().size(),
-            producer.getAllUndupMsgBody().size());
+                producer.getAllUndupMsgBody().size());
         consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), CONSUME_TIME);
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
 
         for (Object o : consumer.getListener().getAllOriginMsg()) {
             MessageClientExt msg = (MessageClientExt) o;

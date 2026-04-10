@@ -98,7 +98,7 @@ public interface HAClient {
     /**
      * Get the transfer rate per second
      *
-     *  @return transfer bytes in second
+     * @return transfer bytes in second
      */
     long getTransferredByteInSecond();
 }

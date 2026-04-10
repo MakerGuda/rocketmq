@@ -17,15 +17,16 @@
 
 package org.apache.rocketmq.proxy.processor;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.service.ServiceManager;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+import java.util.concurrent.CompletableFuture;
+
 public class RequestBrokerProcessor extends AbstractProcessor {
 
     public RequestBrokerProcessor(MessagingProcessor messagingProcessor,
-        ServiceManager serviceManager) {
+                                  ServiceManager serviceManager) {
         super(messagingProcessor, serviceManager);
     }
 

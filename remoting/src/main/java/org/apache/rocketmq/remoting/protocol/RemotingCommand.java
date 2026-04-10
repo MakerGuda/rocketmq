@@ -36,12 +36,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RemotingCommand {
@@ -52,7 +47,7 @@ public class RemotingCommand {
     private static final int RPC_TYPE = 0; // 0, REQUEST_COMMAND
     private static final int RPC_ONEWAY = 1; // 0, RPC
     private static final Map<Class<? extends CommandCustomHeader>, Field[]> CLASS_HASH_MAP =
-        new HashMap<>();
+            new HashMap<>();
     private static final Map<Class, String> CANONICAL_NAME_CACHE = new HashMap<>();
     // 1, Oneway
     // 1, RESPONSE_COMMAND
@@ -138,7 +133,7 @@ public class RemotingCommand {
     }
 
     public static RemotingCommand buildErrorResponse(int code, String remark,
-        Class<? extends CommandCustomHeader> classHeader) {
+                                                     Class<? extends CommandCustomHeader> classHeader) {
         final RemotingCommand response = RemotingCommand.createResponseCommand(classHeader);
         response.setCode(code);
         response.setRemark(remark);
@@ -150,7 +145,7 @@ public class RemotingCommand {
     }
 
     public static RemotingCommand createResponseCommand(int code, String remark,
-        Class<? extends CommandCustomHeader> classHeader) {
+                                                        Class<? extends CommandCustomHeader> classHeader) {
         RemotingCommand cmd = new RemotingCommand();
         cmd.markResponseType();
         cmd.setCode(code);
@@ -214,7 +209,7 @@ public class RemotingCommand {
     }
 
     private static RemotingCommand headerDecode(ByteBuf byteBuffer, int len,
-        SerializeType type) throws RemotingCommandException {
+                                                SerializeType type) throws RemotingCommandException {
         switch (type) {
             case JSON:
                 byte[] headerData = new byte[len];
@@ -263,12 +258,12 @@ public class RemotingCommand {
     }
 
     public <T extends CommandCustomHeader> T decodeCommandCustomHeader(
-        Class<T> classHeader) throws RemotingCommandException {
+            Class<T> classHeader) throws RemotingCommandException {
         return decodeCommandCustomHeader(classHeader, false);
     }
 
     public <T extends CommandCustomHeader> T decodeCommandCustomHeader(
-        Class<T> classHeader, boolean isCached) throws RemotingCommandException {
+            Class<T> classHeader, boolean isCached) throws RemotingCommandException {
         if (isCached && cachedHeader != null) {
             return classHeader.cast(cachedHeader);
         }
@@ -280,7 +275,7 @@ public class RemotingCommand {
     }
 
     public <T extends CommandCustomHeader> T decodeCommandCustomHeaderDirectly(Class<T> classHeader,
-        boolean useFastEncode) throws RemotingCommandException {
+                                                                               boolean useFastEncode) throws RemotingCommandException {
         T objectHeader;
         try {
             objectHeader = classHeader.getDeclaredConstructor().newInstance();
@@ -623,8 +618,8 @@ public class RemotingCommand {
     @Override
     public String toString() {
         return "RemotingCommand [code=" + code + ", language=" + language + ", version=" + version + ", opaque=" + opaque + ", flag(B)="
-            + Integer.toBinaryString(flag) + ", remark=" + remark + ", extFields=" + extFields + ", serializeTypeCurrentRPC="
-            + serializeTypeCurrentRPC + "]";
+                + Integer.toBinaryString(flag) + ", remark=" + remark + ", extFields=" + extFields + ", serializeTypeCurrentRPC="
+                + serializeTypeCurrentRPC + "]";
     }
 
     public SerializeType getSerializeTypeCurrentRPC() {

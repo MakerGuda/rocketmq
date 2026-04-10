@@ -127,15 +127,15 @@ public class QueryMsgByKeySubCommand implements SubCommand {
     }
 
     private void queryByKey(final DefaultMQAdminExt admin, final String cluster, final String topic, final String key, int maxNum, long begin,
-        long end, String keyType, String lastKey)
-        throws MQClientException, InterruptedException, RemotingException {
+                            long end, String keyType, String lastKey)
+            throws MQClientException, InterruptedException, RemotingException {
         admin.start();
         QueryResult queryResult = admin.queryMessage(cluster, topic, key, maxNum, begin, end, keyType, lastKey);
         System.out.printf("%-50s %4s %40s %-200s%n",
-            "#Message ID",
-            "#QID",
-            "#Offset",
-            "#IndexKey");
+                "#Message ID",
+                "#QID",
+                "#Offset",
+                "#IndexKey");
         for (MessageExt msg : queryResult.getMessageList()) {
             if (!StringUtils.isEmpty(keyType)) {
                 long storeTimestamp = MixAll.dealTimeToHourStamps(msg.getStoreTimestamp());

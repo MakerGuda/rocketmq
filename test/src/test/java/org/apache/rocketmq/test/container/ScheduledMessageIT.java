@@ -17,12 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -38,28 +32,27 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @Ignore
 public class ScheduledMessageIT extends ContainerIntegrationTestBase {
-    private static DefaultMQProducer producer;
-
     private static final String CONSUME_GROUP = ScheduledMessageIT.class.getSimpleName() + "_Consumer";
     private static final String MESSAGE_STRING = RandomStringUtils.random(1024);
     private static final byte[] MESSAGE_BODY = MESSAGE_STRING.getBytes(StandardCharsets.UTF_8);
-
     private static final String TOPIC_PREFIX = ScheduledMessageIT.class.getSimpleName() + "_TOPIC";
-    private final Random random = new Random();
     private static final int MESSAGE_COUNT = 128;
+    private static DefaultMQProducer producer;
+    private final Random random = new Random();
 
     public ScheduledMessageIT() throws UnsupportedEncodingException {
-    }
-
-    void createTopic(String topic) {
-        createTopicTo(master1With3Replicas, topic, 1, 1);
-        createTopicTo(master2With3Replicas, topic, 1, 1);
-        createTopicTo(master3With3Replicas, topic, 1, 1);
     }
 
     @BeforeClass
@@ -72,6 +65,12 @@ public class ScheduledMessageIT extends ContainerIntegrationTestBase {
     @AfterClass
     public static void afterClass() throws Exception {
         producer.shutdown();
+    }
+
+    void createTopic(String topic) {
+        createTopicTo(master1With3Replicas, topic, 1, 1);
+        createTopicTo(master2With3Replicas, topic, 1, 1);
+        createTopicTo(master3With3Replicas, topic, 1, 1);
     }
 
     @Ignore
@@ -140,7 +139,7 @@ public class ScheduledMessageIT extends ContainerIntegrationTestBase {
         cancelIsolatedBroker(master1With3Replicas);
 
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2);
+                .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2);
     }
 
     @Test
@@ -174,7 +173,7 @@ public class ScheduledMessageIT extends ContainerIntegrationTestBase {
         cancelIsolatedBroker(master1With3Replicas);
 
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2);
+                .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2);
     }
 
 }

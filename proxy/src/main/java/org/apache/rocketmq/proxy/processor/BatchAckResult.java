@@ -28,13 +28,13 @@ public class BatchAckResult {
     private ProxyException proxyException;
 
     public BatchAckResult(ReceiptHandleMessage receiptHandleMessage,
-        AckResult ackResult) {
+                          AckResult ackResult) {
         this.receiptHandleMessage = receiptHandleMessage;
         this.ackResult = ackResult;
     }
 
     public BatchAckResult(ReceiptHandleMessage receiptHandleMessage,
-        ProxyException proxyException) {
+                          ProxyException proxyException) {
         this.receiptHandleMessage = receiptHandleMessage;
         this.proxyException = proxyException;
     }

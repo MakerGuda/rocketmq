@@ -24,8 +24,6 @@ import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.api.metrics.ObservableLongGauge;
 import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.ViewBuilder;
-import java.util.List;
-import java.util.function.Supplier;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.metrics.NopObservableDoubleGauge;
 import org.apache.rocketmq.common.metrics.NopObservableLongGauge;
@@ -35,12 +33,10 @@ import org.apache.rocketmq.store.queue.ConsumeQueueStoreInterface;
 import org.apache.rocketmq.store.queue.RocksDBConsumeQueueStore;
 import org.rocksdb.TickerType;
 
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.DEFAULT_STORAGE_MEDIUM;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.DEFAULT_STORAGE_TYPE;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_BYTES_ROCKSDB_READ;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.GAUGE_BYTES_ROCKSDB_WRITTEN;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.LABEL_STORAGE_MEDIUM;
-import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.LABEL_STORAGE_TYPE;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static org.apache.rocketmq.store.metrics.DefaultStoreMetricsConstant.*;
 
 public class RocksDBStoreMetricsManager {
     private Supplier<AttributesBuilder> attributesBuilderSupplier;
@@ -75,13 +71,12 @@ public class RocksDBStoreMetricsManager {
     }
 
 
-
     public List<Pair<InstrumentSelector, ViewBuilder>> getMetricsView() {
         return Lists.newArrayList();
     }
 
     public void init(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier,
-        ConsumeQueueStoreInterface consumeQueueStore) {
+                     ConsumeQueueStoreInterface consumeQueueStore) {
 
         final RocksDBConsumeQueueStore rocksDBMessageStore;
         if (consumeQueueStore instanceof RocksDBConsumeQueueStore) {
@@ -138,7 +133,7 @@ public class RocksDBStoreMetricsManager {
                     long newHitTimes = rocksDBMessageStore.getStatistics().getTickerCount(TickerType.BLOCK_CACHE_HIT);
                     long newMissTimes = rocksDBMessageStore.getStatistics().getTickerCount(TickerType.BLOCK_CACHE_MISS);
                     long totalPeriod = newHitTimes - this.blockCacheHitTimes + newMissTimes - this.blockCacheMissTimes;
-                    double hitRate = totalPeriod == 0 ? 0 : (double)(newHitTimes - this.blockCacheHitTimes) / totalPeriod;
+                    double hitRate = totalPeriod == 0 ? 0 : (double) (newHitTimes - this.blockCacheHitTimes) / totalPeriod;
                     this.blockCacheHitTimes = newHitTimes;
                     this.blockCacheMissTimes = newMissTimes;
                     measurement.record(hitRate, this.newAttributesBuilder().put("type", "consume_queue").build());
@@ -163,8 +158,8 @@ public class RocksDBStoreMetricsManager {
             return Attributes.builder();
         }
         return this.attributesBuilderSupplier.get()
-            .put(LABEL_STORAGE_TYPE, DEFAULT_STORAGE_TYPE)
-            .put(LABEL_STORAGE_MEDIUM, DEFAULT_STORAGE_MEDIUM);
+                .put(LABEL_STORAGE_TYPE, DEFAULT_STORAGE_TYPE)
+                .put(LABEL_STORAGE_MEDIUM, DEFAULT_STORAGE_MEDIUM);
     }
 
     // Getter methods for external access
@@ -172,8 +167,17 @@ public class RocksDBStoreMetricsManager {
         return attributesBuilderSupplier;
     }
 
+    // Setter methods for testing
+    public void setAttributesBuilderSupplier(Supplier<AttributesBuilder> attributesBuilderSupplier) {
+        this.attributesBuilderSupplier = attributesBuilderSupplier;
+    }
+
     public MessageStoreConfig getMessageStoreConfig() {
         return messageStoreConfig;
+    }
+
+    public void setMessageStoreConfig(MessageStoreConfig messageStoreConfig) {
+        this.messageStoreConfig = messageStoreConfig;
     }
 
     public ObservableLongGauge getBytesRocksdbRead() {
@@ -214,14 +218,5 @@ public class RocksDBStoreMetricsManager {
 
     public long getBlockCacheMissTimes() {
         return blockCacheMissTimes;
-    }
-
-    // Setter methods for testing
-    public void setAttributesBuilderSupplier(Supplier<AttributesBuilder> attributesBuilderSupplier) {
-        this.attributesBuilderSupplier = attributesBuilderSupplier;
-    }
-
-    public void setMessageStoreConfig(MessageStoreConfig messageStoreConfig) {
-        this.messageStoreConfig = messageStoreConfig;
     }
 }

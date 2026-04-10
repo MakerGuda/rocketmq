@@ -17,12 +17,7 @@
 package org.apache.rocketmq.proxy.grpc;
 
 import io.grpc.Attributes;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcHttp2ConnectionHandler;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.InternalProtocolNegotiationEvent;
-import io.grpc.netty.shaded.io.grpc.netty.InternalProtocolNegotiator;
-import io.grpc.netty.shaded.io.grpc.netty.InternalProtocolNegotiators;
-import io.grpc.netty.shaded.io.grpc.netty.ProtocolNegotiationEvent;
+import io.grpc.netty.shaded.io.grpc.netty.*;
 import io.grpc.netty.shaded.io.netty.buffer.ByteBuf;
 import io.grpc.netty.shaded.io.netty.buffer.ByteBufUtil;
 import io.grpc.netty.shaded.io.netty.channel.ChannelHandler;
@@ -35,24 +30,11 @@ import io.grpc.netty.shaded.io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.grpc.netty.shaded.io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.grpc.netty.shaded.io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
 import io.grpc.netty.shaded.io.netty.handler.codec.haproxy.HAProxyTLV;
-import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
-import io.grpc.netty.shaded.io.netty.handler.ssl.OpenSsl;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslHandler;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslProvider;
-
+import io.grpc.netty.shaded.io.netty.handler.ssl.*;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.grpc.netty.shaded.io.netty.util.AsciiString;
 import io.grpc.netty.shaded.io.netty.util.CharsetUtil;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.cert.CertificateException;
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.HAProxyConstants;
@@ -65,6 +47,13 @@ import org.apache.rocketmq.proxy.config.ProxyConfig;
 import org.apache.rocketmq.proxy.grpc.constant.AttributeKeys;
 import org.apache.rocketmq.remoting.common.TlsMode;
 import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.cert.CertificateException;
+import java.util.List;
 
 public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator.ProtocolNegotiator {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -89,6 +78,39 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
         }
     }
 
+    public static void loadSslContext() throws CertificateException, IOException {
+        ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
+        SslProvider provider;
+        if (OpenSsl.isAvailable()) {
+            provider = SslProvider.OPENSSL;
+            log.info("Using OpenSSL provider");
+        } else {
+            provider = SslProvider.JDK;
+            log.info("Using JDK SSL provider");
+        }
+        if (proxyConfig.isTlsTestModeEnable()) {
+            SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+            sslContext = GrpcSslContexts.forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
+                    .sslProvider(provider)
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .clientAuth(ClientAuth.NONE)
+                    .build();
+        } else {
+            String tlsCertPath = ConfigurationManager.getProxyConfig().getTlsCertPath();
+            String tlsKeyPath = ConfigurationManager.getProxyConfig().getTlsKeyPath();
+            try (InputStream serverKeyInputStream = Files.newInputStream(
+                    Paths.get(tlsKeyPath));
+                 InputStream serverCertificateStream = Files.newInputStream(
+                         Paths.get(tlsCertPath))) {
+                sslContext = GrpcSslContexts.forServer(serverCertificateStream,
+                                serverKeyInputStream)
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .clientAuth(ClientAuth.NONE)
+                        .build();
+            }
+        }
+    }
+
     @Override
     public AsciiString scheme() {
         return AsciiString.of("https");
@@ -103,37 +125,14 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
     public void close() {
     }
 
-    public static void loadSslContext() throws CertificateException, IOException {
-        ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
-        SslProvider provider;
-        if (OpenSsl.isAvailable()) {
-            provider = SslProvider.OPENSSL;
-            log.info("Using OpenSSL provider");
-        } else {
-            provider = SslProvider.JDK;
-            log.info("Using JDK SSL provider");
+    protected void handleHAProxyTLV(HAProxyTLV tlv, Attributes.Builder builder) {
+        byte[] valueBytes = ByteBufUtil.getBytes(tlv.content());
+        if (!BinaryUtil.isAscii(valueBytes)) {
+            return;
         }
-        if (proxyConfig.isTlsTestModeEnable()) {
-            SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
-            sslContext = GrpcSslContexts.forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
-                .sslProvider(provider)
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .clientAuth(ClientAuth.NONE)
-                .build();
-        } else {
-            String tlsCertPath = ConfigurationManager.getProxyConfig().getTlsCertPath();
-            String tlsKeyPath = ConfigurationManager.getProxyConfig().getTlsKeyPath();
-            try (InputStream serverKeyInputStream = Files.newInputStream(
-                Paths.get(tlsKeyPath));
-                 InputStream serverCertificateStream = Files.newInputStream(
-                     Paths.get(tlsCertPath))) {
-                sslContext = GrpcSslContexts.forServer(serverCertificateStream,
-                        serverKeyInputStream)
-                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                    .clientAuth(ClientAuth.NONE)
-                    .build();
-            }
-        }
+        Attributes.Key<String> key = AttributeKeys.valueOf(
+                HAProxyConstants.PROXY_PROTOCOL_TLV_PREFIX + String.format("%02x", tlv.typeByteValue()));
+        builder.set(key, new String(valueBytes, CharsetUtil.UTF_8));
     }
 
     private class ProxyAndTlsProtocolHandler extends ByteToMessageDecoder {
@@ -155,8 +154,8 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
                 }
                 if (ha.state() == ProtocolDetectionState.DETECTED) {
                     ctx.pipeline().addAfter(ctx.name(), HA_PROXY_DECODER, new HAProxyMessageDecoder())
-                        .addAfter(HA_PROXY_DECODER, HA_PROXY_HANDLER, new HAProxyMessageHandler())
-                        .addAfter(HA_PROXY_HANDLER, TLS_MODE_HANDLER, new TlsModeHandler(grpcHandler));
+                            .addAfter(HA_PROXY_DECODER, HA_PROXY_HANDLER, new HAProxyMessageHandler())
+                            .addAfter(HA_PROXY_HANDLER, TLS_MODE_HANDLER, new TlsModeHandler(grpcHandler));
                 } else {
                     ctx.pipeline().addAfter(ctx.name(), TLS_MODE_HANDLER, new TlsModeHandler(grpcHandler));
                 }
@@ -222,7 +221,7 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
                     msg.tlvs().forEach(tlv -> handleHAProxyTLV(tlv, builder));
                 }
                 pne = InternalProtocolNegotiationEvent
-                    .withAttributes(InternalProtocolNegotiationEvent.getDefault(), builder.build());
+                        .withAttributes(InternalProtocolNegotiationEvent.getDefault(), builder.build());
             } finally {
                 msg.release();
             }
@@ -238,28 +237,17 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
         }
     }
 
-    protected void handleHAProxyTLV(HAProxyTLV tlv, Attributes.Builder builder) {
-        byte[] valueBytes = ByteBufUtil.getBytes(tlv.content());
-        if (!BinaryUtil.isAscii(valueBytes)) {
-            return;
-        }
-        Attributes.Key<String> key = AttributeKeys.valueOf(
-            HAProxyConstants.PROXY_PROTOCOL_TLV_PREFIX + String.format("%02x", tlv.typeByteValue()));
-        builder.set(key, new String(valueBytes, CharsetUtil.UTF_8));
-    }
-
     private class TlsModeHandler extends ByteToMessageDecoder {
-
-        private ProtocolNegotiationEvent pne = InternalProtocolNegotiationEvent.getDefault();
 
         private final ChannelHandler ssl;
         private final ChannelHandler plaintext;
+        private ProtocolNegotiationEvent pne = InternalProtocolNegotiationEvent.getDefault();
 
         public TlsModeHandler(GrpcHttp2ConnectionHandler grpcHandler) {
             this.ssl = InternalProtocolNegotiators.serverTls(sslContext)
-                .newHandler(grpcHandler);
+                    .newHandler(grpcHandler);
             this.plaintext = InternalProtocolNegotiators.serverPlaintext()
-                .newHandler(grpcHandler);
+                    .newHandler(grpcHandler);
         }
 
         @Override

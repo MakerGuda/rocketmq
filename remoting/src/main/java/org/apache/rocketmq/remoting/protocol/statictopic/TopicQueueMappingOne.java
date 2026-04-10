@@ -16,8 +16,9 @@
  */
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
-import java.util.List;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.util.List;
 
 public class TopicQueueMappingOne extends RemotingSerializable {
 
@@ -28,7 +29,7 @@ public class TopicQueueMappingOne extends RemotingSerializable {
     TopicQueueMappingDetail mappingDetail;
 
     public TopicQueueMappingOne(TopicQueueMappingDetail mappingDetail, String topic, String bname, Integer globalId, List<LogicQueueMappingItem> items) {
-        this.mappingDetail =  mappingDetail;
+        this.mappingDetail = mappingDetail;
         this.topic = topic;
         this.bname = bname;
         this.globalId = globalId;

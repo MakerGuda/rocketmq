@@ -34,7 +34,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class BroadcastNormalMsgTwoDiffGroupRecvIT extends BaseBroadcast {
     private static Logger logger = LoggerFactory
-        .getLogger(NormalMsgTwoSameGroupConsumerIT.class);
+            .getLogger(NormalMsgTwoSameGroupConsumerIT.class);
     private RMQNormalProducer producer = null;
     private String topic = null;
 
@@ -58,9 +58,9 @@ public class BroadcastNormalMsgTwoDiffGroupRecvIT extends BaseBroadcast {
         String group1 = initConsumerGroup();
         String group2 = initConsumerGroup();
         RMQBroadCastConsumer consumer1 = getBroadCastConsumer(NAMESRV_ADDR, group1, topic, "*",
-            new RMQNormalListener(group1 + "_1"));
+                new RMQNormalListener(group1 + "_1"));
         RMQBroadCastConsumer consumer2 = getBroadCastConsumer(NAMESRV_ADDR, group2, topic, "*",
-            new RMQNormalListener(group2 + "_2"));
+                new RMQNormalListener(group2 + "_2"));
         TestUtils.waitForSeconds(WAIT_TIME);
 
         producer.send(msgSize);
@@ -70,10 +70,10 @@ public class BroadcastNormalMsgTwoDiffGroupRecvIT extends BaseBroadcast {
         consumer2.getListener().waitForMessageConsume(producer.getAllMsgBody(), CONSUME_TIME);
 
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer1.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer1.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer2.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer2.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
     }
 }

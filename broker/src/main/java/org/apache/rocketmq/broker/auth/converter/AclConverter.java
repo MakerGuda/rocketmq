@@ -16,20 +16,17 @@
  */
 package org.apache.rocketmq.broker.auth.converter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.auth.authentication.model.Subject;
 import org.apache.rocketmq.auth.authorization.enums.Decision;
 import org.apache.rocketmq.auth.authorization.enums.PolicyType;
-import org.apache.rocketmq.auth.authorization.model.Acl;
-import org.apache.rocketmq.auth.authorization.model.Environment;
-import org.apache.rocketmq.auth.authorization.model.Policy;
-import org.apache.rocketmq.auth.authorization.model.PolicyEntry;
-import org.apache.rocketmq.auth.authorization.model.Resource;
+import org.apache.rocketmq.auth.authorization.model.*;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.remoting.protocol.body.AclInfo;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 转换器 <b>AclConverter</b>，在认证模型、ACL 等与 Broker 内部表示之间做映射。
@@ -83,7 +80,7 @@ public class AclConverter {
             return null;
         }
         return acls.stream().map(AclConverter::convertAcl)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     public static AclInfo convertAcl(Acl acl) {
@@ -96,8 +93,8 @@ public class AclConverter {
             return aclInfo;
         }
         List<AclInfo.PolicyInfo> policyInfos = acl.getPolicies().stream()
-            .map(AclConverter::convertPolicy)
-            .collect(Collectors.toList());
+                .map(AclConverter::convertPolicy)
+                .collect(Collectors.toList());
         aclInfo.setPolicies(policyInfos);
         return aclInfo;
     }
@@ -111,7 +108,7 @@ public class AclConverter {
             return policyInfo;
         }
         List<AclInfo.PolicyEntryInfo> entryInfos = policy.getEntries().stream()
-            .map(AclConverter::convertPolicyEntry).collect(Collectors.toList());
+                .map(AclConverter::convertPolicyEntry).collect(Collectors.toList());
         policyInfo.setEntries(entryInfos);
         return policyInfo;
     }

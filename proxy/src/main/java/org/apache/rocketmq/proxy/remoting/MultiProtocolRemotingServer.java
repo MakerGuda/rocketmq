@@ -53,10 +53,10 @@ public class MultiProtocolRemotingServer extends NettyRemotingServer {
         this.nettyServerConfig = nettyServerConfig;
 
         this.remotingProtocolHandler = new RemotingProtocolHandler(
-            this::getEncoder,
-            this::getDistributionHandler,
-            this::getConnectionManageHandler,
-            this::getServerHandler);
+                this::getEncoder,
+                this::getDistributionHandler,
+                this::getConnectionManageHandler,
+                this::getServerHandler);
         this.http2ProtocolProxyHandler = new Http2ProtocolProxyHandler();
     }
 
@@ -78,11 +78,11 @@ public class MultiProtocolRemotingServer extends NettyRemotingServer {
     @Override
     protected ChannelPipeline configChannel(SocketChannel ch) {
         return ch.pipeline()
-            .addLast(this.getDefaultEventExecutorGroup(), HANDSHAKE_HANDLER_NAME, new HandshakeHandler())
-            .addLast(this.getDefaultEventExecutorGroup(),
-                new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
-                new ProtocolNegotiationHandler(this.remotingProtocolHandler)
-                    .addProtocolHandler(this.http2ProtocolProxyHandler)
-            );
+                .addLast(this.getDefaultEventExecutorGroup(), HANDSHAKE_HANDLER_NAME, new HandshakeHandler())
+                .addLast(this.getDefaultEventExecutorGroup(),
+                        new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
+                        new ProtocolNegotiationHandler(this.remotingProtocolHandler)
+                                .addProtocolHandler(this.http2ProtocolProxyHandler)
+                );
     }
 }

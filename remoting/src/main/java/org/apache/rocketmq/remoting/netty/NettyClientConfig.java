@@ -45,7 +45,7 @@ public class NettyClientConfig {
     private boolean clientCloseSocketIfTimeout = NettySystemConfig.clientCloseSocketIfTimeout;
 
     private boolean useTLS = Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
-        String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING)));
+            String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING)));
 
     private String socksProxyConfig = "{}";
 

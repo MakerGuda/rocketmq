@@ -18,11 +18,6 @@ package org.apache.rocketmq.proxy.processor;
 
 import com.alibaba.fastjson2.JSON;
 import io.netty.channel.Channel;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.acl.common.AclClientRPCHook;
 import org.apache.rocketmq.acl.common.AclUtils;
@@ -62,8 +57,15 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 public class DefaultMessagingProcessor extends AbstractStartAndShutdown implements MessagingProcessor {
 
+    protected static final String ROCKETMQ_HOME = MixAll.ROCKETMQ_HOME_DIR;
     protected ServiceManager serviceManager;
     protected ProducerProcessor producerProcessor;
     protected ConsumerProcessor consumerProcessor;
@@ -71,28 +73,26 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
     protected ClientProcessor clientProcessor;
     protected RequestBrokerProcessor requestBrokerProcessor;
     protected ReceiptHandleProcessor receiptHandleProcessor;
-
     protected ThreadPoolExecutor producerProcessorExecutor;
     protected ThreadPoolExecutor consumerProcessorExecutor;
-    protected static final String ROCKETMQ_HOME = MixAll.ROCKETMQ_HOME_DIR;
 
     protected DefaultMessagingProcessor(ServiceManager serviceManager) {
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         this.producerProcessorExecutor = ThreadPoolMonitor.createAndMonitor(
-            proxyConfig.getProducerProcessorThreadPoolNums(),
-            proxyConfig.getProducerProcessorThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "ProducerProcessorExecutor",
-            proxyConfig.getProducerProcessorThreadPoolQueueCapacity()
+                proxyConfig.getProducerProcessorThreadPoolNums(),
+                proxyConfig.getProducerProcessorThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "ProducerProcessorExecutor",
+                proxyConfig.getProducerProcessorThreadPoolQueueCapacity()
         );
         this.consumerProcessorExecutor = ThreadPoolMonitor.createAndMonitor(
-            proxyConfig.getConsumerProcessorThreadPoolNums(),
-            proxyConfig.getConsumerProcessorThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "ConsumerProcessorExecutor",
-            proxyConfig.getConsumerProcessorThreadPoolQueueCapacity()
+                proxyConfig.getConsumerProcessorThreadPoolNums(),
+                proxyConfig.getConsumerProcessorThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "ConsumerProcessorExecutor",
+                proxyConfig.getConsumerProcessorThreadPoolQueueCapacity()
         );
 
         this.serviceManager = serviceManager;
@@ -122,7 +122,7 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
         AuthConfig authConfig = ConfigurationManager.getAuthConfig();
         if (StringUtils.isNotBlank(authConfig.getInnerClientAuthenticationCredentials())) {
             SessionCredentials sessionCredentials =
-                JSON.parseObject(authConfig.getInnerClientAuthenticationCredentials(), SessionCredentials.class);
+                    JSON.parseObject(authConfig.getInnerClientAuthenticationCredentials(), SessionCredentials.class);
             if (StringUtils.isNotBlank(sessionCredentials.getAccessKey()) && StringUtils.isNotBlank(sessionCredentials.getSecretKey())) {
                 rpcHook = new AclClientRPCHook(sessionCredentials);
             }
@@ -150,104 +150,104 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
 
     @Override
     public ProxyTopicRouteData getTopicRouteDataForProxy(ProxyContext ctx, List<Address> requestHostAndPortList,
-        String topicName) throws Exception {
+                                                         String topicName) throws Exception {
         return this.serviceManager.getTopicRouteService().getTopicRouteForProxy(ctx, requestHostAndPortList, topicName);
     }
 
     @Override
     public CompletableFuture<List<SendResult>> sendMessage(ProxyContext ctx, QueueSelector queueSelector,
-        String producerGroup, int sysFlag, List<Message> msg, long timeoutMillis) {
+                                                           String producerGroup, int sysFlag, List<Message> msg, long timeoutMillis) {
         return this.producerProcessor.sendMessage(ctx, queueSelector, producerGroup, sysFlag, msg, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<RemotingCommand> forwardMessageToDeadLetterQueue(ProxyContext ctx, ReceiptHandle handle,
-        String messageId, String groupName, String topicName, long timeoutMillis) {
+                                                                              String messageId, String groupName, String topicName, long timeoutMillis) {
         return this.producerProcessor.forwardMessageToDeadLetterQueue(ctx, handle, messageId, groupName, topicName, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<Void> endTransaction(ProxyContext ctx, String topic, String transactionId,
-        String messageId, String producerGroup,
-        TransactionStatus transactionStatus, boolean fromTransactionCheck,
-        long timeoutMillis) {
+                                                  String messageId, String producerGroup,
+                                                  TransactionStatus transactionStatus, boolean fromTransactionCheck,
+                                                  long timeoutMillis) {
         return this.transactionProcessor.endTransaction(ctx, topic, transactionId, messageId, producerGroup, transactionStatus, fromTransactionCheck, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<PopResult> popMessage(
-        ProxyContext ctx,
-        QueueSelector queueSelector,
-        String consumerGroup,
-        String topic,
-        int maxMsgNums,
-        long invisibleTime,
-        long pollTime,
-        int initMode,
-        SubscriptionData subscriptionData,
-        boolean fifo,
-        PopMessageResultFilter popMessageResultFilter,
-        String attemptId,
-        long timeoutMillis
+            ProxyContext ctx,
+            QueueSelector queueSelector,
+            String consumerGroup,
+            String topic,
+            int maxMsgNums,
+            long invisibleTime,
+            long pollTime,
+            int initMode,
+            SubscriptionData subscriptionData,
+            boolean fifo,
+            PopMessageResultFilter popMessageResultFilter,
+            String attemptId,
+            long timeoutMillis
     ) {
         return this.consumerProcessor.popMessage(ctx, queueSelector, consumerGroup, topic, maxMsgNums,
-            invisibleTime, pollTime, initMode, subscriptionData, fifo, popMessageResultFilter, attemptId, timeoutMillis);
+                invisibleTime, pollTime, initMode, subscriptionData, fifo, popMessageResultFilter, attemptId, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<AckResult> ackMessage(ProxyContext ctx, ReceiptHandle handle, String messageId,
-        String consumerGroup, String topic, long timeoutMillis) {
+                                                   String consumerGroup, String topic, long timeoutMillis) {
         return this.consumerProcessor.ackMessage(ctx, handle, messageId, consumerGroup, topic, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<List<BatchAckResult>> batchAckMessage(ProxyContext ctx,
-        List<ReceiptHandleMessage> handleMessageList, String consumerGroup, String topic, long timeoutMillis) {
+                                                                   List<ReceiptHandleMessage> handleMessageList, String consumerGroup, String topic, long timeoutMillis) {
         return this.consumerProcessor.batchAckMessage(ctx, handleMessageList, consumerGroup, topic, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<AckResult> changeInvisibleTime(ProxyContext ctx, ReceiptHandle handle, String messageId,
-        String groupName, String topicName, long invisibleTime, long timeoutMillis) {
+                                                            String groupName, String topicName, long invisibleTime, long timeoutMillis) {
         return this.consumerProcessor.changeInvisibleTime(ctx, handle, messageId, groupName, topicName, invisibleTime, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<PullResult> pullMessage(ProxyContext ctx, MessageQueue messageQueue, String consumerGroup,
-        long queueOffset, int maxMsgNums, int sysFlag, long commitOffset, long suspendTimeoutMillis,
-        SubscriptionData subscriptionData, long timeoutMillis) {
+                                                     long queueOffset, int maxMsgNums, int sysFlag, long commitOffset, long suspendTimeoutMillis,
+                                                     SubscriptionData subscriptionData, long timeoutMillis) {
         return this.consumerProcessor.pullMessage(ctx, messageQueue, consumerGroup, queueOffset, maxMsgNums,
-            sysFlag, commitOffset, suspendTimeoutMillis, subscriptionData, timeoutMillis);
+                sysFlag, commitOffset, suspendTimeoutMillis, subscriptionData, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<Void> updateConsumerOffset(ProxyContext ctx, MessageQueue messageQueue,
-        String consumerGroup, long commitOffset, long timeoutMillis) {
+                                                        String consumerGroup, long commitOffset, long timeoutMillis) {
         return this.consumerProcessor.updateConsumerOffset(ctx, messageQueue, consumerGroup, commitOffset, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<Void> updateConsumerOffsetAsync(ProxyContext ctx, MessageQueue messageQueue,
-        String consumerGroup, long commitOffset, long timeoutMillis) {
+                                                             String consumerGroup, long commitOffset, long timeoutMillis) {
         return this.consumerProcessor.updateConsumerOffsetAsync(ctx, messageQueue, consumerGroup, commitOffset, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<Long> queryConsumerOffset(ProxyContext ctx, MessageQueue messageQueue,
-        String consumerGroup, long timeoutMillis) {
+                                                       String consumerGroup, long timeoutMillis) {
         return this.consumerProcessor.queryConsumerOffset(ctx, messageQueue, consumerGroup, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<Set<MessageQueue>> lockBatchMQ(ProxyContext ctx, Set<MessageQueue> mqSet,
-        String consumerGroup, String clientId, long timeoutMillis) {
+                                                            String consumerGroup, String clientId, long timeoutMillis) {
         return this.consumerProcessor.lockBatchMQ(ctx, mqSet, consumerGroup, clientId, timeoutMillis);
     }
 
     @Override
     public CompletableFuture<Void> unlockBatchMQ(ProxyContext ctx, Set<MessageQueue> mqSet,
-        String consumerGroup,
-        String clientId, long timeoutMillis) {
+                                                 String consumerGroup,
+                                                 String clientId, long timeoutMillis) {
         return this.consumerProcessor.unlockBatchMQ(ctx, mqSet, consumerGroup, clientId, timeoutMillis);
     }
 
@@ -269,7 +269,7 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
 
     @Override
     public CompletableFuture<RemotingCommand> request(ProxyContext ctx, String brokerName, RemotingCommand request,
-        long timeoutMillis) {
+                                                      long timeoutMillis) {
         int originalRequestOpaque = request.getOpaque();
         request.setOpaque(RemotingCommand.createNewRequestId());
         return this.requestBrokerProcessor.request(ctx, brokerName, request, timeoutMillis).thenApply(r -> {
@@ -280,7 +280,7 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
 
     @Override
     public CompletableFuture<Void> requestOneway(ProxyContext ctx, String brokerName, RemotingCommand request,
-        long timeoutMillis) {
+                                                 long timeoutMillis) {
         int originalRequestOpaque = request.getOpaque();
         request.setOpaque(RemotingCommand.createNewRequestId());
         return this.requestBrokerProcessor.requestOneway(ctx, brokerName, request, timeoutMillis).thenApply(r -> {
@@ -311,8 +311,8 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
 
     @Override
     public void registerConsumer(ProxyContext ctx, String consumerGroup, ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
-        Set<SubscriptionData> subList, boolean updateSubscription) {
+                                 ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
+                                 Set<SubscriptionData> subList, boolean updateSubscription) {
         this.clientProcessor.registerConsumer(ctx, consumerGroup, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList, updateSubscription);
     }
 
@@ -358,13 +358,13 @@ public class DefaultMessagingProcessor extends AbstractStartAndShutdown implemen
 
     @Override
     public void addReceiptHandle(ProxyContext ctx, Channel channel, String group, String msgID,
-        MessageReceiptHandle messageReceiptHandle) {
+                                 MessageReceiptHandle messageReceiptHandle) {
         receiptHandleProcessor.addReceiptHandle(ctx, channel, group, msgID, messageReceiptHandle);
     }
 
     @Override
     public MessageReceiptHandle removeReceiptHandle(ProxyContext ctx, Channel channel, String group, String msgID,
-        String receiptHandle) {
+                                                    String receiptHandle) {
         return receiptHandleProcessor.removeReceiptHandle(ctx, channel, group, msgID, receiptHandle);
     }
 }

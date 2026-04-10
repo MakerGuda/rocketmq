@@ -16,6 +16,13 @@
  */
 package org.apache.rocketmq.store.timer;
 
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.DataVersion;
+import org.apache.rocketmq.store.logfile.DefaultMappedFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -24,23 +31,17 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.concurrent.atomic.AtomicLong;
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.remoting.protocol.DataVersion;
-import org.apache.rocketmq.store.logfile.DefaultMappedFile;
 
 public class TimerCheckpoint {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private final RandomAccessFile randomAccessFile;
     private final FileChannel fileChannel;
     private final MappedByteBuffer mappedByteBuffer;
+    private final DataVersion dataVersion = new DataVersion();
     private volatile long lastReadTimeMs = 0; //if it is slave, need to read from master
     private volatile long lastTimerLogFlushPos = 0;
     private volatile long lastTimerQueueOffset = 0;
     private volatile long masterTimerQueueOffset = 0; // read from master
-    private final DataVersion dataVersion = new DataVersion();
 
     public TimerCheckpoint() {
         this.randomAccessFile = null;
@@ -71,7 +72,7 @@ public class TimerCheckpoint {
             }
 
             log.info("timer checkpoint file lastReadTimeMs " + this.lastReadTimeMs + ", "
-                + UtilAll.timeMillisToHumanString(this.lastReadTimeMs));
+                    + UtilAll.timeMillisToHumanString(this.lastReadTimeMs));
             log.info("timer checkpoint file lastTimerLogFlushPos " + this.lastTimerLogFlushPos);
             log.info("timer checkpoint file lastTimerQueueOffset " + this.lastTimerQueueOffset);
             log.info("timer checkpoint file masterTimerQueueOffset " + this.masterTimerQueueOffset);
@@ -81,6 +82,35 @@ public class TimerCheckpoint {
         } else {
             log.info("timer checkpoint file not exists, " + scpPath);
         }
+    }
+
+    public static ByteBuffer encode(TimerCheckpoint another) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(56);
+        byteBuffer.putLong(another.getLastReadTimeMs());
+        byteBuffer.putLong(another.getLastTimerLogFlushPos());
+        byteBuffer.putLong(another.getLastTimerQueueOffset());
+        byteBuffer.putLong(another.getMasterTimerQueueOffset());
+        // new add to record dataVersion
+        byteBuffer.putLong(another.getDataVersion().getStateVersion());
+        byteBuffer.putLong(another.getDataVersion().getTimestamp());
+        byteBuffer.putLong(another.getDataVersion().getCounter().get());
+        byteBuffer.flip();
+        return byteBuffer;
+    }
+
+    public static TimerCheckpoint decode(ByteBuffer byteBuffer) {
+        TimerCheckpoint tmp = new TimerCheckpoint();
+        tmp.setLastReadTimeMs(byteBuffer.getLong());
+        tmp.setLastTimerLogFlushPos(byteBuffer.getLong());
+        tmp.setLastTimerQueueOffset(byteBuffer.getLong());
+        tmp.setMasterTimerQueueOffset(byteBuffer.getLong());
+        // new add to record dataVersion
+        if (byteBuffer.hasRemaining()) {
+            tmp.getDataVersion().setStateVersion(byteBuffer.getLong());
+            tmp.getDataVersion().setTimestamp(byteBuffer.getLong());
+            tmp.getDataVersion().setCounter(new AtomicLong(byteBuffer.getLong()));
+        }
+        return tmp;
     }
 
     public void shutdown() {
@@ -122,35 +152,6 @@ public class TimerCheckpoint {
 
     public long getLastReadTimeMs() {
         return lastReadTimeMs;
-    }
-
-    public static ByteBuffer encode(TimerCheckpoint another) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(56);
-        byteBuffer.putLong(another.getLastReadTimeMs());
-        byteBuffer.putLong(another.getLastTimerLogFlushPos());
-        byteBuffer.putLong(another.getLastTimerQueueOffset());
-        byteBuffer.putLong(another.getMasterTimerQueueOffset());
-        // new add to record dataVersion
-        byteBuffer.putLong(another.getDataVersion().getStateVersion());
-        byteBuffer.putLong(another.getDataVersion().getTimestamp());
-        byteBuffer.putLong(another.getDataVersion().getCounter().get());
-        byteBuffer.flip();
-        return byteBuffer;
-    }
-
-    public static TimerCheckpoint decode(ByteBuffer byteBuffer) {
-        TimerCheckpoint tmp = new TimerCheckpoint();
-        tmp.setLastReadTimeMs(byteBuffer.getLong());
-        tmp.setLastTimerLogFlushPos(byteBuffer.getLong());
-        tmp.setLastTimerQueueOffset(byteBuffer.getLong());
-        tmp.setMasterTimerQueueOffset(byteBuffer.getLong());
-        // new add to record dataVersion
-        if (byteBuffer.hasRemaining()) {
-            tmp.getDataVersion().setStateVersion(byteBuffer.getLong());
-            tmp.getDataVersion().setTimestamp(byteBuffer.getLong());
-            tmp.getDataVersion().setCounter(new AtomicLong(byteBuffer.getLong()));
-        }
-        return tmp;
     }
 
     public void setLastReadTimeMs(long lastReadTimeMs) {

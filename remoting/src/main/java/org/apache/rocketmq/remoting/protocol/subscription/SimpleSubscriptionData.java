@@ -18,6 +18,7 @@
 package org.apache.rocketmq.remoting.protocol.subscription;
 
 import com.google.common.base.MoreObjects;
+
 import java.util.Objects;
 
 public class SimpleSubscriptionData {
@@ -82,12 +83,13 @@ public class SimpleSubscriptionData {
         return Objects.hash(topic, expressionType, expression);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("topic", topic)
-            .add("expressionType", expressionType)
-            .add("expression", expression)
-            .add("version", version)
-            .toString();
+                .add("topic", topic)
+                .add("expressionType", expressionType)
+                .add("expression", expression)
+                .add("version", version)
+                .toString();
     }
 }

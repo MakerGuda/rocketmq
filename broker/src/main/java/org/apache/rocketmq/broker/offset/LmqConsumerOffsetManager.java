@@ -16,21 +16,21 @@
  */
 package org.apache.rocketmq.broker.offset;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import com.google.common.base.Strings;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.BrokerPathConfigHelper;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 /**
  * <b>LmqConsumerOffsetManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
- * 
+ * <p>
  * 继承关系：<code>ConsumerOffsetManager</code>。
  */
 public class LmqConsumerOffsetManager extends ConsumerOffsetManager {
@@ -75,7 +75,7 @@ public class LmqConsumerOffsetManager extends ConsumerOffsetManager {
 
     @Override
     public void commitOffset(final String clientHost, final String group, final String topic, final int queueId,
-        final long offset) {
+                             final long offset) {
         if (!MixAll.isLmq(group)) {
             super.commitOffset(clientHost, group, topic, queueId, offset);
             return;

@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.store.DispatchRequest;
@@ -24,16 +23,20 @@ import org.apache.rocketmq.store.exception.ConsumeQueueException;
 import org.apache.rocketmq.store.exception.StoreException;
 import org.rocksdb.RocksDBException;
 
+import java.util.concurrent.ConcurrentMap;
+
 public interface ConsumeQueueStoreInterface {
 
     /**
      * Load from file.
+     *
      * @return true if loaded successfully.
      */
     boolean load();
 
     /**
      * Recover from file.
+     *
      * @param concurrently whether to recover concurrently
      */
     void recover(boolean concurrently) throws RocksDBException;
@@ -59,16 +62,18 @@ public interface ConsumeQueueStoreInterface {
      * @return whether to start recovering from this MappedFile
      */
     boolean isMappedFileMatchedRecover(long phyOffset, long storeTimestamp,
-        boolean recoverNormally) throws RocksDBException;
+                                       boolean recoverNormally) throws RocksDBException;
 
     /**
      * Shutdown the consumeQueueStore
+     *
      * @return true if shutdown successfully.
      */
     boolean shutdown();
 
     /**
      * destroy all consumeQueues
+     *
      * @param loadAfterDestroy reload store after destroy, only used in RocksDB mode
      */
     void destroy(boolean loadAfterDestroy);
@@ -87,6 +92,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * clean expired data from minCommitLogOffset
+     *
      * @param minCommitLogOffset Minimum commit log offset
      */
     void cleanExpired(long minCommitLogOffset);
@@ -98,6 +104,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * truncate dirty data
+     *
      * @param offsetToTruncate
      * @throws RocksDBException only in rocksdb mode
      */
@@ -113,12 +120,14 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get consumeQueue table
+     *
      * @return the consumeQueue table
      */
     ConcurrentMap<String, ConcurrentMap<Integer, ConsumeQueueInterface>> getConsumeQueueTable();
 
     /**
      * Assign queue offset.
+     *
      * @param msg message itself
      * @throws RocksDBException only in rocksdb mode
      */
@@ -126,21 +135,24 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Increase queue offset.
-     * @param msg message itself
+     *
+     * @param msg        message itself
      * @param messageNum message number
      */
     void increaseQueueOffset(MessageExtBrokerInner msg, short messageNum);
 
     /**
      * Increase lmq offset
-     * @param topic Topic/Queue name
+     *
+     * @param topic   Topic/Queue name
      * @param queueId Queue ID
-     * @param delta amount to increase
+     * @param delta   amount to increase
      */
     void increaseLmqOffset(String topic, int queueId, short delta) throws ConsumeQueueException;
 
     /**
      * get lmq queue offset
+     *
      * @param topic
      * @param queueId
      * @return
@@ -149,6 +161,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * recover topicQueue table by minPhyOffset
+     *
      * @param minPhyOffset
      */
     void recoverOffsetTable(long minPhyOffset);
@@ -156,7 +169,7 @@ public interface ConsumeQueueStoreInterface {
     /**
      * get maxOffset of specific topic-queueId in topicQueue table
      *
-     * @param topic Topic name
+     * @param topic   Topic name
      * @param queueId Queue identifier
      * @return the max offset in QueueOffsetOperator
      * @throws ConsumeQueueException if there is an error while retrieving max consume queue offset
@@ -165,6 +178,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get min logic offset of specific topic-queueId in consumeQueue
+     *
      * @param topic
      * @param queueId
      * @return the min logic offset of specific topic-queueId in consumeQueue
@@ -175,6 +189,7 @@ public interface ConsumeQueueStoreInterface {
     /**
      * Get the message whose timestamp is the smallest, greater than or equal to the given time and when there are more
      * than one message satisfy the condition, decide which one to return based on boundaryType.
+     *
      * @param timestamp    timestamp
      * @param boundaryType Lower or Upper
      * @return the offset(index)
@@ -184,6 +199,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * find or create the consumeQueue
+     *
      * @param topic
      * @param queueId
      * @return the consumeQueue
@@ -201,6 +217,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get the total size of all consumeQueue
+     *
      * @return the total size of all consumeQueue
      */
     long getTotalSize();

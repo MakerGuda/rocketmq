@@ -19,23 +19,17 @@ package org.apache.rocketmq.proxy.service.route;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.math.IntMath;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.impl.producer.TopicPublishInfo;
 import org.apache.rocketmq.client.latency.MQFaultStrategy;
 import org.apache.rocketmq.common.constant.PermName;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.protocol.route.QueueData;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class MessageQueueSelector {
     private static final int BROKER_ACTING_QUEUE_ID = -1;
@@ -78,8 +72,8 @@ public class MessageQueueSelector {
 
                 for (int i = 0; i < qd.getReadQueueNums(); i++) {
                     AddressableMessageQueue mq = new AddressableMessageQueue(
-                        new MessageQueue(topicRoute.getTopicName(), qd.getBrokerName(), i),
-                        brokerAddr);
+                            new MessageQueue(topicRoute.getTopicName(), qd.getBrokerName(), i),
+                            brokerAddr);
                     queueSet.add(mq);
                 }
             }
@@ -104,8 +98,8 @@ public class MessageQueueSelector {
                 int nums = Integer.parseInt(item[1]);
                 for (int i = 0; i < nums; i++) {
                     AddressableMessageQueue mq = new AddressableMessageQueue(
-                        new MessageQueue(topicRoute.getTopicName(), brokerName, i),
-                        brokerAddr);
+                            new MessageQueue(topicRoute.getTopicName(), brokerName, i),
+                            brokerAddr);
                     queueSet.add(mq);
                 }
             }
@@ -124,8 +118,8 @@ public class MessageQueueSelector {
 
                     for (int i = 0; i < qd.getWriteQueueNums(); i++) {
                         AddressableMessageQueue mq = new AddressableMessageQueue(
-                            new MessageQueue(topicRoute.getTopicName(), qd.getBrokerName(), i),
-                            brokerAddr);
+                                new MessageQueue(topicRoute.getTopicName(), qd.getBrokerName(), i),
+                                brokerAddr);
                         queueSet.add(mq);
                     }
                 }
@@ -138,8 +132,8 @@ public class MessageQueueSelector {
     private void buildBrokerActingQueues(String topic, List<AddressableMessageQueue> normalQueues) {
         for (AddressableMessageQueue mq : normalQueues) {
             AddressableMessageQueue brokerActingQueue = new AddressableMessageQueue(
-                new MessageQueue(topic, mq.getMessageQueue().getBrokerName(), BROKER_ACTING_QUEUE_ID),
-                mq.getBrokerAddr());
+                    new MessageQueue(topic, mq.getMessageQueue().getBrokerName(), BROKER_ACTING_QUEUE_ID),
+                    mq.getBrokerAddr());
 
             if (!brokerActingQueues.contains(brokerActingQueue)) {
                 brokerActingQueues.add(brokerActingQueue);
@@ -199,7 +193,7 @@ public class MessageQueueSelector {
         return selectOne(onlyBroker);
     }
 
-    private MessageQueue selectOneMessageQueue(List<MessageQueue> messageQueueList, AtomicInteger sendQueue, TopicPublishInfo.QueueFilter...filter) {
+    private MessageQueue selectOneMessageQueue(List<MessageQueue> messageQueueList, AtomicInteger sendQueue, TopicPublishInfo.QueueFilter... filter) {
         if (messageQueueList == null || messageQueueList.isEmpty()) {
             return null;
         }
@@ -208,7 +202,7 @@ public class MessageQueueSelector {
                 int index = Math.abs(sendQueue.incrementAndGet() % messageQueueList.size());
                 MessageQueue mq = messageQueueList.get(index);
                 boolean filterResult = true;
-                for (TopicPublishInfo.QueueFilter f: filter) {
+                for (TopicPublishInfo.QueueFilter f : filter) {
                     Preconditions.checkNotNull(f);
                     filterResult &= f.filter(mq);
                 }
@@ -231,7 +225,7 @@ public class MessageQueueSelector {
     }
 
     private AddressableMessageQueue transferQueue2Addressable(MessageQueue messageQueue) {
-        for (AddressableMessageQueue amq: queues) {
+        for (AddressableMessageQueue amq : queues) {
             if (amq.getMessageQueue().equals(messageQueue)) {
                 return amq;
             }
@@ -293,7 +287,7 @@ public class MessageQueueSelector {
         }
         MessageQueueSelector queue = (MessageQueueSelector) o;
         return Objects.equals(queues, queue.queues) &&
-            Objects.equals(brokerActingQueues, queue.brokerActingQueues);
+                Objects.equals(brokerActingQueues, queue.brokerActingQueues);
     }
 
     @Override
@@ -304,11 +298,11 @@ public class MessageQueueSelector {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("queues", queues)
-            .add("brokerActingQueues", brokerActingQueues)
-            .add("brokerNameQueueMap", brokerNameQueueMap)
-            .add("queueIndex", queueIndex)
-            .add("brokerIndex", brokerIndex)
-            .toString();
+                .add("queues", queues)
+                .add("brokerActingQueues", brokerActingQueues)
+                .add("brokerNameQueueMap", brokerNameQueueMap)
+                .add("queueIndex", queueIndex)
+                .add("brokerIndex", brokerIndex)
+                .toString();
     }
 }

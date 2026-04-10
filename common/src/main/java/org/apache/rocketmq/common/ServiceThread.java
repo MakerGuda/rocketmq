@@ -16,26 +16,24 @@
  */
 package org.apache.rocketmq.common;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class ServiceThread implements Runnable {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
     private static final long JOIN_TIME = 90 * 1000;
-
-    protected Thread thread;
     protected final CountDownLatch2 waitPoint = new CountDownLatch2(1);
+    //Make it able to restart the thread
+    private final AtomicBoolean started = new AtomicBoolean(false);
+    protected Thread thread;
     protected volatile AtomicBoolean hasNotified = new AtomicBoolean(false);
     protected volatile boolean stopped = false;
     protected boolean isDaemon = false;
-
-    //Make it able to restart the thread
-    private final AtomicBoolean started = new AtomicBoolean(false);
 
     public ServiceThread() {
 

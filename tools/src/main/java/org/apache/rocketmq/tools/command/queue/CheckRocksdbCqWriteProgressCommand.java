@@ -17,9 +17,6 @@
 
 package org.apache.rocketmq.tools.command.queue;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -30,6 +27,10 @@ import org.apache.rocketmq.remoting.protocol.body.ClusterInfo;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.SubCommand;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class CheckRocksdbCqWriteProgressCommand implements SubCommand {
 
@@ -72,8 +73,8 @@ public class CheckRocksdbCqWriteProgressCommand implements SubCommand {
         String topic = commandLine.hasOption('t') ? commandLine.getOptionValue('t').trim() : "";
         // The default check is 30 days
         long checkStoreTime = commandLine.hasOption("cf")
-            ? Long.parseLong(commandLine.getOptionValue("cf").trim())
-            : System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30L);
+                ? Long.parseLong(commandLine.getOptionValue("cf").trim())
+                : System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30L);
 
         try {
             defaultMQAdminExt.start();

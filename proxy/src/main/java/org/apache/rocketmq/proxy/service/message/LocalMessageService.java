@@ -17,33 +17,16 @@
 package org.apache.rocketmq.proxy.service.message;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.client.consumer.AckResult;
-import org.apache.rocketmq.client.consumer.AckStatus;
-import org.apache.rocketmq.client.consumer.PopResult;
-import org.apache.rocketmq.client.consumer.PopStatus;
-import org.apache.rocketmq.client.consumer.PullResult;
+import org.apache.rocketmq.client.consumer.*;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageBatch;
-import org.apache.rocketmq.common.message.MessageClientIDSetter;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.common.message.*;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.common.ProxyException;
 import org.apache.rocketmq.proxy.common.ProxyExceptionCode;
@@ -59,25 +42,11 @@ import org.apache.rocketmq.remoting.protocol.body.BatchAck;
 import org.apache.rocketmq.remoting.protocol.body.BatchAckMessageRequestBody;
 import org.apache.rocketmq.remoting.protocol.body.LockBatchRequestBody;
 import org.apache.rocketmq.remoting.protocol.body.UnlockBatchRequestBody;
-import org.apache.rocketmq.remoting.protocol.header.AckMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ChangeInvisibleTimeRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ChangeInvisibleTimeResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.ConsumerSendMsgBackRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.EndTransactionRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ExtraInfoUtil;
-import org.apache.rocketmq.remoting.protocol.header.GetMaxOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMinOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PopMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PopMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.PullMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.QueryConsumerOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.RecallMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.RecallMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.UpdateConsumerOffsetRequestHeader;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.header.*;
+
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class LocalMessageService implements MessageService {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -91,7 +60,7 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<List<SendResult>> sendMessage(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        List<Message> msgList, SendMessageRequestHeader requestHeader, long timeoutMillis) {
+                                                           List<Message> msgList, SendMessageRequestHeader requestHeader, long timeoutMillis) {
         byte[] body;
         String messageId;
         if (msgList.size() > 1) {
@@ -162,14 +131,14 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<RemotingCommand> sendMessageBack(ProxyContext ctx, ReceiptHandle handle, String messageId,
-        ConsumerSendMsgBackRequestHeader requestHeader, long timeoutMillis) {
+                                                              ConsumerSendMsgBackRequestHeader requestHeader, long timeoutMillis) {
         SimpleChannel channel = channelManager.createChannel(ctx);
         ChannelHandlerContext channelHandlerContext = channel.getChannelHandlerContext();
         RemotingCommand command = LocalRemotingCommand.createRequestCommand(RequestCode.CONSUMER_SEND_MSG_BACK, requestHeader, ctx.getLanguage());
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         try {
             RemotingCommand response = brokerController.getSendMessageProcessor()
-                .processRequest(channelHandlerContext, command);
+                    .processRequest(channelHandlerContext, command);
             future.complete(response);
         } catch (Exception e) {
             log.error("Fail to process sendMessageBack command", e);
@@ -180,15 +149,15 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<Void> endTransactionOneway(ProxyContext ctx, String brokerName,
-        EndTransactionRequestHeader requestHeader,
-        long timeoutMillis) {
+                                                        EndTransactionRequestHeader requestHeader,
+                                                        long timeoutMillis) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         SimpleChannel channel = channelManager.createChannel(ctx);
         ChannelHandlerContext channelHandlerContext = channel.getChannelHandlerContext();
         RemotingCommand command = LocalRemotingCommand.createRequestCommand(RequestCode.END_TRANSACTION, requestHeader, ctx.getLanguage());
         try {
             brokerController.getEndTransactionProcessor()
-                .processRequest(channelHandlerContext, command);
+                    .processRequest(channelHandlerContext, command);
             future.complete(null);
         } catch (Exception e) {
             future.completeExceptionally(e);
@@ -198,7 +167,7 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<PopResult> popMessage(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        PopMessageRequestHeader requestHeader, long timeoutMillis) {
+                                                   PopMessageRequestHeader requestHeader, long timeoutMillis) {
         RemotingCommand request = LocalRemotingCommand.createRequestCommand(RequestCode.POP_MESSAGE, requestHeader, ctx.getLanguage());
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         SimpleChannel channel = channelManager.createInvocationChannel(ctx);
@@ -224,10 +193,10 @@ public class LocalMessageService implements MessageService {
                     popStatus = PopStatus.FOUND;
                     ByteBuffer byteBuffer = ByteBuffer.wrap(r.getBody());
                     messageExtList = MessageDecoder.decodesBatch(
-                        byteBuffer,
-                        true,
-                        false,
-                        true
+                            byteBuffer,
+                            true,
+                            false,
+                            true
                     );
                     break;
                 case ResponseCode.POLLING_FULL:
@@ -258,7 +227,7 @@ public class LocalMessageService implements MessageService {
                     // Value of POP_CK is used to determine whether it is a pop retry,
                     // cause topic could be rewritten by broker.
                     String key = ExtraInfoUtil.getStartOffsetInfoMapKey(messageExt.getTopic(),
-                        messageExt.getProperty(MessageConst.PROPERTY_POP_CK), messageExt.getQueueId());
+                            messageExt.getProperty(MessageConst.PROPERTY_POP_CK), messageExt.getQueueId());
                     if (!sortMap.containsKey(key)) {
                         sortMap.put(key, new ArrayList<>(4));
                     }
@@ -272,7 +241,7 @@ public class LocalMessageService implements MessageService {
                         String key = messageExt.getTopic() + messageExt.getQueueId();
                         if (!map.containsKey(messageExt.getTopic() + messageExt.getQueueId())) {
                             map.put(key, ExtraInfoUtil.buildExtraInfo(messageExt.getQueueOffset(), responseHeader.getPopTime(), responseHeader.getInvisibleTime(), responseHeader.getReviveQid(),
-                                messageExt.getTopic(), messageQueue.getBrokerName(), messageExt.getQueueId()));
+                                    messageExt.getTopic(), messageQueue.getBrokerName(), messageExt.getQueueId()));
                         }
                         messageExt.getProperties().put(MessageConst.PROPERTY_POP_CK, map.get(key) + MessageConst.KEY_SEPARATOR + messageExt.getQueueOffset());
                     } else {
@@ -285,8 +254,8 @@ public class LocalMessageService implements MessageService {
                             }
 
                             messageExt.getProperties().put(MessageConst.PROPERTY_POP_CK,
-                                ExtraInfoUtil.buildExtraInfo(startOffsetInfo.get(key), responseHeader.getPopTime(), responseHeader.getInvisibleTime(),
-                                    responseHeader.getReviveQid(), messageExt.getTopic(), messageQueue.getBrokerName(), messageExt.getQueueId(), msgQueueOffset)
+                                    ExtraInfoUtil.buildExtraInfo(startOffsetInfo.get(key), responseHeader.getPopTime(), responseHeader.getInvisibleTime(),
+                                            responseHeader.getReviveQid(), messageExt.getTopic(), messageQueue.getBrokerName(), messageExt.getQueueId(), msgQueueOffset)
                             );
                             if (requestHeader.isOrder() && orderCountInfo != null) {
                                 Integer count = orderCountInfo.get(key);
@@ -307,14 +276,14 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<AckResult> changeInvisibleTime(ProxyContext ctx, ReceiptHandle handle, String messageId,
-        ChangeInvisibleTimeRequestHeader requestHeader, long timeoutMillis) {
+                                                            ChangeInvisibleTimeRequestHeader requestHeader, long timeoutMillis) {
         SimpleChannel channel = channelManager.createChannel(ctx);
         ChannelHandlerContext channelHandlerContext = channel.getChannelHandlerContext();
         RemotingCommand command = LocalRemotingCommand.createRequestCommand(RequestCode.CHANGE_MESSAGE_INVISIBLETIME, requestHeader, ctx.getLanguage());
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         try {
             future = brokerController.getChangeInvisibleTimeProcessor()
-                .processRequestAsync(channelHandlerContext.channel(), command, true);
+                    .processRequestAsync(channelHandlerContext.channel(), command, true);
         } catch (Exception e) {
             log.error("Fail to process changeInvisibleTime command", e);
             future.completeExceptionally(e);
@@ -329,30 +298,30 @@ public class LocalMessageService implements MessageService {
             }
             ackResult.setPopTime(responseHeader.getPopTime());
             ackResult.setExtraInfo(ReceiptHandle.builder()
-                .startOffset(handle.getStartOffset())
-                .retrieveTime(responseHeader.getPopTime())
-                .invisibleTime(responseHeader.getInvisibleTime())
-                .reviveQueueId(responseHeader.getReviveQid())
-                .topicType(handle.getTopicType())
-                .brokerName(handle.getBrokerName())
-                .queueId(handle.getQueueId())
-                .offset(handle.getOffset())
-                .build()
-                .encode());
+                    .startOffset(handle.getStartOffset())
+                    .retrieveTime(responseHeader.getPopTime())
+                    .invisibleTime(responseHeader.getInvisibleTime())
+                    .reviveQueueId(responseHeader.getReviveQid())
+                    .topicType(handle.getTopicType())
+                    .brokerName(handle.getBrokerName())
+                    .queueId(handle.getQueueId())
+                    .offset(handle.getOffset())
+                    .build()
+                    .encode());
             return ackResult;
         });
     }
 
     @Override
     public CompletableFuture<AckResult> ackMessage(ProxyContext ctx, ReceiptHandle handle, String messageId,
-        AckMessageRequestHeader requestHeader, long timeoutMillis) {
+                                                   AckMessageRequestHeader requestHeader, long timeoutMillis) {
         SimpleChannel channel = channelManager.createChannel(ctx);
         ChannelHandlerContext channelHandlerContext = channel.getChannelHandlerContext();
         RemotingCommand command = LocalRemotingCommand.createRequestCommand(RequestCode.ACK_MESSAGE, requestHeader, ctx.getLanguage());
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         try {
             RemotingCommand response = brokerController.getAckMessageProcessor()
-                .processRequest(channelHandlerContext, command);
+                    .processRequest(channelHandlerContext, command);
             future.complete(response);
         } catch (Exception e) {
             log.error("Fail to process ackMessage command", e);
@@ -371,7 +340,7 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<AckResult> batchAckMessage(ProxyContext ctx, List<ReceiptHandleMessage> handleList,
-        String consumerGroup, String topic, long timeoutMillis) {
+                                                        String consumerGroup, String topic, long timeoutMillis) {
         SimpleChannel channel = channelManager.createChannel(ctx);
         ChannelHandlerContext channelHandlerContext = channel.getChannelHandlerContext();
         RemotingCommand command = LocalRemotingCommand.createRequestCommand(RequestCode.BATCH_ACK_MESSAGE, null);
@@ -381,9 +350,9 @@ public class LocalMessageService implements MessageService {
             String extraInfo = receiptHandleMessage.getReceiptHandle().getReceiptHandle();
             String[] extraInfoData = ExtraInfoUtil.split(extraInfo);
             String mergeKey = ExtraInfoUtil.getRetry(extraInfoData) + "@" +
-                ExtraInfoUtil.getQueueId(extraInfoData) + "@" +
-                ExtraInfoUtil.getCkQueueOffset(extraInfoData) + "@" +
-                ExtraInfoUtil.getPopTime(extraInfoData);
+                    ExtraInfoUtil.getQueueId(extraInfoData) + "@" +
+                    ExtraInfoUtil.getCkQueueOffset(extraInfoData) + "@" +
+                    ExtraInfoUtil.getPopTime(extraInfoData);
             BatchAck bAck = batchAckMap.computeIfAbsent(mergeKey, k -> {
                 BatchAck newBatchAck = new BatchAck();
                 newBatchAck.setConsumerGroup(consumerGroup);
@@ -407,7 +376,7 @@ public class LocalMessageService implements MessageService {
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         try {
             RemotingCommand response = brokerController.getAckMessageProcessor()
-                .processRequest(channelHandlerContext, command);
+                    .processRequest(channelHandlerContext, command);
             future.complete(response);
         } catch (Exception e) {
             log.error("Fail to process batchAckMessage command", e);
@@ -426,63 +395,63 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<PullResult> pullMessage(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        PullMessageRequestHeader requestHeader, long timeoutMillis) {
+                                                     PullMessageRequestHeader requestHeader, long timeoutMillis) {
         throw new NotImplementedException("pullMessage is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Long> queryConsumerOffset(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        QueryConsumerOffsetRequestHeader requestHeader, long timeoutMillis) {
+                                                       QueryConsumerOffsetRequestHeader requestHeader, long timeoutMillis) {
         throw new NotImplementedException("queryConsumerOffset is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Void> updateConsumerOffset(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        UpdateConsumerOffsetRequestHeader requestHeader, long timeoutMillis) {
+                                                        UpdateConsumerOffsetRequestHeader requestHeader, long timeoutMillis) {
         throw new NotImplementedException("updateConsumerOffset is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Void> updateConsumerOffsetAsync(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        UpdateConsumerOffsetRequestHeader requestHeader, long timeoutMillis) {
+                                                             UpdateConsumerOffsetRequestHeader requestHeader, long timeoutMillis) {
         throw new NotImplementedException("updateConsumerOffsetAsync is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Set<MessageQueue>> lockBatchMQ(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        LockBatchRequestBody requestBody, long timeoutMillis) {
+                                                            LockBatchRequestBody requestBody, long timeoutMillis) {
         throw new NotImplementedException("lockBatchMQ is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Void> unlockBatchMQ(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        UnlockBatchRequestBody requestBody, long timeoutMillis) {
+                                                 UnlockBatchRequestBody requestBody, long timeoutMillis) {
         throw new NotImplementedException("unlockBatchMQ is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Long> getMaxOffset(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        GetMaxOffsetRequestHeader requestHeader, long timeoutMillis) {
+                                                GetMaxOffsetRequestHeader requestHeader, long timeoutMillis) {
         throw new NotImplementedException("getMaxOffset is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Long> getMinOffset(ProxyContext ctx, AddressableMessageQueue messageQueue,
-        GetMinOffsetRequestHeader requestHeader, long timeoutMillis) {
+                                                GetMinOffsetRequestHeader requestHeader, long timeoutMillis) {
         throw new NotImplementedException("getMinOffset is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<String> recallMessage(ProxyContext ctx, String brokerName,
-        RecallMessageRequestHeader requestHeader, long timeoutMillis) {
+                                                   RecallMessageRequestHeader requestHeader, long timeoutMillis) {
         SimpleChannel channel = channelManager.createChannel(ctx);
         ChannelHandlerContext channelHandlerContext = channel.getChannelHandlerContext();
         RemotingCommand command =
-            LocalRemotingCommand.createRequestCommand(RequestCode.RECALL_MESSAGE, requestHeader, ctx.getLanguage());
+                LocalRemotingCommand.createRequestCommand(RequestCode.RECALL_MESSAGE, requestHeader, ctx.getLanguage());
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         try {
             RemotingCommand response = brokerController.getRecallMessageProcessor()
-                .processRequest(channelHandlerContext, command);
+                    .processRequest(channelHandlerContext, command);
             future.complete(response);
         } catch (Exception e) {
             log.error("Fail to process recallMessage command", e);
@@ -500,13 +469,13 @@ public class LocalMessageService implements MessageService {
 
     @Override
     public CompletableFuture<RemotingCommand> request(ProxyContext ctx, String brokerName, RemotingCommand request,
-        long timeoutMillis) {
+                                                      long timeoutMillis) {
         throw new NotImplementedException("request is not implemented in LocalMessageService");
     }
 
     @Override
     public CompletableFuture<Void> requestOneway(ProxyContext ctx, String brokerName, RemotingCommand request,
-        long timeoutMillis) {
+                                                 long timeoutMillis) {
         throw new NotImplementedException("requestOneway is not implemented in LocalMessageService");
     }
 }

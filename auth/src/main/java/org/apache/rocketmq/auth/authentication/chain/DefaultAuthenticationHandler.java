@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.auth.authentication.chain;
 
-import java.security.MessageDigest;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.acl.common.AclSigner;
 import org.apache.rocketmq.auth.authentication.context.DefaultAuthenticationContext;
@@ -31,6 +28,10 @@ import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.chain.Handler;
 import org.apache.rocketmq.common.chain.HandlerChain;
 
+import java.security.MessageDigest;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
 public class DefaultAuthenticationHandler implements Handler<DefaultAuthenticationContext, CompletableFuture<Void>> {
 
     private final AuthenticationMetadataProvider authenticationMetadataProvider;
@@ -41,7 +42,7 @@ public class DefaultAuthenticationHandler implements Handler<DefaultAuthenticati
 
     @Override
     public CompletableFuture<Void> handle(DefaultAuthenticationContext context,
-        HandlerChain<DefaultAuthenticationContext, CompletableFuture<Void>> chain) {
+                                          HandlerChain<DefaultAuthenticationContext, CompletableFuture<Void>> chain) {
         return getUser(context).thenAccept(user -> doAuthenticate(context, user));
     }
 
@@ -64,7 +65,7 @@ public class DefaultAuthenticationHandler implements Handler<DefaultAuthenticati
         }
         String signature = AclSigner.calSignature(context.getContent(), user.getPassword());
         if (context.getSignature() == null
-            || !MessageDigest.isEqual(signature.getBytes(AclSigner.DEFAULT_CHARSET), context.getSignature().getBytes(AclSigner.DEFAULT_CHARSET))) {
+                || !MessageDigest.isEqual(signature.getBytes(AclSigner.DEFAULT_CHARSET), context.getSignature().getBytes(AclSigner.DEFAULT_CHARSET))) {
             throw new AuthenticationException("check signature failed.");
         }
     }

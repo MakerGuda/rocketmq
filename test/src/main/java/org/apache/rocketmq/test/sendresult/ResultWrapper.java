@@ -61,6 +61,7 @@ public class ResultWrapper {
     public SendResult getSendResultObj() {
         return sendResultObj;
     }
+
     public void setSendResultObj(SendResult sendResultObj) {
         this.sendResultObj = sendResultObj;
     }

@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.auth;
 
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -28,6 +27,8 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Set;
 
 public class UpdateUserSubCommand implements SubCommand {
 
@@ -76,7 +77,7 @@ public class UpdateUserSubCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
 
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
@@ -100,7 +101,7 @@ public class UpdateUserSubCommand implements SubCommand {
 
                 defaultMQAdminExt.start();
                 Set<String> brokerAddrSet =
-                    CommandUtil.fetchMasterAndSlaveAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAndSlaveAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String addr : brokerAddrSet) {
                     defaultMQAdminExt.updateUser(addr, username, password, userType, userStatus);
                     System.out.printf("update user to %s success.%n", addr);

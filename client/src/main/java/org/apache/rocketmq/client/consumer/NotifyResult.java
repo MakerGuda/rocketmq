@@ -24,22 +24,23 @@ public class NotifyResult {
         return hasMsg;
     }
 
-    public boolean isPollingFull() {
-        return pollingFull;
-    }
-
     public void setHasMsg(boolean hasMsg) {
         this.hasMsg = hasMsg;
+    }
+
+    public boolean isPollingFull() {
+        return pollingFull;
     }
 
     public void setPollingFull(boolean pollingFull) {
         this.pollingFull = pollingFull;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "NotifyResult{" +
-            "hasMsg=" + hasMsg +
-            ", pollingFull=" + pollingFull +
-            '}';
+                "hasMsg=" + hasMsg +
+                ", pollingFull=" + pollingFull +
+                '}';
     }
 }

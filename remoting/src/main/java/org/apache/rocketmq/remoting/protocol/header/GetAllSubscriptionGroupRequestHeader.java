@@ -27,17 +27,15 @@ import org.apache.rocketmq.remoting.protocol.RequestCode;
 
 @RocketMQAction(value = RequestCode.GET_ALL_SUBSCRIPTIONGROUP_CONFIG, resource = ResourceType.GROUP, action = Action.GET)
 public class GetAllSubscriptionGroupRequestHeader implements CommandCustomHeader {
+    @CFNotNull
+    private Integer groupSeq;
+    private String dataVersion;
+    private Integer maxGroupNum;
+
     @Override
     public void checkFields() throws RemotingCommandException {
         // nothing
     }
-
-    @CFNotNull
-    private Integer groupSeq;
-
-    private String dataVersion;
-
-    private Integer maxGroupNum;
 
     public Integer getGroupSeq() {
         return groupSeq;

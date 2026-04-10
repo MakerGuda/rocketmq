@@ -17,9 +17,10 @@
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 
-public class TopicQueueMappingContext  {
+public class TopicQueueMappingContext {
     private String topic;
     private Integer globalId;
     private TopicQueueMappingDetail mappingDetail;
@@ -76,6 +77,10 @@ public class TopicQueueMappingContext  {
         this.mappingItemList = mappingItemList;
     }
 
+    public void setMappingItemList(List<LogicQueueMappingItem> mappingItemList) {
+        this.mappingItemList = mappingItemList;
+    }
+
     public LogicQueueMappingItem getLeaderItem() {
         return leaderItem;
     }
@@ -90,9 +95,5 @@ public class TopicQueueMappingContext  {
 
     public void setCurrentItem(LogicQueueMappingItem currentItem) {
         this.currentItem = currentItem;
-    }
-
-    public void setMappingItemList(List<LogicQueueMappingItem> mappingItemList) {
-        this.mappingItemList = mappingItemList;
     }
 }

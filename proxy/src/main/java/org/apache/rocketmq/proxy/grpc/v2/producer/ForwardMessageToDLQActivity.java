@@ -18,7 +18,6 @@ package org.apache.rocketmq.proxy.grpc.v2.producer;
 
 import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueRequest;
 import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueResponse;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
 import org.apache.rocketmq.proxy.common.MessageReceiptHandle;
 import org.apache.rocketmq.proxy.common.ProxyContext;
@@ -29,15 +28,17 @@ import org.apache.rocketmq.proxy.grpc.v2.common.ResponseBuilder;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+import java.util.concurrent.CompletableFuture;
+
 public class ForwardMessageToDLQActivity extends AbstractMessagingActivity {
 
     public ForwardMessageToDLQActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
+                                       GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
     }
 
     public CompletableFuture<ForwardMessageToDeadLetterQueueResponse> forwardMessageToDeadLetterQueue(ProxyContext ctx,
-        ForwardMessageToDeadLetterQueueRequest request) {
+                                                                                                      ForwardMessageToDeadLetterQueueRequest request) {
         CompletableFuture<ForwardMessageToDeadLetterQueueResponse> future = new CompletableFuture<>();
         try {
             validateTopicAndConsumerGroup(request.getTopic(), request.getGroup());
@@ -51,11 +52,11 @@ public class ForwardMessageToDLQActivity extends AbstractMessagingActivity {
             ReceiptHandle receiptHandle = ReceiptHandle.decode(handleString);
 
             return this.messagingProcessor.forwardMessageToDeadLetterQueue(
-                ctx,
-                receiptHandle,
-                request.getMessageId(),
-                request.getGroup().getName(),
-                request.getTopic().getName()
+                    ctx,
+                    receiptHandle,
+                    request.getMessageId(),
+                    request.getGroup().getName(),
+                    request.getTopic().getName()
             ).thenApply(result -> convertToForwardMessageToDeadLetterQueueResponse(ctx, result));
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -64,9 +65,9 @@ public class ForwardMessageToDLQActivity extends AbstractMessagingActivity {
     }
 
     protected ForwardMessageToDeadLetterQueueResponse convertToForwardMessageToDeadLetterQueueResponse(ProxyContext ctx,
-        RemotingCommand result) {
+                                                                                                       RemotingCommand result) {
         return ForwardMessageToDeadLetterQueueResponse.newBuilder()
-            .setStatus(ResponseBuilder.getInstance().buildStatus(result.getCode(), result.getRemark()))
-            .build();
+                .setStatus(ResponseBuilder.getInstance().buildStatus(result.getCode(), result.getRemark()))
+                .build();
     }
 }

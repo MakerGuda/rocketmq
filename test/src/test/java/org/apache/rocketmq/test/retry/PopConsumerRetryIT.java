@@ -17,10 +17,6 @@
 
 package org.apache.rocketmq.test.retry;
 
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.rocketmq.client.AccessChannel;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -52,6 +48,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import static org.awaitility.Awaitility.await;
 
 public class PopConsumerRetryIT extends BaseConf {
@@ -80,12 +81,12 @@ public class PopConsumerRetryIT extends BaseConf {
     private void switchPop(String groupName, String topicName) throws Exception {
         ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
         Set<String> brokerAddrs = clusterInfo.getBrokerAddrTable().values()
-            .stream().map(BrokerData::selectBrokerAddr).collect(Collectors.toSet());
+                .stream().map(BrokerData::selectBrokerAddr).collect(Collectors.toSet());
         for (String brokerAddr : brokerAddrs) {
             TopicConfig topicConfig = new TopicConfig(topicName, 1, 1, 6);
             defaultMQAdminExt.createAndUpdateTopicConfig(brokerAddr, topicConfig);
             defaultMQAdminExt.setMessageRequestMode(brokerAddr, topicName, groupName,
-                MessageRequestMode.POP, 8, 3000L);
+                    MessageRequestMode.POP, 8, 3000L);
         }
     }
 
@@ -107,7 +108,7 @@ public class PopConsumerRetryIT extends BaseConf {
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
             for (MessageExt message : msgs) {
                 LOGGER.debug(String.format("messageId: %s, times: %d, topic: %s",
-                    message.getMsgId(), message.getReconsumeTimes(), message.getTopic()));
+                        message.getMsgId(), message.getReconsumeTimes(), message.getTopic()));
                 if (message.getReconsumeTimes() < 2) {
                     retryCount.incrementAndGet();
                     return ConsumeConcurrentlyStatus.RECONSUME_LATER;
@@ -133,16 +134,16 @@ public class PopConsumerRetryIT extends BaseConf {
         int total = 10;
         for (int i = 0; i < total; i++) {
             Message msg = new Message(
-                topicName, "*", "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
+                    topicName, "*", "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
             SendResult sendResult = producer.send(msg);
             Assert.assertEquals(SendStatus.SEND_OK, sendResult.getSendStatus());
         }
 
         await().pollInterval(1, TimeUnit.SECONDS).atMost(90, TimeUnit.SECONDS)
-            .until(() -> {
-                LOGGER.debug(String.format("retry: %d, success: %d", retryCount.get(), successCount.get()));
-                return retryCount.get() == total * 2 && successCount.get() == total;
-            });
+                .until(() -> {
+                    LOGGER.debug(String.format("retry: %d, success: %d", retryCount.get(), successCount.get()));
+                    return retryCount.get() == total * 2 && successCount.get() == total;
+                });
     }
 
     @Test
@@ -163,7 +164,7 @@ public class PopConsumerRetryIT extends BaseConf {
         consumer.registerMessageListener((MessageListenerOrderly) (msgs, context) -> {
             for (MessageExt message : msgs) {
                 LOGGER.debug(String.format("messageId: %s, times: %d, topic: %s",
-                    message.getMsgId(), message.getReconsumeTimes(), message.getTopic()));
+                        message.getMsgId(), message.getReconsumeTimes(), message.getTopic()));
                 if (message.getReconsumeTimes() < 2) {
                     retryCount.incrementAndGet();
                     return ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
@@ -189,15 +190,15 @@ public class PopConsumerRetryIT extends BaseConf {
         int total = 10;
         for (int i = 0; i < total; i++) {
             Message msg = new Message(
-                topicName, "*", "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
+                    topicName, "*", "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
             SendResult sendResult = producer.send(msg);
             Assert.assertEquals(SendStatus.SEND_OK, sendResult.getSendStatus());
         }
 
         await().pollInterval(1, TimeUnit.SECONDS).atMost(90, TimeUnit.SECONDS)
-            .until(() -> {
-                LOGGER.debug(String.format("retry: %d, success: %d", retryCount.get(), successCount.get()));
-                return retryCount.get() == total * 2 && successCount.get() == total;
-            });
+                .until(() -> {
+                    LOGGER.debug(String.format("retry: %d, success: %d", retryCount.get(), successCount.get()));
+                    return retryCount.get() == total * 2 && successCount.get() == total;
+                });
     }
 }

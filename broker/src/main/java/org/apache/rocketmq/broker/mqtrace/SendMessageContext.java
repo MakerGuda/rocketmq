@@ -16,20 +16,26 @@
  */
 package org.apache.rocketmq.broker.mqtrace;
 
-import java.util.Properties;
-
 import org.apache.rocketmq.common.message.MessageType;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
+
+import java.util.Properties;
 
 /**
  * 上下文对象 <b>SendMessageContext</b>，在一次 RPC 或处理链路中携带请求/响应相关数据。
  */
 public class SendMessageContext {
-    /** namespace */
+    /**
+     * namespace
+     */
     private String namespace;
-    /** producer group without namespace. */
+    /**
+     * producer group without namespace.
+     */
     private String producerGroup;
-    /** topic without namespace. */
+    /**
+     * topic without namespace.
+     */
     private String topic;
     private String msgId;
     private String originMsgId;
@@ -298,16 +304,16 @@ public class SendMessageContext {
         return commercialSendStats;
     }
 
+    public void setCommercialSendStats(final BrokerStatsManager.StatsType commercialSendStats) {
+        this.commercialSendStats = commercialSendStats;
+    }
+
     public int getCommercialSendMsgNum() {
         return commercialSendMsgNum;
     }
 
     public void setCommercialSendMsgNum(int commercialSendMsgNum) {
         this.commercialSendMsgNum = commercialSendMsgNum;
-    }
-
-    public void setCommercialSendStats(final BrokerStatsManager.StatsType commercialSendStats) {
-        this.commercialSendStats = commercialSendStats;
     }
 
     public int getCommercialSendSize() {

@@ -16,13 +16,10 @@
  */
 package org.apache.rocketmq.tieredstore;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.utils.ThreadUtils;
+
+import java.util.concurrent.*;
 
 public class MessageStoreExecutor {
 
@@ -35,14 +32,6 @@ public class MessageStoreExecutor {
     public final ExecutorService bufferFetchExecutor;
     public final ExecutorService fileRecyclingExecutor;
 
-    private static class SingletonHolder {
-        private static final MessageStoreExecutor INSTANCE = new MessageStoreExecutor();
-    }
-
-    public static MessageStoreExecutor getInstance() {
-        return SingletonHolder.INSTANCE;
-    }
-
     public MessageStoreExecutor() {
         this(10000);
     }
@@ -50,32 +39,36 @@ public class MessageStoreExecutor {
     public MessageStoreExecutor(int maxQueueCapacity) {
 
         this.commonExecutor = ThreadUtils.newScheduledThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors()),
-            new ThreadFactoryImpl("TieredCommonExecutor_"));
+                Math.max(4, Runtime.getRuntime().availableProcessors()),
+                new ThreadFactoryImpl("TieredCommonExecutor_"));
 
         this.bufferCommitThreadPoolQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
         this.bufferCommitExecutor = ThreadUtils.newThreadPoolExecutor(
-            Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
-            Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
-            TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS,
-            this.bufferCommitThreadPoolQueue,
-            new ThreadFactoryImpl("BufferCommitExecutor_"));
+                Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
+                Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
+                TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS,
+                this.bufferCommitThreadPoolQueue,
+                new ThreadFactoryImpl("BufferCommitExecutor_"));
 
         this.bufferFetchThreadPoolQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
         this.bufferFetchExecutor = ThreadUtils.newThreadPoolExecutor(
-            Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
-            Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
-            TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS,
-            this.bufferFetchThreadPoolQueue,
-            new ThreadFactoryImpl("BufferFetchExecutor_"));
+                Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
+                Math.max(16, Runtime.getRuntime().availableProcessors() * 4),
+                TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS,
+                this.bufferFetchThreadPoolQueue,
+                new ThreadFactoryImpl("BufferFetchExecutor_"));
 
         this.fileRecyclingThreadPoolQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
         this.fileRecyclingExecutor = ThreadUtils.newThreadPoolExecutor(
-            Math.max(4, Runtime.getRuntime().availableProcessors()),
-            Math.max(4, Runtime.getRuntime().availableProcessors()),
-            TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS,
-            this.fileRecyclingThreadPoolQueue,
-            new ThreadFactoryImpl("BufferFetchExecutor_"));
+                Math.max(4, Runtime.getRuntime().availableProcessors()),
+                Math.max(4, Runtime.getRuntime().availableProcessors()),
+                TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS,
+                this.fileRecyclingThreadPoolQueue,
+                new ThreadFactoryImpl("BufferFetchExecutor_"));
+    }
+
+    public static MessageStoreExecutor getInstance() {
+        return SingletonHolder.INSTANCE;
     }
 
     private void shutdownExecutor(ExecutorService executor) {
@@ -89,5 +82,9 @@ public class MessageStoreExecutor {
         this.shutdownExecutor(this.bufferCommitExecutor);
         this.shutdownExecutor(this.bufferFetchExecutor);
         this.shutdownExecutor(this.fileRecyclingExecutor);
+    }
+
+    private static class SingletonHolder {
+        private static final MessageStoreExecutor INSTANCE = new MessageStoreExecutor();
     }
 }

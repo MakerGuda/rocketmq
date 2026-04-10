@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.client.consumer;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
 import org.apache.rocketmq.client.consumer.store.OffsetStore;
@@ -42,14 +37,19 @@ import org.apache.rocketmq.remoting.protocol.filter.FilterAPI;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
+import java.util.*;
+
 import static org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData.SUB_ALL;
 
 public class DefaultLitePullConsumer extends ClientConfig implements LitePullConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultLitePullConsumer.class);
-
+    /**
+     * Minimum commit offset interval time in milliseconds.
+     */
+    private static final long MIN_AUTOCOMMIT_INTERVAL_MILLIS = 1000;
     private final DefaultLitePullConsumerImpl defaultLitePullConsumerImpl;
-
+    private final Set<SubscriptionData> subscriptionsForHeartbeat = new HashSet<>();
     /**
      * Consumers belonging to the same consumer group share a group id. The consumers in a group then divides the topic
      * as fairly amongst themselves as possible by establishing that each queue is only consumed by a single consumer
@@ -59,23 +59,19 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * consumer groups.
      */
     private String consumerGroup;
-
     /**
      * Long polling mode, the Consumer connection max suspend time, it is not recommended to modify
      */
     private long brokerSuspendMaxTimeMillis = 1000 * 20;
-
     /**
      * Long polling mode, the Consumer connection timeout(must greater than brokerSuspendMaxTimeMillis), it is not
      * recommended to modify
      */
     private long consumerTimeoutMillisWhenSuspend = 1000 * 30;
-
     /**
      * The socket timeout in milliseconds
      */
     private long consumerPullTimeoutMillis = 1000 * 10;
-
     /**
      * Consumption pattern,default is clustering
      */
@@ -88,7 +84,6 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * Offset Storage
      */
     private OffsetStore offsetStore;
-
     /**
      * Queue allocation algorithm
      */
@@ -97,49 +92,36 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * Whether the unit of subscription group
      */
     private boolean unitMode = false;
-
     /**
      * The flag for auto commit offset
      */
     private boolean autoCommit = true;
-
     /**
      * Pull thread number
      */
     private int pullThreadNums = 20;
-
-    /**
-     * Minimum commit offset interval time in milliseconds.
-     */
-    private static final long MIN_AUTOCOMMIT_INTERVAL_MILLIS = 1000;
-
     /**
      * Maximum commit offset interval time in milliseconds.
      */
     private long autoCommitIntervalMillis = 5 * 1000;
-
     /**
      * Maximum number of messages pulled each time.
      */
     private int pullBatchSize = 10;
-
     /**
      * Flow control threshold for consume request, each consumer will cache at most 10000 consume requests by default.
      * Consider the {@code pullBatchSize}, the instantaneous value may exceed the limit
      */
     private long pullThresholdForAll = 10000;
-
     /**
      * Consume max span offset.
      */
     private int consumeMaxSpan = 2000;
-
     /**
      * Flow control threshold on queue level, each message queue will cache at most 1000 messages by default, Consider
      * the {@code pullBatchSize}, the instantaneous value may exceed the limit
      */
     private int pullThresholdForQueue = 1000;
-
     /**
      * Limit the cached message size on queue level, each message queue will cache at most 100 MiB messages by default,
      * Consider the {@code pullBatchSize}, the instantaneous value may exceed the limit
@@ -148,33 +130,25 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * The size of a message only measured by message body, so it's not accurate
      */
     private int pullThresholdSizeForQueue = 100;
-
     /**
      * The poll timeout in milliseconds
      */
     private long pollTimeoutMillis = 1000 * 5;
-
     /**
      * Interval time in in milliseconds for checking changes in topic metadata.
      */
     private long topicMetadataCheckIntervalMillis = 30 * 1000;
-
     private ConsumeFromWhere consumeFromWhere = ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET;
-
     /**
      * Backtracking consumption time with second precision. Time format is 20131223171201<br> Implying Seventeen twelve
      * and 01 seconds on December 23, 2013 year<br> Default backtracking consumption time Half an hour ago.
      */
     private String consumeTimestamp = UtilAll.timeMillisToHumanString3(System.currentTimeMillis() - (1000 * 60 * 30));
-
     /**
      * Interface of asynchronous transfer data
      */
     private TraceDispatcher traceDispatcher = null;
-
     private RPCHook rpcHook;
-
-    private final Set<SubscriptionData> subscriptionsForHeartbeat = new HashSet<>();
 
     /**
      * Default constructor.
@@ -323,7 +297,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
 
     @Override
     public void registerTopicMessageQueueChangeListener(String topic,
-        TopicMessageQueueChangeListener topicMessageQueueChangeListener) throws MQClientException {
+                                                        TopicMessageQueueChangeListener topicMessageQueueChangeListener) throws MQClientException {
         this.defaultLitePullConsumerImpl.registerTopicMessageQueueChangeListener(withNamespace(topic), topicMessageQueueChangeListener);
     }
 
@@ -369,7 +343,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      */
     @Override
     public void subscribe(String topic, String subExpression,
-        MessageQueueListener messageQueueListener) throws MQClientException {
+                          MessageQueueListener messageQueueListener) throws MQClientException {
         this.defaultLitePullConsumerImpl.subscribe(withNamespace(topic), subExpression, messageQueueListener);
     }
 
@@ -532,6 +506,10 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
         return consumerGroup;
     }
 
+    public void setConsumerGroup(String consumerGroup) {
+        this.consumerGroup = consumerGroup;
+    }
+
     public MessageQueueListener getMessageQueueListener() {
         return messageQueueListener;
     }
@@ -564,18 +542,14 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
         this.topicMetadataCheckIntervalMillis = topicMetadataCheckIntervalMillis;
     }
 
-    public void setConsumerGroup(String consumerGroup) {
-        this.consumerGroup = consumerGroup;
-    }
-
     public ConsumeFromWhere getConsumeFromWhere() {
         return consumeFromWhere;
     }
 
     public void setConsumeFromWhere(ConsumeFromWhere consumeFromWhere) {
         if (consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET
-            && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET
-            && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_TIMESTAMP) {
+                && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET
+                && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_TIMESTAMP) {
             throw new RuntimeException("Invalid ConsumeFromWhere Value", null);
         }
         this.consumeFromWhere = consumeFromWhere;
@@ -601,7 +575,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
                 traceDispatcher.setNamespaceV2(namespaceV2);
                 this.traceDispatcher = traceDispatcher;
                 this.defaultLitePullConsumerImpl.registerConsumeMessageHook(
-                    new ConsumeMessageTraceHookImpl(traceDispatcher));
+                        new ConsumeMessageTraceHookImpl(traceDispatcher));
             } catch (Throwable e) {
                 log.error("system mqtrace hook init failed ,maybe can't send msg trace data");
             }
@@ -632,7 +606,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
         this.subscriptionsForHeartbeat.clear();
         for (Map.Entry<String, MessageSelector> entry : messageSelectorMap.entrySet()) {
             SubscriptionData subscriptionData = FilterAPI.build(entry.getKey(),
-                entry.getValue().getExpression(), entry.getValue().getExpressionType());
+                    entry.getValue().getExpression(), entry.getValue().getExpressionType());
             this.subscriptionsForHeartbeat.add(subscriptionData);
         }
     }

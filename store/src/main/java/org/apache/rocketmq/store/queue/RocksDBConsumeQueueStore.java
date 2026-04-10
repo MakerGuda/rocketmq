@@ -16,29 +16,9 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nonnull;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.common.BoundaryType;
-import org.apache.rocketmq.common.MixAll;
-import org.apache.rocketmq.common.Pair;
-import org.apache.rocketmq.common.ServiceState;
-import org.apache.rocketmq.common.ThreadFactoryImpl;
-import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.*;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
@@ -55,14 +35,19 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.Statistics;
 import org.rocksdb.WriteBatch;
 
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
+    public static final int MAX_KEY_LEN = 300;
     private static final Logger ERROR_LOG = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
     private static final Logger ROCKSDB_LOG = LoggerFactory.getLogger(LoggerName.ROCKSDB_LOGGER_NAME);
-
     private static final int DEFAULT_BYTE_BUFFER_CAPACITY = 16;
-
-    public static final int MAX_KEY_LEN = 300;
-
     private final ScheduledExecutorService scheduledExecutorService;
     private final String storePath;
 
@@ -78,19 +63,13 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
     private final List<Pair<ByteBuffer, ByteBuffer>> cqBBPairList;
     private final List<Pair<ByteBuffer, ByteBuffer>> offsetBBPairList;
     private final Map<ByteBuffer, Pair<ByteBuffer, DispatchEntry>> tempTopicQueueMaxOffsetMap;
+    private final OffsetInitializer offsetInitializer;
+    private final RocksGroupCommitService groupCommitService;
+    private final AtomicReference<ServiceState> serviceState = new AtomicReference<>(ServiceState.CREATE_JUST);
+    private final RocksDBCleanConsumeQueueService cleanConsumeQueueService;
     private volatile boolean isCQError = false;
-
     private int consumeQueueByteBufferCacheIndex;
     private int offsetBufferCacheIndex;
-
-    private final OffsetInitializer offsetInitializer;
-
-    private final RocksGroupCommitService groupCommitService;
-
-    private final AtomicReference<ServiceState> serviceState = new AtomicReference<>(ServiceState.CREATE_JUST);
-
-    private final RocksDBCleanConsumeQueueService cleanConsumeQueueService;
-
     private long dispatchFromPhyOffset;
 
     /**
@@ -122,7 +101,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
 
         this.tempTopicQueueMaxOffsetMap = new HashMap<>();
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
-            new ThreadFactoryImpl("RocksDBConsumeQueueStoreScheduledThread", messageStore.getBrokerIdentity()));
+                new ThreadFactoryImpl("RocksDBConsumeQueueStoreScheduledThread", messageStore.getBrokerIdentity()));
         this.cleanConsumeQueueService = new RocksDBCleanConsumeQueueService();
     }
 
@@ -156,14 +135,14 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
             }, 10, this.messageStoreConfig.getCleanRocksDBDirtyCQIntervalMin(), TimeUnit.MINUTES);
 
             messageStore.getScheduledCleanQueueExecutorService().scheduleAtFixedRate(this.cleanConsumeQueueService::run,
-                1000 * 60, this.messageStoreConfig.getCleanResourceInterval(), TimeUnit.MILLISECONDS);
+                    1000 * 60, this.messageStoreConfig.getCleanResourceInterval(), TimeUnit.MILLISECONDS);
         }
     }
 
     private void cleanDirty(final Set<String> existTopicSet) {
         try {
             Map<String, Set<Integer>> topicQueueIdToBeDeletedMap =
-                this.rocksDBConsumeQueueOffsetTable.iterateOffsetTable2FindDirty(existTopicSet);
+                    this.rocksDBConsumeQueueOffsetTable.iterateOffsetTable2FindDirty(existTopicSet);
 
             for (Map.Entry<String, Set<Integer>> entry : topicQueueIdToBeDeletedMap.entrySet()) {
                 String topic = entry.getKey();
@@ -184,6 +163,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
         log.info("load rocksdb consume queue {}.", result ? "OK" : "Failed");
         return result;
     }
+
     @Override
     public void recover(boolean concurrently) throws RocksDBException {
         start();
@@ -303,7 +283,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
     }
 
     private void updateTempTopicQueueMaxOffset(final Pair<ByteBuffer, ByteBuffer> offsetBBPair,
-        final DispatchEntry entry) {
+                                               final DispatchEntry entry) {
         RocksDBConsumeQueueOffsetTable.buildOffsetKeyAndValueByteBuffer(offsetBBPair, entry);
         ByteBuffer topicQueueId = offsetBBPair.getObject1();
         ByteBuffer maxOffsetBB = offsetBBPair.getObject2();
@@ -320,7 +300,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
     }
 
     private void dispatchLMQ(@Nonnull DispatchRequest request, @Nonnull final WriteBatch writeBatch)
-        throws RocksDBException {
+            throws RocksDBException {
         if (!messageStoreConfig.isEnableLmq() || !request.containsLMQ()) {
             return;
         }
@@ -365,7 +345,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
     }
 
     public List<ByteBuffer> rangeQuery(final String topic, final int queueId, final long startIndex,
-        final int num) throws RocksDBException {
+                                       final int num) throws RocksDBException {
         return this.rocksDBConsumeQueueTable.rangeQuery(topic, queueId, startIndex, num);
     }
 
@@ -377,8 +357,8 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
      * Try to set topicQueueTable = new HashMap<>(), otherwise it will cause bug when broker role changes.
      * And unlike method in DefaultMessageStore, we don't need to really recover topic queue table advance,
      * because we can recover topic queue table from rocksdb when we need to use it.
-     * @see RocksDBConsumeQueue#assignQueueOffset
      *
+     * @see RocksDBConsumeQueue#assignQueueOffset
      * @see RocksDBConsumeQueue#increaseQueueOffset(QueueOffsetOperator, MessageExtBrokerInner, short)
      * @see org.apache.rocketmq.store.queue.RocksDBConsumeQueueOffsetTable#getMinCqOffset(String, int)
      */
@@ -480,7 +460,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
 
     @Override
     public long getOffsetInQueueByTime(String topic, int queueId, long timestamp,
-        BoundaryType boundaryType) throws RocksDBException {
+                                       BoundaryType boundaryType) throws RocksDBException {
         final long minPhysicOffset = this.messageStore.getMinPhyOffset();
         long low = this.rocksDBConsumeQueueOffsetTable.getMinCqOffset(topic, queueId);
         Long high = this.rocksDBConsumeQueueOffsetTable.getMaxCqOffset(topic, queueId);
@@ -488,7 +468,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
             return 0;
         }
         return this.rocksDBConsumeQueueTable.binarySearchInCQByTime(topic, queueId, high, low, timestamp,
-            minPhysicOffset, boundaryType);
+                minPhysicOffset, boundaryType);
     }
 
     /**
@@ -561,7 +541,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
 
     @Override
     public boolean isMappedFileMatchedRecover(long phyOffset, long storeTimestamp,
-        boolean recoverNormally) {
+                                              boolean recoverNormally) {
         return phyOffset <= dispatchFromPhyOffset;
     }
 
@@ -583,18 +563,16 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
     }
 
     public void updateCqOffset(final String topic, final int queueId, final long phyOffset,
-        final long cqOffset, boolean max) throws RocksDBException {
+                               final long cqOffset, boolean max) throws RocksDBException {
         this.rocksDBConsumeQueueOffsetTable.updateCqOffset(topic, queueId, phyOffset, cqOffset, max);
     }
 
     class RocksDBCleanConsumeQueueService {
-        protected long lastPhysicalMinOffset = 0;
-
         private final double diskSpaceWarningLevelRatio =
-            Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceWarningLevelRatio", "0.90"));
-
+                Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceWarningLevelRatio", "0.90"));
         private final double diskSpaceCleanForciblyRatio =
-            Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceCleanForciblyRatio", "0.85"));
+                Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceCleanForciblyRatio", "0.85"));
+        protected long lastPhysicalMinOffset = 0;
 
         public void run() {
             try {
@@ -631,7 +609,7 @@ public class RocksDBConsumeQueueStore extends AbstractConsumeQueueStore {
             double ratio = messageStoreConfig.getDiskMaxUsedSpaceRatio() / 100.0;
 
             String storePathLogics = StorePathConfigHelper
-                .getStorePathConsumeQueue(messageStoreConfig.getStorePathRootDir());
+                    .getStorePathConsumeQueue(messageStoreConfig.getStorePathRootDir());
             double logicsRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathLogics);
             if (logicsRatio > diskSpaceWarningLevelRatio) {
                 boolean diskMaybeFull = messageStore.getRunningFlags().getAndMakeLogicDiskFull();

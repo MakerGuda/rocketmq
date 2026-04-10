@@ -16,33 +16,12 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2.client;
 
-import apache.rocketmq.v2.ClientType;
-import apache.rocketmq.v2.Code;
-import apache.rocketmq.v2.FilterExpression;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.HeartbeatResponse;
-import apache.rocketmq.v2.NotifyClientTerminationRequest;
-import apache.rocketmq.v2.NotifyClientTerminationResponse;
-import apache.rocketmq.v2.Resource;
-import apache.rocketmq.v2.Settings;
-import apache.rocketmq.v2.Status;
-import apache.rocketmq.v2.SubscriptionEntry;
-import apache.rocketmq.v2.TelemetryCommand;
-import apache.rocketmq.v2.ThreadStackTrace;
-import apache.rocketmq.v2.VerifyMessageResult;
+import apache.rocketmq.v2.*;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.netty.channel.Channel;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.broker.client.ClientChannelInfo;
-import org.apache.rocketmq.broker.client.ConsumerGroupEvent;
-import org.apache.rocketmq.broker.client.ConsumerIdsChangeListener;
-import org.apache.rocketmq.broker.client.ProducerChangeListener;
-import org.apache.rocketmq.broker.client.ProducerGroupEvent;
+import org.apache.rocketmq.broker.client.*;
 import org.apache.rocketmq.common.MQVersion;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -71,13 +50,18 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+
 public class ClientActivity extends AbstractMessagingActivity {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
 
     public ClientActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager,
-        GrpcChannelManager grpcChannelManager) {
+                          GrpcClientSettingsManager grpcClientSettingsManager,
+                          GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
         this.init();
     }
@@ -94,8 +78,8 @@ public class ClientActivity extends AbstractMessagingActivity {
             Settings clientSettings = grpcClientSettingsManager.getClientSettings(ctx);
             if (clientSettings == null) {
                 future.complete(HeartbeatResponse.newBuilder()
-                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, "cannot find client settings for this client"))
-                    .build());
+                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, "cannot find client settings for this client"))
+                        .build());
                 return future;
             }
             switch (clientSettings.getClientType()) {
@@ -115,14 +99,14 @@ public class ClientActivity extends AbstractMessagingActivity {
                 }
                 default: {
                     future.complete(HeartbeatResponse.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, clientSettings.getClientType().name()))
-                        .build());
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, clientSettings.getClientType().name()))
+                            .build());
                     return future;
                 }
             }
             future.complete(HeartbeatResponse.newBuilder()
-                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                .build());
+                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                    .build());
             return future;
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -131,7 +115,7 @@ public class ClientActivity extends AbstractMessagingActivity {
     }
 
     public CompletableFuture<NotifyClientTerminationResponse> notifyClientTermination(ProxyContext ctx,
-        NotifyClientTerminationRequest request) {
+                                                                                      NotifyClientTerminationRequest request) {
         CompletableFuture<NotifyClientTerminationResponse> future = new CompletableFuture<>();
 
         try {
@@ -140,8 +124,8 @@ public class ClientActivity extends AbstractMessagingActivity {
             Settings clientSettings = grpcClientSettingsManager.removeAndGetClientSettings(ctx);
             if (clientSettings == null) {
                 future.complete(NotifyClientTerminationResponse.newBuilder()
-                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, "cannot find client settings for this client"))
-                    .build());
+                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, "cannot find client settings for this client"))
+                        .build());
                 return future;
             }
 
@@ -168,13 +152,13 @@ public class ClientActivity extends AbstractMessagingActivity {
                     break;
                 default:
                     future.complete(NotifyClientTerminationResponse.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, clientSettings.getClientType().name()))
-                        .build());
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.UNRECOGNIZED_CLIENT_TYPE, clientSettings.getClientType().name()))
+                            .build());
                     return future;
             }
             future.complete(NotifyClientTerminationResponse.newBuilder()
-                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                .build());
+                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                    .build());
         } catch (Throwable t) {
             future.completeExceptionally(t);
         }
@@ -218,19 +202,19 @@ public class ClientActivity extends AbstractMessagingActivity {
     }
 
     protected void processTelemetryException(TelemetryCommand request, Throwable t,
-        StreamObserver<TelemetryCommand> responseObserver) {
+                                             StreamObserver<TelemetryCommand> responseObserver) {
         StatusRuntimeException exception = io.grpc.Status.INTERNAL
-            .withDescription("process client telemetryCommand failed. " + t.getMessage())
-            .withCause(t)
-            .asRuntimeException();
+                .withDescription("process client telemetryCommand failed. " + t.getMessage())
+                .withCause(t)
+                .asRuntimeException();
         if (t instanceof GrpcProxyException) {
             GrpcProxyException proxyException = (GrpcProxyException) t;
             if (proxyException.getCode().getNumber() < Code.INTERNAL_ERROR_VALUE &&
-                proxyException.getCode().getNumber() >= Code.BAD_REQUEST_VALUE) {
+                    proxyException.getCode().getNumber() >= Code.BAD_REQUEST_VALUE) {
                 exception = io.grpc.Status.INVALID_ARGUMENT
-                    .withDescription("process client telemetryCommand failed. " + t.getMessage())
-                    .withCause(t)
-                    .asRuntimeException();
+                        .withDescription("process client telemetryCommand failed. " + t.getMessage())
+                        .withCause(t)
+                        .asRuntimeException();
             }
         }
         if (exception.getStatus().getCode().equals(io.grpc.Status.Code.INTERNAL)) {
@@ -240,7 +224,7 @@ public class ClientActivity extends AbstractMessagingActivity {
     }
 
     protected void processAndWriteClientSettings(ProxyContext ctx, TelemetryCommand request,
-        StreamObserver<TelemetryCommand> responseObserver) {
+                                                 StreamObserver<TelemetryCommand> responseObserver) {
         GrpcClientChannel grpcClientChannel = null;
         Settings settings = request.getSettings();
         switch (settings.getPubSubCase()) {
@@ -263,8 +247,8 @@ public class ClientActivity extends AbstractMessagingActivity {
         }
         if (Settings.PubSubCase.PUBSUB_NOT_SET.equals(settings.getPubSubCase())) {
             responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
-                .withDescription("there is no publishing or subscription data in settings")
-                .asRuntimeException());
+                    .withDescription("there is no publishing or subscription data in settings")
+                    .asRuntimeException());
             return;
         }
         TelemetryCommand command = processClientSettings(ctx, request);
@@ -280,9 +264,9 @@ public class ClientActivity extends AbstractMessagingActivity {
         grpcClientSettingsManager.updateClientSettings(ctx, clientId, request.getSettings());
         Settings settings = grpcClientSettingsManager.getClientSettings(ctx);
         return TelemetryCommand.newBuilder()
-            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-            .setSettings(settings)
-            .build();
+                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                .setSettings(settings)
+                .build();
     }
 
     protected GrpcClientChannel registerProducer(ProxyContext ctx, String topicName) {
@@ -301,7 +285,7 @@ public class ClientActivity extends AbstractMessagingActivity {
     }
 
     protected GrpcClientChannel registerConsumer(ProxyContext ctx, String consumerGroup, ClientType clientType,
-        List<SubscriptionEntry> subscriptionEntryList, boolean updateSubscription) {
+                                                 List<SubscriptionEntry> subscriptionEntryList, boolean updateSubscription) {
         String clientId = ctx.getClientID();
         LanguageCode languageCode = LanguageCode.valueOf(ctx.getLanguage());
 
@@ -309,14 +293,14 @@ public class ClientActivity extends AbstractMessagingActivity {
         ClientChannelInfo clientChannelInfo = new ClientChannelInfo(channel, clientId, languageCode, parseClientVersion(ctx.getClientVersion()));
 
         this.messagingProcessor.registerConsumer(
-            ctx,
-            consumerGroup,
-            clientChannelInfo,
-            this.buildConsumeType(clientType),
-            MessageModel.CLUSTERING,
-            ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET,
-            this.buildSubscriptionDataSet(subscriptionEntryList),
-            updateSubscription
+                ctx,
+                consumerGroup,
+                clientChannelInfo,
+                this.buildConsumeType(clientType),
+                MessageModel.CLUSTERING,
+                ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET,
+                this.buildSubscriptionDataSet(subscriptionEntryList),
+                updateSubscription
         );
         return channel;
     }
@@ -368,7 +352,7 @@ public class ClientActivity extends AbstractMessagingActivity {
     }
 
     protected ConsumeMessageDirectlyResult buildConsumeMessageDirectlyResult(Status status,
-        VerifyMessageResult request) {
+                                                                             VerifyMessageResult request) {
         ConsumeMessageDirectlyResult consumeMessageDirectlyResult = new ConsumeMessageDirectlyResult();
         switch (status.getCode().getNumber()) {
             case Code.OK_VALUE: {
@@ -446,7 +430,7 @@ public class ClientActivity extends AbstractMessagingActivity {
                 }
                 GrpcClientChannel removedChannel = grpcChannelManager.removeChannel(clientChannelInfo.getClientId());
                 log.info("remove grpc channel when client unregister. group:{}, clientChannelInfo:{}, removed:{}",
-                    group, clientChannelInfo, removedChannel != null);
+                        group, clientChannelInfo, removedChannel != null);
             }
         }
 
@@ -465,9 +449,9 @@ public class ClientActivity extends AbstractMessagingActivity {
                         return;
                     }
                     grpcClientSettingsManager.updateClientSettings(
-                        ProxyContext.createForInner(this.getClass()),
-                        clientChannelInfo.getClientId(),
-                        settings
+                            ProxyContext.createForInner(this.getClass()),
+                            clientChannelInfo.getClientId(),
+                            settings
                     );
                 }
             }

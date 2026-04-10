@@ -18,11 +18,6 @@
 package org.apache.rocketmq.tools.command.topic;
 
 import com.alibaba.fastjson2.JSON;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -34,6 +29,12 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
 
 public class UpdateTopicListSubCommand implements SubCommand {
     @Override
@@ -65,7 +66,7 @@ public class UpdateTopicListSubCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         final DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -90,7 +91,7 @@ public class UpdateTopicListSubCommand implements SubCommand {
                 defaultMQAdminExt.createAndUpdateTopicConfigList(brokerAddress, topicConfigs);
 
                 System.out.printf("submit batch of topic config to %s success, please check the result later.%n",
-                    brokerAddress);
+                        brokerAddress);
                 return;
 
             } else if (commandLine.hasOption('c')) {
@@ -99,12 +100,12 @@ public class UpdateTopicListSubCommand implements SubCommand {
                 defaultMQAdminExt.start();
 
                 Set<String> masterSet =
-                    CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String brokerAddress : masterSet) {
                     defaultMQAdminExt.createAndUpdateTopicConfigList(brokerAddress, topicConfigs);
 
                     System.out.printf("submit batch of topic config to %s success, please check the result later.%n",
-                        brokerAddress);
+                            brokerAddress);
                 }
             }
 

@@ -16,10 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.auth;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -31,6 +27,11 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UpdateAclSubCommand implements SubCommand {
 
@@ -82,7 +83,7 @@ public class UpdateAclSubCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
 
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
@@ -95,18 +96,18 @@ public class UpdateAclSubCommand implements SubCommand {
             List<String> resources = null;
             if (commandLine.hasOption('r')) {
                 resources = Arrays.stream(StringUtils.split(commandLine.getOptionValue('r'), ','))
-                    .map(StringUtils::trim).collect(Collectors.toList());
+                        .map(StringUtils::trim).collect(Collectors.toList());
             }
             List<String> actions = null;
             if (commandLine.hasOption('a')) {
                 actions = Arrays.stream(StringUtils.split(commandLine.getOptionValue('a'), ','))
-                    .map(StringUtils::trim).collect(Collectors.toList());
+                        .map(StringUtils::trim).collect(Collectors.toList());
             }
 
             List<String> sourceIps = null;
             if (commandLine.hasOption('i')) {
                 sourceIps = Arrays.stream(StringUtils.split(commandLine.getOptionValue('i'), ','))
-                    .map(StringUtils::trim).collect(Collectors.toList());
+                        .map(StringUtils::trim).collect(Collectors.toList());
             }
 
             String decision = null;
@@ -128,7 +129,7 @@ public class UpdateAclSubCommand implements SubCommand {
 
                 defaultMQAdminExt.start();
                 Set<String> brokerAddrSet =
-                    CommandUtil.fetchMasterAndSlaveAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAndSlaveAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String addr : brokerAddrSet) {
                     defaultMQAdminExt.updateAcl(addr, subject, resources, actions, sourceIps, decision);
                     System.out.printf("update acl to %s success.%n", addr);

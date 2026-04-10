@@ -51,7 +51,7 @@ public class ProducerGroupAndInstanceNameValidityIT extends BaseConf {
         RMQNormalProducer producer1 = getProducer(NAMESRV_ADDR, topic);
         assertThat(producer1.isStartSuccess()).isEqualTo(true);
         RMQNormalProducer producer2 = getProducer(NAMESRV_ADDR, topic,
-            producer1.getProducerGroupName(), producer1.getProducerInstanceName());
+                producer1.getProducerGroupName(), producer1.getProducerInstanceName());
         assertThat(producer2.isStartSuccess()).isEqualTo(false);
     }
 
@@ -63,7 +63,7 @@ public class ProducerGroupAndInstanceNameValidityIT extends BaseConf {
         RMQNormalProducer producer1 = getProducer(NAMESRV_ADDR, topic);
         assertThat(producer1.isStartSuccess()).isEqualTo(true);
         RMQNormalProducer producer2 = getProducer(NAMESRV_ADDR, topic,
-            producer1.getProducerGroupName(), RandomUtils.getStringByUUID());
+                producer1.getProducerGroupName(), RandomUtils.getStringByUUID());
         assertThat(producer2.isStartSuccess()).isEqualTo(true);
     }
 

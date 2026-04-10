@@ -22,7 +22,7 @@ import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfi
 
 /**
  * <b>RocksDBLmqSubscriptionGroupManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
- * 
+ * <p>
  * 继承关系：<code>RocksDBSubscriptionGroupManager</code>。
  */
 public class RocksDBLmqSubscriptionGroupManager extends RocksDBSubscriptionGroupManager {

@@ -16,10 +16,11 @@
  */
 package org.apache.rocketmq.remoting.protocol.admin;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TopicStatsTable extends RemotingSerializable {
     private double topicPutTps;

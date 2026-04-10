@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.nio.ByteBuffer;
-import java.util.List;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.attribute.CQType;
@@ -31,6 +29,9 @@ import org.apache.rocketmq.store.MessageFilter;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.rocksdb.RocksDBException;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+
 public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private static final Logger ERROR_LOG = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
@@ -41,8 +42,8 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     private final int queueId;
 
     public RocksDBConsumeQueue(final MessageStoreConfig messageStoreConfig,
-        final RocksDBConsumeQueueStore consumeQueueStore,
-        final String topic, final int queueId) {
+                               final RocksDBConsumeQueueStore consumeQueueStore,
+                               final String topic, final int queueId) {
         this.messageStoreConfig = messageStoreConfig;
         this.consumeQueueStore = consumeQueueStore;
         this.topic = topic;
@@ -142,9 +143,10 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
 
     /**
      * We already implement it in RocksDBConsumeQueueStore.
-     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
+     *
      * @param timestamp timestamp
      * @return
+     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
      */
     @Override
     public long getOffsetInQueueByTime(long timestamp) {
@@ -153,10 +155,11 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
 
     /**
      * We already implement it in RocksDBConsumeQueueStore.
-     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
+     *
      * @param timestamp    timestamp
      * @param boundaryType Lower or Upper
      * @return
+     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
      */
     @Override
     public long getOffsetInQueueByTime(long timestamp, BoundaryType boundaryType) {
@@ -193,6 +196,7 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
 
     /**
      * Ignored, we already implement this method
+     *
      * @see org.apache.rocketmq.store.queue.RocksDBConsumeQueueOffsetTable#getMinCqOffset(String, int)
      */
     @Override
@@ -301,7 +305,7 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     public ReferredIterator<CqUnit> iterateFrom(long startIndex, int count) throws RocksDBException {
         long maxCqOffset = getMaxOffsetInQueue();
         if (startIndex < maxCqOffset) {
-            int num = Math.min((int)(maxCqOffset - startIndex), count);
+            int num = Math.min((int) (maxCqOffset - startIndex), count);
             return iterateFrom0(startIndex, num);
         }
         return null;
@@ -384,6 +388,22 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     @Override
     public int getQueueId() {
         return queueId;
+    }
+
+    public void initializeWithOffset(long offset, long minPhyOffset) {
+        log.info("RocksDBConsumeQueue initializeWithOffset topic={}, queueId={}, offset={}, oldMax={}, oldMin={}",
+                topic, queueId, offset, getMaxOffsetInQueue(), getMinOffsetInQueue());
+        try {
+            // clean the expired cqUnit and offset
+            consumeQueueStore.cleanExpired(minPhyOffset);
+
+            // update the max and min offset
+            this.consumeQueueStore.updateCqOffset(topic, queueId, 0L, offset - 1, true);
+            // set phyOffset to 0, min cq offset will be lazy corrected to max cq Offset + 1
+            this.consumeQueueStore.updateCqOffset(topic, queueId, 0L, offset, false);
+        } catch (RocksDBException e) {
+            ERROR_LOG.error("RocksDBConsumeQueue initializeWithOffset Failed. topic={}, queueId={}, offset={}", topic, queueId, offset, e);
+        }
     }
 
     private class RocksDBConsumeQueueIterator implements ReferredIterator<CqUnit> {
@@ -489,22 +509,6 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
             } finally {
                 release();
             }
-        }
-    }
-
-    public void initializeWithOffset(long offset, long minPhyOffset) {
-        log.info("RocksDBConsumeQueue initializeWithOffset topic={}, queueId={}, offset={}, oldMax={}, oldMin={}",
-            topic, queueId, offset, getMaxOffsetInQueue(), getMinOffsetInQueue());
-        try {
-            // clean the expired cqUnit and offset
-            consumeQueueStore.cleanExpired(minPhyOffset);
-
-            // update the max and min offset
-            this.consumeQueueStore.updateCqOffset(topic, queueId, 0L, offset - 1, true);
-            // set phyOffset to 0, min cq offset will be lazy corrected to max cq Offset + 1
-            this.consumeQueueStore.updateCqOffset(topic, queueId, 0L, offset, false);
-        } catch (RocksDBException e) {
-            ERROR_LOG.error("RocksDBConsumeQueue initializeWithOffset Failed. topic={}, queueId={}, offset={}", topic, queueId, offset, e);
         }
     }
 }

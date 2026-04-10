@@ -23,6 +23,7 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
 import org.apache.rocketmq.srvutil.FileWatchService;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,12 +36,12 @@ public class TlsCertificateManager implements StartAndShutdown {
     public TlsCertificateManager() {
         try {
             this.fileWatchService = new FileWatchService(
-                new String[] {
-                    ConfigurationManager.getProxyConfig().getTlsCertPath(),
-                    ConfigurationManager.getProxyConfig().getTlsKeyPath()
-                },
-                new CertKeyFileWatchListener(),
-                ConfigurationManager.getProxyConfig().getTlsCertWatchIntervalMs()
+                    new String[]{
+                            ConfigurationManager.getProxyConfig().getTlsCertPath(),
+                            ConfigurationManager.getProxyConfig().getTlsKeyPath()
+                    },
+                    new CertKeyFileWatchListener(),
+                    ConfigurationManager.getProxyConfig().getTlsCertWatchIntervalMs()
             );
         } catch (Exception e) {
             log.error("Failed to initialize TLS certificate watch service", e);
@@ -72,8 +73,8 @@ public class TlsCertificateManager implements StartAndShutdown {
     public void start() throws Exception {
         this.fileWatchService.start();
         log.info("TLS certificate manager started successfully, start watching: {} {}",
-            ConfigurationManager.getProxyConfig().getTlsCertPath(),
-            ConfigurationManager.getProxyConfig().getTlsKeyPath()
+                ConfigurationManager.getProxyConfig().getTlsCertPath(),
+                ConfigurationManager.getProxyConfig().getTlsKeyPath()
         );
     }
 
@@ -81,6 +82,11 @@ public class TlsCertificateManager implements StartAndShutdown {
     public void shutdown() throws Exception {
         this.fileWatchService.shutdown();
         log.info("TLS certificate manager shutdown successfully");
+    }
+
+    // Interface for listeners interested in TLS context reload events
+    public interface TlsContextReloadListener {
+        void onTlsContextReload();
     }
 
     private class CertKeyFileWatchListener implements FileWatchService.Listener {
@@ -113,10 +119,5 @@ public class TlsCertificateManager implements StartAndShutdown {
                 }
             }
         }
-    }
-
-    // Interface for listeners interested in TLS context reload events
-    public interface TlsContextReloadListener {
-        void onTlsContextReload();
     }
 }

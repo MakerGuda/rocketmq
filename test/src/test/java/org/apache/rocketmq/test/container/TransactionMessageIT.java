@@ -17,12 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.io.UnsupportedEncodingException;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -39,6 +33,13 @@ import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -46,6 +47,7 @@ import static org.awaitility.Awaitility.await;
 public class TransactionMessageIT extends ContainerIntegrationTestBase {
 
     private static final String MESSAGE_STRING = RandomStringUtils.random(1024);
+    private static final int MESSAGE_COUNT = 16;
     private static byte[] messageBody;
 
     static {
@@ -55,13 +57,15 @@ public class TransactionMessageIT extends ContainerIntegrationTestBase {
         }
     }
 
-    private static final int MESSAGE_COUNT = 16;
-
     public TransactionMessageIT() {
     }
 
     private static String generateGroup() {
         return "GID-" + TransactionMessageIT.class.getSimpleName() + RandomStringUtils.randomNumeric(5);
+    }
+
+    private static String generateTopic() {
+        return TransactionMessageIT.class.getSimpleName() + RandomStringUtils.randomNumeric(5);
     }
 
     @Test
@@ -96,10 +100,6 @@ public class TransactionMessageIT extends ContainerIntegrationTestBase {
 
         pushConsumer.shutdown();
         producer.shutdown();
-    }
-
-    private static String generateTopic() {
-        return TransactionMessageIT.class.getSimpleName() + RandomStringUtils.randomNumeric(5);
     }
 
     @Test
@@ -138,10 +138,10 @@ public class TransactionMessageIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(master1With3Replicas.getBrokerIdentity().getBrokerClusterName(),
-            master1With3Replicas.getBrokerIdentity().getBrokerName(),
-            master1With3Replicas.getBrokerIdentity().getBrokerId()));
+                master1With3Replicas.getBrokerIdentity().getBrokerName(),
+                master1With3Replicas.getBrokerIdentity().getBrokerId()));
         System.out.printf("=========" + master1With3Replicas.getBrokerIdentity().getBrokerName() + "-"
-            + master1With3Replicas.getBrokerIdentity().getBrokerId() + " removed%n");
+                + master1With3Replicas.getBrokerIdentity().getBrokerId() + " removed%n");
         createTopicTo(master2With3Replicas, topic, 1, 1);
 
         transactionCheckListener.setShouldReturnUnknownState(false);
@@ -216,20 +216,20 @@ public class TransactionMessageIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(master1With3Replicas.getBrokerIdentity().getBrokerClusterName(),
-            master1With3Replicas.getBrokerIdentity().getBrokerName(),
-            master1With3Replicas.getBrokerIdentity().getBrokerId()));
+                master1With3Replicas.getBrokerIdentity().getBrokerName(),
+                master1With3Replicas.getBrokerIdentity().getBrokerId()));
         System.out.printf("=========" + master1With3Replicas.getBrokerIdentity().getBrokerName() + "-"
-            + master1With3Replicas.getBrokerIdentity().getBrokerId() + " removed%n");
+                + master1With3Replicas.getBrokerIdentity().getBrokerId() + " removed%n");
 
         createTopicTo(master2With3Replicas, topic, 1, 1);
         createTopicTo(master3With3Replicas, topic, 1, 1);
         //isolateBroker(master2With3Replicas);
         brokerContainer2.removeBroker(new BrokerIdentity(master2With3Replicas.getBrokerIdentity().getBrokerClusterName(),
-            master2With3Replicas.getBrokerIdentity().getBrokerName(),
-            master2With3Replicas.getBrokerIdentity().getBrokerId()));
+                master2With3Replicas.getBrokerIdentity().getBrokerName(),
+                master2With3Replicas.getBrokerIdentity().getBrokerId()));
         System.out.printf("=========" + master2With3Replicas.getBrokerIdentity().getBrokerClusterName() + "-"
-            + master2With3Replicas.getBrokerIdentity().getBrokerName()
-            + "-" + master2With3Replicas.getBrokerIdentity().getBrokerId() + " removed%n");
+                + master2With3Replicas.getBrokerIdentity().getBrokerName()
+                + "-" + master2With3Replicas.getBrokerIdentity().getBrokerId() + " removed%n");
 
         pushConsumer.getDefaultMQPushConsumerImpl().getRebalanceImpl().doRebalance(false);
         transactionCheckListener.setShouldReturnUnknownState(false);
@@ -249,7 +249,7 @@ public class TransactionMessageIT extends ContainerIntegrationTestBase {
         cancelIsolatedBroker(master1With3Replicas);
 
         master2With3Replicas = brokerContainer2.addBroker(buildConfigContext(master2With3Replicas.getBrokerConfig(),
-            master2With3Replicas.getMessageStoreConfig()));
+                master2With3Replicas.getMessageStoreConfig()));
         master2With3Replicas.start();
         cancelIsolatedBroker(master2With3Replicas);
 

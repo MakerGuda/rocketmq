@@ -43,8 +43,8 @@ public class BrokerOperatorResult {
     @Override
     public String toString() {
         return "BrokerOperatorResult{" +
-            "successList=" + successList +
-            ", failureList=" + failureList +
-            '}';
+                "successList=" + successList +
+                ", failureList=" + failureList +
+                '}';
     }
 }

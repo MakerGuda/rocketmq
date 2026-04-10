@@ -16,14 +16,14 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
+
+import java.util.Map;
 
 public class MultiDispatchUtils {
 
@@ -38,9 +38,9 @@ public class MultiDispatchUtils {
 
     public static boolean isNeedHandleMultiDispatch(MessageStoreConfig messageStoreConfig, String topic) {
         return messageStoreConfig.isEnableMultiDispatch()
-            && !topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)
-            && !topic.startsWith(TopicValidator.SYSTEM_TOPIC_PREFIX)
-            && !topic.equals(TopicValidator.RMQ_SYS_SCHEDULE_TOPIC);
+                && !topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)
+                && !topic.startsWith(TopicValidator.SYSTEM_TOPIC_PREFIX)
+                && !topic.equals(TopicValidator.RMQ_SYS_SCHEDULE_TOPIC);
     }
 
     public static boolean checkMultiDispatchQueue(MessageStoreConfig messageStoreConfig, DispatchRequest dispatchRequest) {

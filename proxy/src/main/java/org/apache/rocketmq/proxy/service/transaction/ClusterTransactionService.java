@@ -17,20 +17,9 @@
 package org.apache.rocketmq.proxy.service.transaction;
 
 import com.google.common.collect.Sets;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.broker.client.ProducerManager;
+import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.thread.ThreadPoolMonitor;
@@ -39,12 +28,18 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.config.ProxyConfig;
-import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.proxy.service.route.MessageQueueView;
 import org.apache.rocketmq.proxy.service.route.TopicRouteService;
 import org.apache.rocketmq.remoting.protocol.heartbeat.HeartbeatData;
 import org.apache.rocketmq.remoting.protocol.heartbeat.ProducerData;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ClusterTransactionService extends AbstractTransactionService {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -54,14 +49,13 @@ public class ClusterTransactionService extends AbstractTransactionService {
     private final MQClientAPIFactory mqClientAPIFactory;
     private final TopicRouteService topicRouteService;
     private final ProducerManager producerManager;
-
-    private ThreadPoolExecutor heartbeatExecutors;
     private final Map<String /* group */, Set<ClusterData>/* cluster list */> groupClusterData = new ConcurrentHashMap<>();
     private final AtomicReference<Map<String /* brokerAddr */, String /* brokerName */>> brokerAddrNameMapRef = new AtomicReference<>();
+    private ThreadPoolExecutor heartbeatExecutors;
     private TxHeartbeatServiceThread txHeartbeatServiceThread;
 
     public ClusterTransactionService(TopicRouteService topicRouteService, ProducerManager producerManager,
-        MQClientAPIFactory mqClientAPIFactory) {
+                                     MQClientAPIFactory mqClientAPIFactory) {
         this.topicRouteService = topicRouteService;
         this.producerManager = producerManager;
         this.mqClientAPIFactory = mqClientAPIFactory;
@@ -206,11 +200,11 @@ public class ClusterTransactionService extends AbstractTransactionService {
                 heartbeatExecutors.submit(() -> {
                     String brokerAddr = brokerData.selectBrokerAddr();
                     this.mqClientAPIFactory.getClient()
-                        .sendHeartbeatOneway(brokerAddr, heartbeatData, Duration.ofSeconds(3).toMillis())
-                        .exceptionally(t -> {
-                            log.error("Send transactionHeartbeat to broker err. brokerAddr: {}", brokerAddr, t);
-                            return null;
-                        });
+                            .sendHeartbeatOneway(brokerAddr, heartbeatData, Duration.ofSeconds(3).toMillis())
+                            .exceptionally(t -> {
+                                log.error("Send transactionHeartbeat to broker err. brokerAddr: {}", brokerAddr, t);
+                                return null;
+                            });
                 });
             }
         } catch (Exception e) {
@@ -224,6 +218,29 @@ public class ClusterTransactionService extends AbstractTransactionService {
             return null;
         }
         return brokerAddrNameMapRef.get().get(brokerAddr);
+    }
+
+    @Override
+    public void start() throws Exception {
+        ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
+        txHeartbeatServiceThread = new TxHeartbeatServiceThread();
+
+        super.start();
+        txHeartbeatServiceThread.start();
+        heartbeatExecutors = ThreadPoolMonitor.createAndMonitor(
+                proxyConfig.getTransactionHeartbeatThreadPoolNums(),
+                proxyConfig.getTransactionHeartbeatThreadPoolNums(),
+                0L, TimeUnit.MILLISECONDS,
+                "TransactionHeartbeatRegisterThread",
+                proxyConfig.getTransactionHeartbeatThreadPoolQueueCapacity()
+        );
+    }
+
+    @Override
+    public void shutdown() throws Exception {
+        txHeartbeatServiceThread.shutdown();
+        heartbeatExecutors.shutdown();
+        super.shutdown();
     }
 
     static class ClusterData {
@@ -274,28 +291,5 @@ public class ClusterTransactionService extends AbstractTransactionService {
         protected void onWaitEnd() {
             scanProducerHeartBeat();
         }
-    }
-
-    @Override
-    public void start() throws Exception {
-        ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
-        txHeartbeatServiceThread = new TxHeartbeatServiceThread();
-
-        super.start();
-        txHeartbeatServiceThread.start();
-        heartbeatExecutors = ThreadPoolMonitor.createAndMonitor(
-            proxyConfig.getTransactionHeartbeatThreadPoolNums(),
-            proxyConfig.getTransactionHeartbeatThreadPoolNums(),
-            0L, TimeUnit.MILLISECONDS,
-            "TransactionHeartbeatRegisterThread",
-            proxyConfig.getTransactionHeartbeatThreadPoolQueueCapacity()
-        );
-    }
-
-    @Override
-    public void shutdown() throws Exception {
-        txHeartbeatServiceThread.shutdown();
-        heartbeatExecutors.shutdown();
-        super.shutdown();
     }
 }

@@ -17,13 +17,13 @@
 
 package org.apache.rocketmq.remoting.netty;
 
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.OpenSsl;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,63 +31,19 @@ import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Properties;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_CIPHERS;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_CLIENT_AUTHSERVER;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_CLIENT_CERTPATH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_CLIENT_KEYPASSWORD;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_CLIENT_KEYPATH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_CLIENT_TRUSTCERTPATH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_PROTOCOLS;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_SERVER_AUTHCLIENT;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_SERVER_CERTPATH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_SERVER_KEYPASSWORD;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_SERVER_KEYPATH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_SERVER_NEED_CLIENT_AUTH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_SERVER_TRUSTCERTPATH;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_TEST_MODE_ENABLE;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsCiphers;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsClientAuthServer;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsClientCertPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsClientKeyPassword;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsClientKeyPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsClientTrustCertPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsProtocols;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerAuthClient;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerCertPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerKeyPassword;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerKeyPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerNeedClientAuth;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsServerTrustCertPath;
-import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.tlsTestModeEnable;
+import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.*;
 
 public class TlsHelper {
 
-    public interface DecryptionStrategy {
-        /**
-         * Decrypt the target encrpted private key file.
-         *
-         * @param privateKeyEncryptPath A pathname string
-         * @param forClient tells whether it's a client-side key file
-         * @return An input stream for a decrypted key file
-         * @throws IOException if an I/O error has occurred
-         */
-        InputStream decryptPrivateKey(String privateKeyEncryptPath, boolean forClient) throws IOException;
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_REMOTING_NAME);
-
     private static DecryptionStrategy decryptionStrategy = new DecryptionStrategy() {
         @Override
         public InputStream decryptPrivateKey(final String privateKeyEncryptPath,
-            final boolean forClient) throws IOException {
+                                             final boolean forClient) throws IOException {
             return new FileInputStream(privateKeyEncryptPath);
         }
     };
-
 
     public static void registerDecryptionStrategy(final DecryptionStrategy decryptionStrategy) {
         TlsHelper.decryptionStrategy = decryptionStrategy;
@@ -111,9 +67,9 @@ public class TlsHelper {
         if (forClient) {
             if (tlsTestModeEnable) {
                 sslContextBuilder = SslContextBuilder
-                    .forClient()
-                    .sslProvider(SslProvider.JDK)
-                    .trustManager(InsecureTrustManagerFactory.INSTANCE);
+                        .forClient()
+                        .sslProvider(SslProvider.JDK)
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE);
             } else {
                 sslContextBuilder = SslContextBuilder.forClient().sslProvider(SslProvider.JDK);
 
@@ -127,24 +83,24 @@ public class TlsHelper {
                 }
 
                 sslContextBuilder = sslContextBuilder.keyManager(
-                    !isNullOrEmpty(tlsClientCertPath) ? new FileInputStream(tlsClientCertPath) : null,
-                    !isNullOrEmpty(tlsClientKeyPath) ? decryptionStrategy.decryptPrivateKey(tlsClientKeyPath, true) : null,
-                    !isNullOrEmpty(tlsClientKeyPassword) ? tlsClientKeyPassword : null);
+                        !isNullOrEmpty(tlsClientCertPath) ? new FileInputStream(tlsClientCertPath) : null,
+                        !isNullOrEmpty(tlsClientKeyPath) ? decryptionStrategy.decryptPrivateKey(tlsClientKeyPath, true) : null,
+                        !isNullOrEmpty(tlsClientKeyPassword) ? tlsClientKeyPassword : null);
             }
         } else {
 
             if (tlsTestModeEnable) {
                 SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
                 sslContextBuilder = SslContextBuilder
-                    .forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
-                    .sslProvider(provider)
-                    .clientAuth(ClientAuth.OPTIONAL);
+                        .forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
+                        .sslProvider(provider)
+                        .clientAuth(ClientAuth.OPTIONAL);
             } else {
                 sslContextBuilder = SslContextBuilder.forServer(
-                    !isNullOrEmpty(tlsServerCertPath) ? new FileInputStream(tlsServerCertPath) : null,
-                    !isNullOrEmpty(tlsServerKeyPath) ? decryptionStrategy.decryptPrivateKey(tlsServerKeyPath, false) : null,
-                    !isNullOrEmpty(tlsServerKeyPassword) ? tlsServerKeyPassword : null)
-                    .sslProvider(provider);
+                                !isNullOrEmpty(tlsServerCertPath) ? new FileInputStream(tlsServerCertPath) : null,
+                                !isNullOrEmpty(tlsServerKeyPath) ? decryptionStrategy.decryptPrivateKey(tlsServerKeyPath, false) : null,
+                                !isNullOrEmpty(tlsServerKeyPassword) ? tlsServerKeyPassword : null)
+                        .sslProvider(provider);
 
                 if (!tlsServerAuthClient) {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
@@ -169,6 +125,7 @@ public class TlsHelper {
             sslContextBuilder.protocols(tlsProtocols.split(","));
         }
     }
+
     private static void extractTlsConfigFromFile(final File configFile) {
         if (!(configFile.exists() && configFile.isFile() && configFile.canRead())) {
             LOGGER.info("Tls config file doesn't exist, skip it");
@@ -247,5 +204,17 @@ public class TlsHelper {
      */
     private static boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    public interface DecryptionStrategy {
+        /**
+         * Decrypt the target encrpted private key file.
+         *
+         * @param privateKeyEncryptPath A pathname string
+         * @param forClient             tells whether it's a client-side key file
+         * @return An input stream for a decrypted key file
+         * @throws IOException if an I/O error has occurred
+         */
+        InputStream decryptPrivateKey(String privateKeyEncryptPath, boolean forClient) throws IOException;
     }
 }

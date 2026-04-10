@@ -25,8 +25,8 @@ import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.annotation.CFNullable;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 
 @RocketMQAction(value = RequestCode.GET_CONSUMER_RUNNING_INFO, action = Action.GET)
 public class GetConsumerRunningInfoRequestHeader extends RpcRequestHeader {
@@ -69,9 +69,9 @@ public class GetConsumerRunningInfoRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("clientId", clientId)
-            .add("jstackEnable", jstackEnable)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("clientId", clientId)
+                .add("jstackEnable", jstackEnable)
+                .toString();
     }
 }

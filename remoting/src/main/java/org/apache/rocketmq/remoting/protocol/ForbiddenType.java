@@ -27,15 +27,15 @@ public interface ForbiddenType {
     /**
      * 1=forbidden by broker
      */
-    int BROKER_FORBIDDEN               = 1;
+    int BROKER_FORBIDDEN = 1;
     /**
      * 2=forbidden by groupId
      */
-    int GROUP_FORBIDDEN                = 2;
+    int GROUP_FORBIDDEN = 2;
     /**
      * 3=forbidden by topic
      */
-    int TOPIC_FORBIDDEN                = 3;
+    int TOPIC_FORBIDDEN = 3;
     /**
      * 4=forbidden by broadcasting mode
      */
@@ -43,6 +43,6 @@ public interface ForbiddenType {
     /**
      * 5=forbidden for a subscription(group with a topic)
      */
-    int SUBSCRIPTION_FORBIDDEN         = 5;
+    int SUBSCRIPTION_FORBIDDEN = 5;
 
 }

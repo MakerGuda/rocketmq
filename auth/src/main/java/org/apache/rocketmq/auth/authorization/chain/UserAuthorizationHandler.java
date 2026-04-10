@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.auth.authorization.chain;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import org.apache.rocketmq.auth.authentication.enums.SubjectType;
 import org.apache.rocketmq.auth.authentication.enums.UserStatus;
 import org.apache.rocketmq.auth.authentication.enums.UserType;
@@ -30,6 +28,9 @@ import org.apache.rocketmq.auth.authorization.exception.AuthorizationException;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.chain.Handler;
 import org.apache.rocketmq.common.chain.HandlerChain;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public class UserAuthorizationHandler implements Handler<DefaultAuthorizationContext, CompletableFuture<Void>> {
 

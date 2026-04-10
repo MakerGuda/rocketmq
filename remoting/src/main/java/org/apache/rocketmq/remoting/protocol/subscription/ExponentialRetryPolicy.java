@@ -18,6 +18,7 @@
 package org.apache.rocketmq.remoting.protocol.subscription;
 
 import com.google.common.base.MoreObjects;
+
 import java.util.concurrent.TimeUnit;
 
 public class ExponentialRetryPolicy implements RetryPolicy {
@@ -61,10 +62,10 @@ public class ExponentialRetryPolicy implements RetryPolicy {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("initial", initial)
-            .add("max", max)
-            .add("multiplier", multiplier)
-            .toString();
+                .add("initial", initial)
+                .add("max", max)
+                .add("multiplier", multiplier)
+                .toString();
     }
 
     @Override

@@ -19,16 +19,6 @@ package org.apache.rocketmq.controller.processor;
 import com.google.common.base.Stopwatch;
 import io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.api.common.Attributes;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import java.util.concurrent.TimeoutException;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.controller.BrokerHeartbeatManager;
@@ -53,20 +43,15 @@ import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextB
 import org.apache.rocketmq.remoting.protocol.header.controller.register.RegisterBrokerToControllerRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.namesrv.BrokerHeartbeatRequestHeader;
 
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_REQUEST_HANDLE_STATUS;
 import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_REQUEST_TYPE;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_APPLY_BROKER_ID;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.BROKER_HEARTBEAT;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CLEAN_BROKER_DATA;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_ALTER_SYNC_STATE_SET;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_ELECT_MASTER;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_GET_METADATA_INFO;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_GET_REPLICA_INFO;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_GET_SYNC_STATE_DATA;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_REGISTER_BROKER;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.GET_CONTROLLER_CONFIG;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.CONTROLLER_GET_NEXT_BROKER_ID;
-import static org.apache.rocketmq.remoting.protocol.RequestCode.UPDATE_CONTROLLER_CONFIG;
+import static org.apache.rocketmq.remoting.protocol.RequestCode.*;
 
 /**
  * Processor for controller request
@@ -83,6 +68,7 @@ public class ControllerRequestProcessor implements NettyRequestProcessor {
         this.heartbeatManager = controllerManager.getHeartbeatManager();
         initConfigBlackList();
     }
+
     private void initConfigBlackList() {
         configBlackList.add("configBlackList");
         configBlackList.add("configStorePath");
@@ -90,25 +76,26 @@ public class ControllerRequestProcessor implements NettyRequestProcessor {
         String[] configArray = controllerManager.getControllerConfig().getConfigBlackList().split(";");
         configBlackList.addAll(Arrays.asList(configArray));
     }
+
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request) throws Exception {
         if (ctx != null) {
             log.debug("Receive request, {} {} {}",
-                request.getCode(),
-                RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
-                request);
+                    request.getCode(),
+                    RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
+                    request);
         }
         Stopwatch stopwatch = Stopwatch.createStarted();
         try {
             RemotingCommand resp = handleRequest(ctx, request);
             Attributes attributes = ControllerMetricsManager.newAttributesBuilder()
-                .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
-                .put(LABEL_REQUEST_HANDLE_STATUS, ControllerMetricsConstant.RequestHandleStatus.SUCCESS.getLowerCaseName())
-                .build();
+                    .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
+                    .put(LABEL_REQUEST_HANDLE_STATUS, ControllerMetricsConstant.RequestHandleStatus.SUCCESS.getLowerCaseName())
+                    .build();
             ControllerMetricsManager.requestTotal.add(1, attributes);
             attributes = ControllerMetricsManager.newAttributesBuilder()
-                .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
-                .build();
+                    .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
+                    .build();
             ControllerMetricsManager.requestLatency.record(stopwatch.elapsed(TimeUnit.MICROSECONDS), attributes);
             return resp;
         } catch (Exception e) {
@@ -116,14 +103,14 @@ public class ControllerRequestProcessor implements NettyRequestProcessor {
             Attributes attributes;
             if (e instanceof TimeoutException) {
                 attributes = ControllerMetricsManager.newAttributesBuilder()
-                    .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
-                    .put(LABEL_REQUEST_HANDLE_STATUS, ControllerMetricsConstant.RequestHandleStatus.TIMEOUT.getLowerCaseName())
-                    .build();
+                        .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
+                        .put(LABEL_REQUEST_HANDLE_STATUS, ControllerMetricsConstant.RequestHandleStatus.TIMEOUT.getLowerCaseName())
+                        .build();
             } else {
                 attributes = ControllerMetricsManager.newAttributesBuilder()
-                    .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
-                    .put(LABEL_REQUEST_HANDLE_STATUS, ControllerMetricsConstant.RequestHandleStatus.FAILED.getLowerCaseName())
-                    .build();
+                        .put(LABEL_REQUEST_TYPE, ControllerMetricsConstant.RequestType.getLowerCaseNameByCode(request.getCode()))
+                        .put(LABEL_REQUEST_HANDLE_STATUS, ControllerMetricsConstant.RequestHandleStatus.FAILED.getLowerCaseName())
+                        .build();
             }
             ControllerMetricsManager.requestTotal.add(1, attributes);
             throw e;
@@ -164,7 +151,7 @@ public class ControllerRequestProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand handleAlterSyncStateSet(ChannelHandlerContext ctx,
-        RemotingCommand request) throws Exception {
+                                                    RemotingCommand request) throws Exception {
         final AlterSyncStateSetRequestHeader controllerRequest = (AlterSyncStateSetRequestHeader) request.decodeCommandCustomHeader(AlterSyncStateSetRequestHeader.class);
         final SyncStateSet syncStateSet = RemotingSerializable.decode(request.getBody(), SyncStateSet.class);
         final CompletableFuture<RemotingCommand> future = this.controllerManager.getController().alterSyncStateSet(controllerRequest, syncStateSet);
@@ -175,7 +162,7 @@ public class ControllerRequestProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand handleControllerElectMaster(ChannelHandlerContext ctx,
-        RemotingCommand request) throws Exception {
+                                                        RemotingCommand request) throws Exception {
         final ElectMasterRequestHeader electMasterRequest = (ElectMasterRequestHeader) request.decodeCommandCustomHeader(ElectMasterRequestHeader.class);
         final CompletableFuture<RemotingCommand> future = this.controllerManager.getController().electMaster(electMasterRequest);
         if (future != null) {
@@ -330,6 +317,7 @@ public class ControllerRequestProcessor implements NettyRequestProcessor {
     public boolean rejectRequest() {
         return false;
     }
+
     private boolean validateBlackListConfigExist(Properties properties) {
         for (String blackConfig : configBlackList) {
             if (properties.containsKey(blackConfig)) {

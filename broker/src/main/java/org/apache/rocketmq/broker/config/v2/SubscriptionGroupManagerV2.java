@@ -19,7 +19,6 @@ package org.apache.rocketmq.broker.config.v2;
 import com.alibaba.fastjson2.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.nio.charset.StandardCharsets;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.subscription.SubscriptionGroupManager;
 import org.apache.rocketmq.common.MixAll;
@@ -29,9 +28,11 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Broker 子系统组件 <b>SubscriptionGroupManagerV2</b>（Subscription Group Manager V2）。
- * 
+ * <p>
  * 继承关系：<code>SubscriptionGroupManager</code>。
  */
 public class SubscriptionGroupManagerV2 extends SubscriptionGroupManager {
@@ -51,9 +52,9 @@ public class SubscriptionGroupManagerV2 extends SubscriptionGroupManager {
     public boolean loadDataVersion() {
         try {
             ConfigHelper.loadDataVersion(configStorage, TableId.SUBSCRIPTION_GROUP)
-                .ifPresent(buf -> {
-                    ConfigHelper.onDataVersionLoad(buf, dataVersion);
-                });
+                    .ifPresent(buf -> {
+                        ConfigHelper.onDataVersionLoad(buf, dataVersion);
+                    });
         } catch (RocksDBException e) {
             log.error("loadDataVersion error", e);
             return false;

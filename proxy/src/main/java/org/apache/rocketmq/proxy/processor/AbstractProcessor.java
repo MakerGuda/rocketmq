@@ -24,13 +24,12 @@ import org.apache.rocketmq.proxy.service.ServiceManager;
 
 public abstract class AbstractProcessor extends AbstractStartAndShutdown {
 
+    protected static final ProxyException EXPIRED_HANDLE_PROXY_EXCEPTION = new ProxyException(ProxyExceptionCode.INVALID_RECEIPT_HANDLE, "receipt handle is expired");
     protected MessagingProcessor messagingProcessor;
     protected ServiceManager serviceManager;
 
-    protected static final ProxyException EXPIRED_HANDLE_PROXY_EXCEPTION = new ProxyException(ProxyExceptionCode.INVALID_RECEIPT_HANDLE, "receipt handle is expired");
-
     public AbstractProcessor(MessagingProcessor messagingProcessor,
-        ServiceManager serviceManager) {
+                             ServiceManager serviceManager) {
         this.messagingProcessor = messagingProcessor;
         this.serviceManager = serviceManager;
     }

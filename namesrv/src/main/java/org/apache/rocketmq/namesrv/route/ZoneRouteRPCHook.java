@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.namesrv.route;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.remoting.RPCHook;
@@ -31,6 +26,12 @@ import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.remoting.protocol.route.QueueData;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class ZoneRouteRPCHook implements RPCHook {
 
@@ -68,7 +69,7 @@ public class ZoneRouteRPCHook implements RPCHook {
             }
             //master down, consume from slave. break nearby route rule.
             if (brokerData.getBrokerAddrs().get(MixAll.MASTER_ID) == null
-                || StringUtils.equalsIgnoreCase(brokerData.getZoneName(), zoneName)) {
+                    || StringUtils.equalsIgnoreCase(brokerData.getZoneName(), zoneName)) {
                 brokerDataReserved.add(brokerData);
             } else {
                 brokerDataRemoved.put(brokerData.getBrokerName(), brokerData);
@@ -88,7 +89,7 @@ public class ZoneRouteRPCHook implements RPCHook {
             for (Entry<String, BrokerData> entry : brokerDataRemoved.entrySet()) {
                 BrokerData brokerData = entry.getValue();
                 brokerData.getBrokerAddrs().values()
-                    .forEach(brokerAddr -> topicRouteData.getFilterServerTable().remove(brokerAddr));
+                        .forEach(brokerAddr -> topicRouteData.getFilterServerTable().remove(brokerAddr));
             }
         }
         return topicRouteData;

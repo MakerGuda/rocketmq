@@ -19,6 +19,7 @@ package org.apache.rocketmq.remoting.protocol.body;
 
 import com.google.common.base.Objects;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class ElectMasterResponseBody extends RemotingSerializable {
         }
         ElectMasterResponseBody that = (ElectMasterResponseBody) o;
         return Objects.equal(brokerMemberGroup, that.brokerMemberGroup) &&
-            Objects.equal(syncStateSet, that.syncStateSet);
+                Objects.equal(syncStateSet, that.syncStateSet);
     }
 
     @Override
@@ -63,24 +64,24 @@ public class ElectMasterResponseBody extends RemotingSerializable {
     @Override
     public String toString() {
         return "BrokerMemberGroup{" +
-            "brokerMemberGroup='" + brokerMemberGroup.toString() + '\'' +
-            ", syncStateSet='" + syncStateSet.toString() +
-            '}';
-    }
-
-    public void setBrokerMemberGroup(BrokerMemberGroup brokerMemberGroup) {
-        this.brokerMemberGroup = brokerMemberGroup;
+                "brokerMemberGroup='" + brokerMemberGroup.toString() + '\'' +
+                ", syncStateSet='" + syncStateSet.toString() +
+                '}';
     }
 
     public BrokerMemberGroup getBrokerMemberGroup() {
         return brokerMemberGroup;
     }
 
-    public void setSyncStateSet(Set<Long> syncStateSet) {
-        this.syncStateSet = syncStateSet;
+    public void setBrokerMemberGroup(BrokerMemberGroup brokerMemberGroup) {
+        this.brokerMemberGroup = brokerMemberGroup;
     }
 
     public Set<Long> getSyncStateSet() {
         return syncStateSet;
+    }
+
+    public void setSyncStateSet(Set<Long> syncStateSet) {
+        this.syncStateSet = syncStateSet;
     }
 }

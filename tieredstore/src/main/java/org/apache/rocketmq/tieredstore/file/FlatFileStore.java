@@ -18,14 +18,6 @@ package org.apache.rocketmq.tieredstore.file;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.tieredstore.MessageStoreConfig;
@@ -35,6 +27,11 @@ import org.apache.rocketmq.tieredstore.metadata.entity.TopicMetadata;
 import org.apache.rocketmq.tieredstore.util.MessageStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class FlatFileStore {
 
@@ -64,7 +61,7 @@ public class FlatFileStore {
             long costTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             log.info("FlatFileStore recover error, total cost={}ms", costTime);
             LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME)
-                .error("FlatFileStore recover error, total cost={}ms", costTime, e);
+                    .error("FlatFileStore recover error, total cost={}ms", costTime, e);
             return false;
         }
         return true;
@@ -76,12 +73,12 @@ public class FlatFileStore {
         metadataStore.iterateTopic(topicMetadata -> {
             semaphore.acquireUninterruptibly();
             futures.add(this.recoverAsync(topicMetadata)
-                .whenComplete((unused, throwable) -> {
-                    if (throwable != null) {
-                        log.error("FlatFileStore recover file error, topic={}", topicMetadata.getTopic(), throwable);
-                    }
-                    semaphore.release();
-                }));
+                    .whenComplete((unused, throwable) -> {
+                        if (throwable != null) {
+                            log.error("FlatFileStore recover file error, topic={}", topicMetadata.getTopic(), throwable);
+                        }
+                        semaphore.release();
+                    }));
         });
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
@@ -92,14 +89,14 @@ public class FlatFileStore {
             AtomicLong queueCount = new AtomicLong();
             metadataStore.iterateQueue(topicMetadata.getTopic(), queueMetadata -> {
                 FlatMessageFile flatFile = this.computeIfAbsent(new MessageQueue(
-                    topicMetadata.getTopic(), storeConfig.getBrokerName(), queueMetadata.getQueue().getQueueId()));
+                        topicMetadata.getTopic(), storeConfig.getBrokerName(), queueMetadata.getQueue().getQueueId()));
                 queueCount.incrementAndGet();
                 log.debug("FlatFileStore recover file, topicId={}, topic={}, queueId={}, cost={}ms",
-                    flatFile.getTopicId(), flatFile.getMessageQueue().getTopic(),
-                    flatFile.getMessageQueue().getQueueId(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
+                        flatFile.getTopicId(), flatFile.getMessageQueue().getTopic(),
+                        flatFile.getMessageQueue().getQueueId(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
             });
             log.info("FlatFileStore recover file, topic={}, total={}, cost={}ms",
-                topicMetadata.getTopic(), queueCount.get(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
+                    topicMetadata.getTopic(), queueCount.get(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
         }, executor.bufferCommitExecutor);
     }
 
@@ -113,7 +110,7 @@ public class FlatFileStore {
             flatFile.getFileLock().lock();
             try {
                 flatFile.destroyExpiredFile(System.currentTimeMillis() -
-                    TimeUnit.HOURS.toMillis(flatFile.getFileReservedHours()));
+                        TimeUnit.HOURS.toMillis(flatFile.getFileReservedHours()));
             } catch (Exception e) {
                 log.error("FlatFileStore delete expire file error", e);
             } finally {
@@ -121,7 +118,7 @@ public class FlatFileStore {
             }
         }
         log.info("FlatFileStore schedule delete expired file, count={}, cost={}ms",
-            fileList.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
+                fileList.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
     public MetadataStore getMetadataStore() {
@@ -138,7 +135,7 @@ public class FlatFileStore {
 
     public FlatMessageFile computeIfAbsent(MessageQueue messageQueue) {
         return flatFileConcurrentMap.computeIfAbsent(messageQueue,
-            mq -> new FlatMessageFile(flatFileFactory, mq.getTopic(), mq.getQueueId()));
+                mq -> new FlatMessageFile(flatFileFactory, mq.getTopic(), mq.getQueueId()));
     }
 
     public FlatMessageFile getFlatFile(MessageQueue messageQueue) {

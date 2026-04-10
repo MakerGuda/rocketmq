@@ -21,15 +21,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.NetworkUtil;
@@ -45,13 +36,20 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
 @SuppressWarnings("DoubleBraceInitialization")
 public class RemotingHelper {
     public static final String DEFAULT_CHARSET = "UTF-8";
     public static final String DEFAULT_CIDR_ALL = "0.0.0.0/0";
-
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_REMOTING_NAME);
-
     public static final Map<Integer, String> REQUEST_CODE_MAP = new HashMap<Integer, String>() {
         {
             try {
@@ -65,7 +63,6 @@ public class RemotingHelper {
             }
         }
     };
-
     public static final Map<Integer, String> RESPONSE_CODE_MAP = new HashMap<Integer, String>() {
         {
             try {
@@ -79,6 +76,7 @@ public class RemotingHelper {
             }
         }
     };
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_REMOTING_NAME);
 
     public static <T> T getAttributeValue(AttributeKey<T> key, final Channel channel) {
         if (channel.hasAttr(key)) {
@@ -104,8 +102,8 @@ public class RemotingHelper {
     }
 
     public static RemotingCommand invokeSync(final String addr, final RemotingCommand request,
-        final long timeoutMillis) throws InterruptedException, RemotingConnectException,
-        RemotingSendRequestException, RemotingTimeoutException, RemotingCommandException {
+                                             final long timeoutMillis) throws InterruptedException, RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, RemotingCommandException {
         long beginTime = System.currentTimeMillis();
         SocketAddress socketAddress = NetworkUtil.string2SocketAddress(addr);
         SocketChannel socketChannel = connect(socketAddress);
@@ -293,9 +291,9 @@ public class RemotingHelper {
     public static int ipToInt(String ip) {
         String[] ips = ip.split("\\.");
         return (Integer.parseInt(ips[0]) << 24)
-            | (Integer.parseInt(ips[1]) << 16)
-            | (Integer.parseInt(ips[2]) << 8)
-            | Integer.parseInt(ips[3]);
+                | (Integer.parseInt(ips[1]) << 16)
+                | (Integer.parseInt(ips[2]) << 8)
+                | Integer.parseInt(ips[3]);
     }
 
     public static boolean ipInCIDR(String ip, String cidr) {
@@ -350,7 +348,7 @@ public class RemotingHelper {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     log.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
-                        future.isSuccess());
+                            future.isSuccess());
                 }
             });
         }

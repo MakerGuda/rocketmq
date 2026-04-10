@@ -16,41 +16,31 @@
  */
 package org.apache.rocketmq.broker.pop;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.config.AbstractRocksDBStorage;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.store.rocksdb.RocksDBOptionsFactory;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactRangeOptions;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.Slice;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 基于 RocksDB 的存储实现 <b>PopConsumerRocksdbStore</b>，承担对应状态的高性能持久化。
- * 
+ * <p>
  * 继承关系：<code>AbstractRocksDBStorage</code>。
  */
 public class PopConsumerRocksdbStore extends AbstractRocksDBStorage implements PopConsumerKVStore {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
     private static final byte[] COLUMN_FAMILY_NAME = "popState".getBytes(StandardCharsets.UTF_8);
-
+    protected ColumnFamilyHandle columnFamilyHandle;
     private WriteOptions writeOptions;
     private WriteOptions deleteOptions;
-    protected ColumnFamilyHandle columnFamilyHandle;
 
     public PopConsumerRocksdbStore(String filePath) {
         super(filePath);
@@ -73,7 +63,7 @@ public class PopConsumerRocksdbStore extends AbstractRocksDBStorage implements P
 
         this.compactRangeOptions = new CompactRangeOptions();
         this.compactRangeOptions.setBottommostLevelCompaction(
-            CompactRangeOptions.BottommostLevelCompaction.kForce);
+                CompactRangeOptions.BottommostLevelCompaction.kForce);
         this.compactRangeOptions.setAllowWriteStall(true);
         this.compactRangeOptions.setExclusiveManualCompaction(false);
         this.compactRangeOptions.setChangeLevel(true);
@@ -149,8 +139,8 @@ public class PopConsumerRocksdbStore extends AbstractRocksDBStorage implements P
         // However, in the current implementation, this is not the bottleneck.
         List<PopConsumerRecord> consumerRecordList = new ArrayList<>();
         try (ReadOptions scanOptions = new ReadOptions()
-            .setIterateLowerBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(lower).array()))
-            .setIterateUpperBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(upper).array()));
+                .setIterateLowerBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(lower).array()))
+                .setIterateUpperBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(upper).array()));
              RocksIterator iterator = db.newIterator(this.columnFamilyHandle, scanOptions)) {
             iterator.seek(ByteBuffer.allocate(Long.BYTES).putLong(lower).array());
             while (iterator.isValid() && consumerRecordList.size() < maxCount) {

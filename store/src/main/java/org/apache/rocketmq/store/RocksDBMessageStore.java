@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.store;
 
-import java.io.IOException;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
@@ -25,11 +23,14 @@ import org.apache.rocketmq.store.queue.ConsumeQueueStoreInterface;
 import org.apache.rocketmq.store.queue.RocksDBConsumeQueueStore;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
+import java.io.IOException;
+import java.util.concurrent.ConcurrentMap;
+
 public class RocksDBMessageStore extends DefaultMessageStore {
 
     public RocksDBMessageStore(final MessageStoreConfig messageStoreConfig, final BrokerStatsManager brokerStatsManager,
-        final MessageArrivingListener messageArrivingListener, final BrokerConfig brokerConfig, final ConcurrentMap<String, TopicConfig> topicConfigTable) throws
-        IOException {
+                               final MessageArrivingListener messageArrivingListener, final BrokerConfig brokerConfig, final ConcurrentMap<String, TopicConfig> topicConfigTable) throws
+            IOException {
         super(messageStoreConfig, brokerStatsManager, messageArrivingListener, brokerConfig, topicConfigTable);
     }
 

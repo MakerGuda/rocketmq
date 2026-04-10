@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.broker.coldctr;
 
-import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.longpolling.PullRequest;
 import org.apache.rocketmq.common.ServiceThread;
@@ -27,33 +24,35 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * just requests are type of pull have the qualification to be put into this hold queue.
  * if the pull request is reading cold data and that request will be cold at the first time,
  * then the pull request will be cold in this @code pullRequestLinkedBlockingQueue,
  * in @code coldTimeoutMillis later the pull request will be warm and marked holded
- *
+ * <p>
  * 后台服务线程 <b>ColdDataPullRequestHoldService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
  * 继承关系：<code>ServiceThread</code>。
  */
 public class ColdDataPullRequestHoldService extends ServiceThread {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_COLDCTR_LOGGER_NAME);
     public static final String NO_SUSPEND_KEY = "_noSuspend_";
-
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_COLDCTR_LOGGER_NAME);
     private final long coldHoldTimeoutMillis = 3000;
     private final SystemClock systemClock = new SystemClock();
     private final BrokerController brokerController;
     private final LinkedBlockingQueue<PullRequest> pullRequestColdHoldQueue = new LinkedBlockingQueue<>(10000);
 
+    public ColdDataPullRequestHoldService(BrokerController brokerController) {
+        this.brokerController = brokerController;
+    }
+
     public void suspendColdDataReadRequest(PullRequest pullRequest) {
         if (this.brokerController.getMessageStoreConfig().isColdDataFlowControlEnable()) {
             pullRequestColdHoldQueue.offer(pullRequest);
         }
-    }
-
-    public ColdDataPullRequestHoldService(BrokerController brokerController) {
-        this.brokerController = brokerController;
     }
 
     @Override
@@ -83,7 +82,7 @@ public class ColdDataPullRequestHoldService extends ServiceThread {
     }
 
     private void checkColdDataPullRequest() {
-        int succTotal = 0, errorTotal = 0, queueSize = pullRequestColdHoldQueue.size() ;
+        int succTotal = 0, errorTotal = 0, queueSize = pullRequestColdHoldQueue.size();
         Iterator<PullRequest> iterator = pullRequestColdHoldQueue.iterator();
         while (iterator.hasNext()) {
             PullRequest pullRequest = iterator.next();
@@ -91,7 +90,7 @@ public class ColdDataPullRequestHoldService extends ServiceThread {
                 try {
                     pullRequest.getRequestCommand().addExtField(NO_SUSPEND_KEY, "1");
                     this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(
-                        pullRequest.getClientChannel(), pullRequest.getRequestCommand());
+                            pullRequest.getClientChannel(), pullRequest.getRequestCommand());
                     succTotal++;
                 } catch (Exception e) {
                     log.error("PullRequestColdHoldService checkColdDataPullRequest error", e);
@@ -102,7 +101,7 @@ public class ColdDataPullRequestHoldService extends ServiceThread {
             }
         }
         log.info("checkColdPullRequest-info-finish, queueSize: {} successTotal: {} errorTotal: {}",
-            queueSize, succTotal, errorTotal);
+                queueSize, succTotal, errorTotal);
     }
 
 }

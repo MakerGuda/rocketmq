@@ -24,6 +24,7 @@ import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 public class RecallMessageResponseHeader implements CommandCustomHeader {
     @CFNotNull
     private String msgId;
+
     @Override
     public void checkFields() throws RemotingCommandException {
     }

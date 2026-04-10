@@ -18,25 +18,25 @@
 package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.apache.rocketmq.remoting.protocol.ResponseCode;
-import org.apache.rocketmq.remoting.protocol.header.EndTransactionRequestHeader;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.processor.TransactionStatus;
 import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+import org.apache.rocketmq.remoting.protocol.ResponseCode;
+import org.apache.rocketmq.remoting.protocol.header.EndTransactionRequestHeader;
 
 public class TransactionActivity extends AbstractRemotingActivity {
 
     public TransactionActivity(RequestPipeline requestPipeline,
-        MessagingProcessor messagingProcessor) {
+                               MessagingProcessor messagingProcessor) {
         super(requestPipeline, messagingProcessor);
     }
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         RemotingCommand response = RemotingCommand.createResponseCommand(null);
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark(null);
@@ -56,13 +56,13 @@ public class TransactionActivity extends AbstractRemotingActivity {
         }
 
         this.messagingProcessor.endTransaction(
-            context,
-            requestHeader.getTopic(),
-            requestHeader.getTransactionId(),
-            requestHeader.getMsgId(),
-            requestHeader.getProducerGroup(),
-            transactionStatus,
-            requestHeader.getFromTransactionCheck()
+                context,
+                requestHeader.getTopic(),
+                requestHeader.getTransactionId(),
+                requestHeader.getMsgId(),
+                requestHeader.getProducerGroup(),
+                transactionStatus,
+                requestHeader.getFromTransactionCheck()
         );
         return response;
     }

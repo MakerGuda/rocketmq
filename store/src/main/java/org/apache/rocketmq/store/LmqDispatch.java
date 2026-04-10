@@ -27,7 +27,7 @@ public class LmqDispatch {
     private static final short VALUE_OF_EACH_INCREMENT = 1;
 
     public static void wrapLmqDispatch(MessageStore messageStore, final MessageExtBrokerInner msg)
-        throws ConsumeQueueException {
+            throws ConsumeQueueException {
         String lmqNames = msg.getProperty(MessageConst.PROPERTY_INNER_MULTI_DISPATCH);
         String[] queueNames = lmqNames.split(MixAll.LMQ_DISPATCH_SEPARATOR);
         Long[] queueOffsets = new Long[queueNames.length];
@@ -39,12 +39,12 @@ public class LmqDispatch {
             }
         }
         MessageAccessor.putProperty(msg, MessageConst.PROPERTY_INNER_MULTI_QUEUE_OFFSET,
-            StringUtils.join(queueOffsets, MixAll.LMQ_DISPATCH_SEPARATOR));
+                StringUtils.join(queueOffsets, MixAll.LMQ_DISPATCH_SEPARATOR));
         msg.removeWaitStorePropertyString();
     }
 
     public static void updateLmqOffsets(MessageStore messageStore, final MessageExtBrokerInner msgInner)
-        throws ConsumeQueueException {
+            throws ConsumeQueueException {
         String lmqNames = msgInner.getProperty(MessageConst.PROPERTY_INNER_MULTI_DISPATCH);
         String[] queueNames = lmqNames.split(MixAll.LMQ_DISPATCH_SEPARATOR);
         for (String queueName : queueNames) {

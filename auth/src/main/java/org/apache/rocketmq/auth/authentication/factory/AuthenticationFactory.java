@@ -19,10 +19,6 @@ package org.apache.rocketmq.auth.authentication.factory;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authentication.AuthenticationEvaluator;
 import org.apache.rocketmq.auth.authentication.context.AuthenticationContext;
@@ -35,6 +31,11 @@ import org.apache.rocketmq.auth.authentication.strategy.AuthenticationStrategy;
 import org.apache.rocketmq.auth.authentication.strategy.StatelessAuthenticationStrategy;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class AuthenticationFactory {
 
@@ -51,7 +52,7 @@ public class AuthenticationFactory {
         return computeIfAbsent(PROVIDER_PREFIX + config.getConfigName(), key -> {
             try {
                 Class<? extends AuthenticationProvider<? extends AuthenticationContext>> clazz =
-                    DefaultAuthenticationProvider.class;
+                        DefaultAuthenticationProvider.class;
                 if (StringUtils.isNotBlank(config.getAuthenticationProvider())) {
                     clazz = (Class<? extends AuthenticationProvider<? extends AuthenticationContext>>) Class.forName(config.getAuthenticationProvider());
                 }
@@ -81,7 +82,7 @@ public class AuthenticationFactory {
                     return null;
                 }
                 Class<? extends AuthenticationMetadataProvider> clazz = (Class<? extends AuthenticationMetadataProvider>)
-                    Class.forName(config.getAuthenticationMetadataProvider());
+                        Class.forName(config.getAuthenticationMetadataProvider());
                 AuthenticationMetadataProvider result = clazz.getDeclaredConstructor().newInstance();
                 result.initialize(config, metadataService);
                 return result;
@@ -121,7 +122,7 @@ public class AuthenticationFactory {
     }
 
     public static AuthenticationContext newContext(AuthConfig config, ChannelHandlerContext context,
-        RemotingCommand command) {
+                                                   RemotingCommand command) {
         AuthenticationProvider<AuthenticationContext> authenticationProvider = getProvider(config);
         if (authenticationProvider == null) {
             return null;

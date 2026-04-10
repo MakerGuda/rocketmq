@@ -19,12 +19,13 @@ package org.apache.rocketmq.remoting.protocol.subscription;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import com.google.common.base.MoreObjects;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.rocketmq.common.MixAll;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.apache.rocketmq.common.SubscriptionGroupAttributes.PRIORITY_FACTOR_ATTRIBUTE;
 
@@ -197,7 +198,7 @@ public class SubscriptionGroupConfig {
         result = prime * result + retryMaxTimes;
         result = prime * result + retryQueueNums;
         result =
-            prime * result + (int) (whichBrokerWhenConsumeSlowly ^ (whichBrokerWhenConsumeSlowly >>> 32));
+                prime * result + (int) (whichBrokerWhenConsumeSlowly ^ (whichBrokerWhenConsumeSlowly >>> 32));
         result = prime * result + groupSysFlag;
         result = prime * result + consumeTimeoutMinute;
         result = prime * result + ((subscriptionDataSet == null) ? 0 : subscriptionDataSet.hashCode());
@@ -215,40 +216,40 @@ public class SubscriptionGroupConfig {
             return false;
         SubscriptionGroupConfig other = (SubscriptionGroupConfig) obj;
         return new EqualsBuilder()
-            .append(groupName, other.groupName)
-            .append(consumeEnable, other.consumeEnable)
-            .append(consumeFromMinEnable, other.consumeFromMinEnable)
-            .append(consumeBroadcastEnable, other.consumeBroadcastEnable)
-            .append(consumeMessageOrderly, other.consumeMessageOrderly)
-            .append(retryQueueNums, other.retryQueueNums)
-            .append(retryMaxTimes, other.retryMaxTimes)
-            .append(whichBrokerWhenConsumeSlowly, other.whichBrokerWhenConsumeSlowly)
-            .append(notifyConsumerIdsChangedEnable, other.notifyConsumerIdsChangedEnable)
-            .append(groupSysFlag, other.groupSysFlag)
-            .append(consumeTimeoutMinute, other.consumeTimeoutMinute)
-            .append(subscriptionDataSet, other.subscriptionDataSet)
-            .append(attributes, other.attributes)
-            .isEquals();
+                .append(groupName, other.groupName)
+                .append(consumeEnable, other.consumeEnable)
+                .append(consumeFromMinEnable, other.consumeFromMinEnable)
+                .append(consumeBroadcastEnable, other.consumeBroadcastEnable)
+                .append(consumeMessageOrderly, other.consumeMessageOrderly)
+                .append(retryQueueNums, other.retryQueueNums)
+                .append(retryMaxTimes, other.retryMaxTimes)
+                .append(whichBrokerWhenConsumeSlowly, other.whichBrokerWhenConsumeSlowly)
+                .append(notifyConsumerIdsChangedEnable, other.notifyConsumerIdsChangedEnable)
+                .append(groupSysFlag, other.groupSysFlag)
+                .append(consumeTimeoutMinute, other.consumeTimeoutMinute)
+                .append(subscriptionDataSet, other.subscriptionDataSet)
+                .append(attributes, other.attributes)
+                .isEquals();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("groupName", groupName)
-            .add("consumeEnable", consumeEnable)
-            .add("consumeFromMinEnable", consumeFromMinEnable)
-            .add("consumeBroadcastEnable", consumeBroadcastEnable)
-            .add("consumeMessageOrderly", consumeMessageOrderly)
-            .add("retryQueueNums", retryQueueNums)
-            .add("retryMaxTimes", retryMaxTimes)
-            .add("groupRetryPolicy", groupRetryPolicy)
-            .add("brokerId", brokerId)
-            .add("whichBrokerWhenConsumeSlowly", whichBrokerWhenConsumeSlowly)
-            .add("notifyConsumerIdsChangedEnable", notifyConsumerIdsChangedEnable)
-            .add("groupSysFlag", groupSysFlag)
-            .add("consumeTimeoutMinute", consumeTimeoutMinute)
-            .add("subscriptionDataSet", subscriptionDataSet)
-            .add("attributes", attributes)
-            .toString();
+                .add("groupName", groupName)
+                .add("consumeEnable", consumeEnable)
+                .add("consumeFromMinEnable", consumeFromMinEnable)
+                .add("consumeBroadcastEnable", consumeBroadcastEnable)
+                .add("consumeMessageOrderly", consumeMessageOrderly)
+                .add("retryQueueNums", retryQueueNums)
+                .add("retryMaxTimes", retryMaxTimes)
+                .add("groupRetryPolicy", groupRetryPolicy)
+                .add("brokerId", brokerId)
+                .add("whichBrokerWhenConsumeSlowly", whichBrokerWhenConsumeSlowly)
+                .add("notifyConsumerIdsChangedEnable", notifyConsumerIdsChangedEnable)
+                .add("groupSysFlag", groupSysFlag)
+                .add("consumeTimeoutMinute", consumeTimeoutMinute)
+                .add("subscriptionDataSet", subscriptionDataSet)
+                .add("attributes", attributes)
+                .toString();
     }
 }

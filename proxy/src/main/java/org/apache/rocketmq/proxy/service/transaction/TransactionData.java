@@ -31,7 +31,7 @@ public class TransactionData implements Comparable<TransactionData> {
     private final long expireMs;
 
     public TransactionData(String brokerName, String topic, long tranStateTableOffset, long commitLogOffset, String transactionId,
-        long checkTimestamp, long expireMs) {
+                           long checkTimestamp, long expireMs) {
         this.brokerName = brokerName;
         this.topic = topic;
         this.tranStateTableOffset = tranStateTableOffset;
@@ -83,8 +83,8 @@ public class TransactionData implements Comparable<TransactionData> {
         }
         TransactionData data = (TransactionData) o;
         return tranStateTableOffset == data.tranStateTableOffset && commitLogOffset == data.commitLogOffset &&
-            getExpireTime() == data.getExpireTime() && Objects.equal(brokerName, data.brokerName) &&
-            Objects.equal(transactionId, data.transactionId);
+                getExpireTime() == data.getExpireTime() && Objects.equal(brokerName, data.brokerName) &&
+                Objects.equal(transactionId, data.transactionId);
     }
 
     @Override
@@ -95,23 +95,23 @@ public class TransactionData implements Comparable<TransactionData> {
     @Override
     public int compareTo(TransactionData o) {
         return ComparisonChain.start()
-            .compare(getExpireTime(), o.getExpireTime())
-            .compare(brokerName, o.brokerName)
-            .compare(commitLogOffset, o.commitLogOffset)
-            .compare(tranStateTableOffset, o.tranStateTableOffset)
-            .compare(transactionId, o.transactionId)
-            .result();
+                .compare(getExpireTime(), o.getExpireTime())
+                .compare(brokerName, o.brokerName)
+                .compare(commitLogOffset, o.commitLogOffset)
+                .compare(tranStateTableOffset, o.tranStateTableOffset)
+                .compare(transactionId, o.transactionId)
+                .result();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("brokerName", brokerName)
-            .add("tranStateTableOffset", tranStateTableOffset)
-            .add("commitLogOffset", commitLogOffset)
-            .add("transactionId", transactionId)
-            .add("checkTimestamp", checkTimestamp)
-            .add("expireMs", expireMs)
-            .toString();
+                .add("brokerName", brokerName)
+                .add("tranStateTableOffset", tranStateTableOffset)
+                .add("commitLogOffset", commitLogOffset)
+                .add("transactionId", transactionId)
+                .add("checkTimestamp", checkTimestamp)
+                .add("expireMs", expireMs)
+                .toString();
     }
 }

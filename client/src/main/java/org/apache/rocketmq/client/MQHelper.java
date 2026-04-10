@@ -16,23 +16,24 @@
  */
 package org.apache.rocketmq.client;
 
-import java.util.Set;
-import java.util.TreeSet;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.common.message.MessageQueue;
-import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
+
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MQHelper {
     private static final Logger log = LoggerFactory.getLogger(MQHelper.class);
 
     @Deprecated
     public static void resetOffsetByTimestamp(
-        final MessageModel messageModel,
-        final String consumerGroup,
-        final String topic,
-        final long timestamp) throws Exception {
+            final MessageModel messageModel,
+            final String consumerGroup,
+            final String topic,
+            final long timestamp) throws Exception {
         resetOffsetByTimestamp(messageModel, "DEFAULT", consumerGroup, topic, timestamp);
     }
 
@@ -46,11 +47,11 @@ public class MQHelper {
      * @param timestamp     time
      */
     public static void resetOffsetByTimestamp(
-        final MessageModel messageModel,
-        final String instanceName,
-        final String consumerGroup,
-        final String topic,
-        final long timestamp) throws Exception {
+            final MessageModel messageModel,
+            final String instanceName,
+            final String consumerGroup,
+            final String topic,
+            final long timestamp) throws Exception {
 
         DefaultMQPullConsumer consumer = new DefaultMQPullConsumer(consumerGroup);
         consumer.setInstanceName(instanceName);
@@ -67,7 +68,7 @@ public class MQHelper {
                     if (offset >= 0) {
                         consumer.updateConsumeOffset(mq, offset);
                         log.info("resetOffsetByTimestamp updateConsumeOffset success, {} {} {}",
-                            consumerGroup, offset, mq);
+                                consumerGroup, offset, mq);
                     }
                 }
             }

@@ -15,21 +15,7 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.store.index.rocksdb;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ServiceThread;
@@ -46,6 +32,18 @@ import org.apache.rocketmq.store.index.QueryOffsetResult;
 import org.apache.rocketmq.store.logfile.MappedFile;
 import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
 import org.rocksdb.RocksDB;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import static org.apache.rocketmq.common.MixAll.dealTimeToHourStamps;
 
 public class IndexRocksDBStore {
@@ -54,17 +52,18 @@ public class IndexRocksDBStore {
     private static final int DEFAULT_CAPACITY = 100000;
     private static final int BATCH_SIZE = 1000;
     private static final Set<String> INDEX_TYPE_SET = new HashSet<>();
+    private static final int INITIAL = 0, RUNNING = 1, SHUTDOWN = 2;
+
     static {
         INDEX_TYPE_SET.add(MessageConst.INDEX_KEY_TYPE);
         INDEX_TYPE_SET.add(MessageConst.INDEX_TAG_TYPE);
         INDEX_TYPE_SET.add(MessageConst.INDEX_UNIQUE_TYPE);
     }
-    private static final int INITIAL = 0, RUNNING = 1, SHUTDOWN = 2;
-    private volatile int state = INITIAL;
 
     private final MessageStore messageStore;
     private final MessageStoreConfig storeConfig;
     private final MessageRocksDBStorage messageRocksDBStorage;
+    private volatile int state = INITIAL;
     private volatile long lastDeleteIndexTime = 0L;
     private IndexBuildService indexBuildService;
     private BlockingQueue<IndexRocksDBRecord> originIndexMsgQueue;
@@ -252,7 +251,8 @@ public class IndexRocksDBStore {
         return false;
     }
 
-    public void destroy() {}
+    public void destroy() {
+    }
 
     private String getServiceThreadName() {
         String brokerIdentifier = "";
@@ -268,6 +268,7 @@ public class IndexRocksDBStore {
     private class IndexBuildService extends ServiceThread {
         private final Logger log = IndexRocksDBStore.log;
         private List<IndexRocksDBRecord> irs;
+
         @Override
         public String getServiceName() {
             return getServiceThreadName() + this.getClass().getSimpleName();

@@ -29,7 +29,8 @@ public interface PutMessageHook {
     String hookName();
 
     /**
-     *  Execute before put message. For example, Message verification or special message transform
+     * Execute before put message. For example, Message verification or special message transform
+     *
      * @param msg
      * @return
      */

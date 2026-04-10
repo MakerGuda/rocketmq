@@ -16,13 +16,14 @@
  */
 package org.apache.rocketmq.store.rocksdb;
 
-import java.util.function.LongSupplier;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.rocksdb.AbstractCompactionFilter;
 import org.rocksdb.AbstractCompactionFilterFactory;
 import org.rocksdb.RemoveConsumeQueueCompactionFilter;
+
+import java.util.function.LongSupplier;
 
 public class ConsumeQueueCompactionFilterFactory extends AbstractCompactionFilterFactory<RemoveConsumeQueueCompactionFilter> {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.ROCKSDB_LOGGER_NAME);

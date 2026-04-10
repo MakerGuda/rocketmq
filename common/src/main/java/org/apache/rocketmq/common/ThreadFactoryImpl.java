@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.common;
 
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ThreadFactoryImpl implements ThreadFactory {
 
@@ -60,8 +61,8 @@ public class ThreadFactoryImpl implements ThreadFactory {
 
         // Log all uncaught exception
         thread.setUncaughtExceptionHandler((t, e) ->
-            LOGGER.error("[BUG] Thread has an uncaught exception, threadId={}, threadName={}",
-                t.getId(), t.getName(), e));
+                LOGGER.error("[BUG] Thread has an uncaught exception, threadId={}, threadName={}",
+                        t.getId(), t.getName(), e));
 
         return thread;
     }

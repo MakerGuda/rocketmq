@@ -32,13 +32,13 @@ import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 @RocketMQAction(value = RequestCode.GET_SUBSCRIPTIONGROUP_CONFIG, action = Action.GET)
 public class GetSubscriptionGroupConfigRequestHeader extends RpcRequestHeader {
 
-    @Override
-    public void checkFields() throws RemotingCommandException {
-    }
-
     @CFNotNull
     @RocketMQResource(ResourceType.GROUP)
     private String group;
+
+    @Override
+    public void checkFields() throws RemotingCommandException {
+    }
 
     /**
      * @return the group

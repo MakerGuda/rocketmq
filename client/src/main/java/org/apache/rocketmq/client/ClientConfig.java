@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.client;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.message.MessageQueue;
@@ -30,6 +25,11 @@ import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
 import org.apache.rocketmq.remoting.protocol.LanguageCode;
 import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
 import org.apache.rocketmq.remoting.protocol.RequestType;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Client Common configuration
@@ -42,16 +42,29 @@ public class ClientConfig {
     public static final String SEND_LATENCY_ENABLE = "com.rocketmq.sendLatencyEnable";
     public static final String START_DETECTOR_ENABLE = "com.rocketmq.startDetectorEnable";
     public static final String HEART_BEAT_V2 = "com.rocketmq.heartbeat.v2";
+    @Deprecated
+    protected String namespace;
+    protected String namespaceV2;
+    protected AccessChannel accessChannel = AccessChannel.LOCAL;
+    /**
+     * Enable stream request type will inject a RPCHook to add corresponding request type to remoting layer.
+     * And it will also generate a different client id to prevent unexpected reuses of MQClientInstance.
+     */
+    protected boolean enableStreamRequestType = false;
+    /**
+     * The switch for message trace
+     */
+    protected boolean enableTrace = false;
+    /**
+     * The name value of message trace topic. If not set, the default trace topic name will be used.
+     */
+    protected String traceTopic;
+    protected int maxPageSizeInGetMetadata = 2000;
     private String namesrvAddr = NameServerAddressUtils.getNameServerAddresses();
     private String clientIP = NetworkUtil.getLocalAddress();
     private String instanceName = System.getProperty("rocketmq.client.name", "DEFAULT");
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
-    @Deprecated
-    protected String namespace;
     private boolean namespaceInitialized = false;
-    protected String namespaceV2;
-    protected AccessChannel accessChannel = AccessChannel.LOCAL;
-
     /**
      * Pulling topic information interval from the named server
      */
@@ -65,7 +78,6 @@ public class ClientConfig {
      */
     private int persistConsumerOffsetInterval = 1000 * 5;
     private long pullTimeDelayMillsWhenException = 1000;
-
     private int traceMsgBatchNum = 10;
     private boolean unitMode = false;
     private String unitName;
@@ -73,23 +85,12 @@ public class ClientConfig {
     private boolean decodeDecompressBody = Boolean.parseBoolean(System.getProperty(DECODE_DECOMPRESS_BODY, "true"));
     private boolean vipChannelEnabled = Boolean.parseBoolean(System.getProperty(SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY, "false"));
     private boolean useHeartbeatV2 = Boolean.parseBoolean(System.getProperty(HEART_BEAT_V2, "false"));
-
     private boolean useTLS = TlsSystemConfig.tlsEnable;
-
     private String socksProxyConfig = System.getProperty(SOCKS_PROXY_CONFIG, "{}");
-
     private int mqClientApiTimeout = 3 * 1000;
     private int detectTimeout = 200;
     private int detectInterval = 2 * 1000;
-
     private LanguageCode language = LanguageCode.JAVA;
-
-    /**
-     * Enable stream request type will inject a RPCHook to add corresponding request type to remoting layer.
-     * And it will also generate a different client id to prevent unexpected reuses of MQClientInstance.
-     */
-    protected boolean enableStreamRequestType = false;
-
     /**
      * Enable the fault tolerance mechanism of the client sending process.
      * DO NOT OPEN when ORDER messages are required.
@@ -98,20 +99,7 @@ public class ClientConfig {
      */
     private boolean sendLatencyEnable = Boolean.parseBoolean(System.getProperty(SEND_LATENCY_ENABLE, "false"));
     private boolean startDetectorEnable = Boolean.parseBoolean(System.getProperty(START_DETECTOR_ENABLE, "false"));
-
     private boolean enableHeartbeatChannelEventListener = true;
-
-    /**
-     * The switch for message trace
-     */
-    protected boolean enableTrace = false;
-
-    /**
-     * The name value of message trace topic. If not set, the default trace topic name will be used.
-     */
-    protected String traceTopic;
-
-    protected int maxPageSizeInGetMetadata = 2000;
 
     public String buildMQClientId() {
         StringBuilder sb = new StringBuilder();
@@ -528,36 +516,36 @@ public class ClientConfig {
     @Override
     public String toString() {
         return "ClientConfig{" +
-            "namesrvAddr='" + namesrvAddr + '\'' +
-            ", clientIP='" + clientIP + '\'' +
-            ", instanceName='" + instanceName + '\'' +
-            ", clientCallbackExecutorThreads=" + clientCallbackExecutorThreads +
-            ", namespace='" + namespace + '\'' +
-            ", namespaceInitialized=" + namespaceInitialized +
-            ", namespaceV2='" + namespaceV2 + '\'' +
-            ", accessChannel=" + accessChannel +
-            ", pollNameServerInterval=" + pollNameServerInterval +
-            ", heartbeatBrokerInterval=" + heartbeatBrokerInterval +
-            ", persistConsumerOffsetInterval=" + persistConsumerOffsetInterval +
-            ", pullTimeDelayMillsWhenException=" + pullTimeDelayMillsWhenException +
-            ", unitMode=" + unitMode +
-            ", unitName='" + unitName + '\'' +
-            ", decodeReadBody=" + decodeReadBody +
-            ", decodeDecompressBody=" + decodeDecompressBody +
-            ", vipChannelEnabled=" + vipChannelEnabled +
-            ", useHeartbeatV2=" + useHeartbeatV2 +
-            ", useTLS=" + useTLS +
-            ", socksProxyConfig='" + socksProxyConfig + '\'' +
-            ", mqClientApiTimeout=" + mqClientApiTimeout +
-            ", detectTimeout=" + detectTimeout +
-            ", detectInterval=" + detectInterval +
-            ", language=" + language +
-            ", enableStreamRequestType=" + enableStreamRequestType +
-            ", sendLatencyEnable=" + sendLatencyEnable +
-            ", startDetectorEnable=" + startDetectorEnable +
-            ", enableHeartbeatChannelEventListener=" + enableHeartbeatChannelEventListener +
-            ", enableTrace=" + enableTrace +
-            ", traceTopic='" + traceTopic + '\'' +
-            '}';
+                "namesrvAddr='" + namesrvAddr + '\'' +
+                ", clientIP='" + clientIP + '\'' +
+                ", instanceName='" + instanceName + '\'' +
+                ", clientCallbackExecutorThreads=" + clientCallbackExecutorThreads +
+                ", namespace='" + namespace + '\'' +
+                ", namespaceInitialized=" + namespaceInitialized +
+                ", namespaceV2='" + namespaceV2 + '\'' +
+                ", accessChannel=" + accessChannel +
+                ", pollNameServerInterval=" + pollNameServerInterval +
+                ", heartbeatBrokerInterval=" + heartbeatBrokerInterval +
+                ", persistConsumerOffsetInterval=" + persistConsumerOffsetInterval +
+                ", pullTimeDelayMillsWhenException=" + pullTimeDelayMillsWhenException +
+                ", unitMode=" + unitMode +
+                ", unitName='" + unitName + '\'' +
+                ", decodeReadBody=" + decodeReadBody +
+                ", decodeDecompressBody=" + decodeDecompressBody +
+                ", vipChannelEnabled=" + vipChannelEnabled +
+                ", useHeartbeatV2=" + useHeartbeatV2 +
+                ", useTLS=" + useTLS +
+                ", socksProxyConfig='" + socksProxyConfig + '\'' +
+                ", mqClientApiTimeout=" + mqClientApiTimeout +
+                ", detectTimeout=" + detectTimeout +
+                ", detectInterval=" + detectInterval +
+                ", language=" + language +
+                ", enableStreamRequestType=" + enableStreamRequestType +
+                ", sendLatencyEnable=" + sendLatencyEnable +
+                ", startDetectorEnable=" + startDetectorEnable +
+                ", enableHeartbeatChannelEventListener=" + enableHeartbeatChannelEventListener +
+                ", enableTrace=" + enableTrace +
+                ", traceTopic='" + traceTopic + '\'' +
+                '}';
     }
 }

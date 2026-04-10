@@ -23,25 +23,13 @@ import org.apache.rocketmq.controller.helper.BrokerValidPredicate;
 import org.apache.rocketmq.controller.impl.event.ControllerResult;
 import org.apache.rocketmq.controller.impl.heartbeat.BrokerIdentityInfo;
 import org.apache.rocketmq.controller.impl.heartbeat.BrokerLiveInfo;
-import org.apache.rocketmq.controller.impl.task.BrokerCloseChannelRequest;
-import org.apache.rocketmq.controller.impl.task.BrokerCloseChannelResponse;
-import org.apache.rocketmq.controller.impl.task.CheckNotActiveBrokerRequest;
-import org.apache.rocketmq.controller.impl.task.CheckNotActiveBrokerResponse;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoRequest;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoResponse;
-import org.apache.rocketmq.controller.impl.task.RaftBrokerHeartBeatEventRequest;
-import org.apache.rocketmq.controller.impl.task.RaftBrokerHeartBeatEventResponse;
+import org.apache.rocketmq.controller.impl.task.*;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -78,7 +66,7 @@ public class RaftReplicasInfoManager extends ReplicasInfoManager {
     }
 
     public ControllerResult<RaftBrokerHeartBeatEventResponse> onBrokerHeartBeat(
-        RaftBrokerHeartBeatEventRequest request) {
+            RaftBrokerHeartBeatEventRequest request) {
         BrokerIdentityInfo brokerIdentityInfo = request.getBrokerIdentityInfo();
         BrokerLiveInfo brokerLiveInfo = request.getBrokerLiveInfo();
         ControllerResult<RaftBrokerHeartBeatEventResponse> result = new ControllerResult<>(new RaftBrokerHeartBeatEventResponse());
@@ -130,14 +118,14 @@ public class RaftReplicasInfoManager extends ReplicasInfoManager {
             }
         });
         Set<String> alreadyReportedBrokerName = notActiveBrokerIdentityInfoList.stream()
-            .map(BrokerIdentityInfo::getBrokerName)
-            .collect(Collectors.toSet());
+                .map(BrokerIdentityInfo::getBrokerName)
+                .collect(Collectors.toSet());
         // avoid to duplicate report, filter by name,
         // because BrokerIdentityInfo in needReElectBrokerNames does not have brokerId or clusterName
         notActiveBrokerIdentityInfoList.addAll(needReElectBrokerNames.stream()
-            .filter(brokerName -> !alreadyReportedBrokerName.contains(brokerName))
-            .map(brokerName -> new BrokerIdentityInfo(null, brokerName, null))
-            .collect(Collectors.toList()));
+                .filter(brokerName -> !alreadyReportedBrokerName.contains(brokerName))
+                .map(brokerName -> new BrokerIdentityInfo(null, brokerName, null))
+                .collect(Collectors.toList()));
         ControllerResult<CheckNotActiveBrokerResponse> result = new ControllerResult<>(new CheckNotActiveBrokerResponse());
         try {
             result.setBody(JSON.toJSONBytes(notActiveBrokerIdentityInfoList));

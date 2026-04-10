@@ -52,11 +52,11 @@ public class RemoteChannelSerializer {
         try {
             JSONObject jsonObject = JSON.parseObject(jsonData);
             return new RemoteChannel(
-                jsonObject.getString(REMOTE_PROXY_IP_KEY),
-                jsonObject.getString(REMOTE_ADDRESS_KEY),
-                jsonObject.getString(LOCAL_ADDRESS_KEY),
-                jsonObject.getObject(TYPE_KEY, ChannelProtocolType.class),
-                jsonObject.getObject(EXTEND_ATTRIBUTE_KEY, String.class)
+                    jsonObject.getString(REMOTE_PROXY_IP_KEY),
+                    jsonObject.getString(REMOTE_ADDRESS_KEY),
+                    jsonObject.getString(LOCAL_ADDRESS_KEY),
+                    jsonObject.getObject(TYPE_KEY, ChannelProtocolType.class),
+                    jsonObject.getObject(EXTEND_ATTRIBUTE_KEY, String.class)
             );
         } catch (Throwable t) {
             log.error("decode remote channel data failed. data:{}", jsonData, t);

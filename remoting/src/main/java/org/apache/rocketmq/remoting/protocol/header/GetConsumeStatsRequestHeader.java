@@ -17,9 +17,6 @@
 package org.apache.rocketmq.remoting.protocol.header;
 
 import com.google.common.base.MoreObjects;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.common.action.RocketMQAction;
@@ -29,6 +26,10 @@ import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @RocketMQAction(value = RequestCode.GET_CONSUME_STATS, action = Action.GET)
 public class GetConsumeStatsRequestHeader extends TopicRequestHeader {
@@ -92,8 +93,8 @@ public class GetConsumeStatsRequestHeader extends TopicRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .toString();
     }
 }

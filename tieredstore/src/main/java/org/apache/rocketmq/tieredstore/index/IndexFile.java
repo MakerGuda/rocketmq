@@ -20,13 +20,6 @@ import java.nio.ByteBuffer;
 
 public interface IndexFile extends IndexService {
 
-    /**
-     * Enumeration for the status of the index file.
-     */
-    enum IndexStatusEnum {
-        SHUTDOWN, UNSEALED, SEALED, UPLOAD
-    }
-
     long getTimestamp();
 
     long getEndTimestamp();
@@ -34,4 +27,11 @@ public interface IndexFile extends IndexService {
     IndexStatusEnum getFileStatus();
 
     ByteBuffer doCompaction();
+
+    /**
+     * Enumeration for the status of the index file.
+     */
+    enum IndexStatusEnum {
+        SHUTDOWN, UNSEALED, SEALED, UPLOAD
+    }
 }

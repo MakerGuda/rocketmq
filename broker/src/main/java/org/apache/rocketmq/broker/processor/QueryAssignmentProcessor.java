@@ -17,12 +17,6 @@
 package org.apache.rocketmq.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.broker.BrokerController;
@@ -52,9 +46,12 @@ import org.apache.rocketmq.remoting.protocol.body.SetMessageRequestModeRequestBo
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Netty 请求处理器：处理与「Query Assignment」相关的 Remoting 请求。
- * 
+ * <p>
  * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
  */
 public class QueryAssignmentProcessor implements NettyRequestProcessor {
@@ -82,7 +79,7 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                          RemotingCommand request) throws RemotingCommandException {
         switch (request.getCode()) {
             case RequestCode.QUERY_ASSIGNMENT:
                 return this.queryAssignment(ctx, request);
@@ -103,7 +100,7 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
      *
      */
     private RemotingCommand queryAssignment(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         final QueryAssignmentRequestBody requestBody = QueryAssignmentRequestBody.decode(request.getBody(), QueryAssignmentRequestBody.class);
         final String topic = requestBody.getTopic();
         final String consumerGroup = requestBody.getConsumerGroup();
@@ -167,8 +164,8 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
      * @return the MessageQueues assigned to this client
      */
     private Set<MessageQueue> doLoadBalance(final String topic, final String consumerGroup, final String clientId,
-        final MessageModel messageModel, final String strategyName,
-        SetMessageRequestModeRequestBody setMessageRequestModeRequestBody, final ChannelHandlerContext ctx) {
+                                            final MessageModel messageModel, final String strategyName,
+                                            SetMessageRequestModeRequestBody setMessageRequestModeRequestBody, final ChannelHandlerContext ctx) {
         Set<MessageQueue> assignedQueueSet = null;
         final TopicRouteInfoManager topicRouteInfoManager = this.brokerController.getTopicRouteInfoManager();
 
@@ -185,7 +182,7 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
                 if (MixAll.isLmq(topic)) {
                     mqSet = new HashSet<>();
                     mqSet.add(new MessageQueue(
-                        topic, brokerController.getBrokerConfig().getBrokerName(), (int)MixAll.LMQ_QUEUE_ID));
+                            topic, brokerController.getBrokerConfig().getBrokerName(), (int) MixAll.LMQ_QUEUE_ID));
                 } else {
                     mqSet = topicRouteInfoManager.getTopicSubscribeInfo(topic);
                 }
@@ -225,7 +222,7 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
 
                     if (setMessageRequestModeRequestBody != null && setMessageRequestModeRequestBody.getMode() == MessageRequestMode.POP) {
                         allocateResult = allocate4Pop(allocateMessageQueueStrategy, consumerGroup, clientId, mqAll,
-                            cidAll, setMessageRequestModeRequestBody.getPopShareQueueNum());
+                                cidAll, setMessageRequestModeRequestBody.getPopShareQueueNum());
 
                     } else {
                         allocateResult = allocateMessageQueueStrategy.allocate(consumerGroup, clientId, mqAll, cidAll);
@@ -248,8 +245,8 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
     }
 
     public List<MessageQueue> allocate4Pop(AllocateMessageQueueStrategy allocateMessageQueueStrategy,
-        final String consumerGroup, final String clientId, List<MessageQueue> mqAll, List<String> cidAll,
-        int popShareQueueNum) {
+                                           final String consumerGroup, final String clientId, List<MessageQueue> mqAll, List<String> cidAll,
+                                           int popShareQueueNum) {
 
         List<MessageQueue> allocateResult;
         if (popShareQueueNum <= 0 || popShareQueueNum >= cidAll.size() - 1) {
@@ -284,7 +281,7 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
     }
 
     private List<MessageQueue> allocate(String consumerGroup, String currentCID, List<MessageQueue> mqAll,
-        List<String> cidAll) {
+                                        List<String> cidAll) {
         if (StringUtils.isBlank(currentCID)) {
             throw new IllegalArgumentException("currentCID is empty");
         }
@@ -299,9 +296,9 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
         List<MessageQueue> result = new ArrayList<>();
         if (!cidAll.contains(currentCID)) {
             log.info("[BUG] ConsumerGroup: {} The consumerId: {} not in cidAll: {}",
-                consumerGroup,
-                currentCID,
-                cidAll);
+                    consumerGroup,
+                    currentCID,
+                    cidAll);
             return result;
         }
 
@@ -311,7 +308,7 @@ public class QueryAssignmentProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand setMessageRequestMode(ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                                  RemotingCommand request) throws RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final SetMessageRequestModeRequestBody requestBody = SetMessageRequestModeRequestBody.decode(request.getBody(), SetMessageRequestModeRequestBody.class);
 

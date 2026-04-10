@@ -17,9 +17,10 @@
 
 package org.apache.rocketmq.proxy.service.channel;
 
+import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
 public class InvocationContext implements InvocationContextInterface {
     private final CompletableFuture<RemotingCommand> response;

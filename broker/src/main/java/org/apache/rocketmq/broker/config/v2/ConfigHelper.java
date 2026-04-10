@@ -20,13 +20,14 @@ import com.alibaba.fastjson2.JSON;
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.common.config.AbstractRocksDBStorage;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.WriteBatch;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 工具类 <b>ConfigHelper</b>，提供静态方法以简化 Broker 内部重复逻辑。
@@ -47,9 +48,9 @@ public class ConfigHelper {
      * @throws RocksDBException if RocksDB raises an error
      */
     public static Optional<ByteBuf> loadDataVersion(ConfigStorage configStorage, TableId tableId)
-        throws RocksDBException {
+            throws RocksDBException {
         int keyLen = 1 /* table-prefix */ + Short.BYTES /* table-id */ + 1 /* record-prefix */
-            + ConfigStorage.DATA_VERSION_KEY_BYTES.length;
+                + ConfigStorage.DATA_VERSION_KEY_BYTES.length;
         ByteBuf keyBuf = AbstractRocksDBStorage.POOLED_ALLOCATOR.buffer(keyLen);
         try {
             keyBuf.writeByte(TablePrefix.TABLE.getValue());
@@ -68,12 +69,12 @@ public class ConfigHelper {
     }
 
     public static void stampDataVersion(WriteBatch writeBatch, TableId table, DataVersion dataVersion, long stateMachineVersion)
-        throws RocksDBException {
+            throws RocksDBException {
         // Increase data version
         dataVersion.nextVersion(stateMachineVersion);
 
         int keyLen = 1 /* table-prefix */ + Short.BYTES /* table-id */ + 1 /* record-prefix */
-            + ConfigStorage.DATA_VERSION_KEY_BYTES.length;
+                + ConfigStorage.DATA_VERSION_KEY_BYTES.length;
         ByteBuf keyBuf = AbstractRocksDBStorage.POOLED_ALLOCATOR.buffer(keyLen);
         ByteBuf valueBuf = AbstractRocksDBStorage.POOLED_ALLOCATOR.buffer(Long.BYTES * 3);
         try {

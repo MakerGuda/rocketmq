@@ -30,11 +30,7 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.controller.Controller;
 import org.apache.rocketmq.controller.helper.BrokerLifecycleListener;
 import org.apache.rocketmq.controller.impl.closure.ControllerClosure;
-import org.apache.rocketmq.controller.impl.task.BrokerCloseChannelRequest;
-import org.apache.rocketmq.controller.impl.task.CheckNotActiveBrokerRequest;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoRequest;
-import org.apache.rocketmq.controller.impl.task.GetSyncStateDataRequest;
-import org.apache.rocketmq.controller.impl.task.RaftBrokerHeartBeatEventRequest;
+import org.apache.rocketmq.controller.impl.task.*;
 import org.apache.rocketmq.remoting.ChannelEventListener;
 import org.apache.rocketmq.remoting.CommandCustomHeader;
 import org.apache.rocketmq.remoting.RemotingServer;
@@ -67,15 +63,15 @@ import java.util.concurrent.CompletableFuture;
 public class JRaftController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CONTROLLER_LOGGER_NAME);
     private final RaftGroupService raftGroupService;
-    private Node node;
     private final JRaftControllerStateMachine stateMachine;
     private final ControllerConfig controllerConfig;
     private final List<BrokerLifecycleListener> brokerLifecycleListeners;
     private final Map<PeerId/* jRaft peerId */, String/* Controller RPC Server Addr */> peerIdToAddr;
     private final NettyRemotingServer remotingServer;
+    private Node node;
 
     public JRaftController(ControllerConfig controllerConfig,
-        final ChannelEventListener channelEventListener) throws IOException {
+                           final ChannelEventListener channelEventListener) throws IOException {
         this.controllerConfig = controllerConfig;
         this.brokerLifecycleListeners = new ArrayList<>();
 
@@ -173,7 +169,7 @@ public class JRaftController implements Controller {
 
     @Override
     public CompletableFuture<RemotingCommand> alterSyncStateSet(AlterSyncStateSetRequestHeader request,
-        SyncStateSet syncStateSet) {
+                                                                SyncStateSet syncStateSet) {
         final RemotingCommand requestCommand = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_ALTER_SYNC_STATE_SET, request);
         requestCommand.setBody(syncStateSet.encode());
         return applyToJRaft(requestCommand);
@@ -235,11 +231,11 @@ public class JRaftController implements Controller {
             sb.append(peerIdToAddr.get(peer)).append(";");
         }
         return RemotingCommand.createResponseCommandWithHeader(ResponseCode.SUCCESS, new GetMetaDataResponseHeader(
-            node.getGroupId(),
-            node.getLeaderId() == null ? "" : node.getLeaderId().toString(),
-            this.peerIdToAddr.get(node.getLeaderId()),
-            node.isLeader(),
-            sb.toString()
+                node.getGroupId(),
+                node.getLeaderId() == null ? "" : node.getLeaderId().toString(),
+                this.peerIdToAddr.get(node.getLeaderId()),
+                node.isLeader(),
+                sb.toString()
         ));
     }
 

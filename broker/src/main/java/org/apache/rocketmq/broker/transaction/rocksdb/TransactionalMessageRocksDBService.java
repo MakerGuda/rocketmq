@@ -15,12 +15,7 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.broker.transaction.rocksdb;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
-import java.util.concurrent.TimeUnit;
+
 import io.netty.channel.Channel;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,8 +33,16 @@ import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequest
 import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.MessageStore;
 import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
-import org.apache.rocketmq.store.transaction.TransRocksDBRecord;
 import org.apache.rocketmq.store.transaction.TransMessageRocksDBStore;
+import org.apache.rocketmq.store.transaction.TransRocksDBRecord;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
+import java.util.concurrent.TimeUnit;
+
 import static org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage.TRANS_COLUMN_FAMILY;
 
 /**
@@ -49,13 +52,11 @@ public class TransactionalMessageRocksDBService {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
     private static final int MAX_BATCH_SIZE_FROM_ROCKSDB = 2000;
     private static final int INITIAL = 0, RUNNING = 1, SHUTDOWN = 2;
-    private volatile int state = INITIAL;
-
     private final MessageRocksDBStorage messageRocksDBStorage;
     private final TransMessageRocksDBStore transMessageRocksDBStore;
     private final MessageStore messageStore;
     private final BrokerController brokerController;
-
+    private volatile int state = INITIAL;
     private TransStatusCheckService transStatusService;
     private ExecutorService checkTranStatusTaskExecutor;
 
@@ -79,13 +80,13 @@ public class TransactionalMessageRocksDBService {
     private void initService() {
         this.transStatusService = new TransStatusCheckService();
         this.checkTranStatusTaskExecutor = ThreadUtils.newThreadPoolExecutor(
-            2,
-            5,
-            100,
-            TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(2000),
-            new ThreadFactoryImpl("Transaction-rocksdb-msg-check-thread", brokerController.getBrokerIdentity()),
-            new CallerRunsPolicy());
+                2,
+                5,
+                100,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(2000),
+                new ThreadFactoryImpl("Transaction-rocksdb-msg-check-thread", brokerController.getBrokerIdentity()),
+                new CallerRunsPolicy());
     }
 
     public void shutdown() {
@@ -250,6 +251,7 @@ public class TransactionalMessageRocksDBService {
 
     private class TransStatusCheckService extends ServiceThread {
         private final Logger log = TransactionalMessageRocksDBService.log;
+
         @Override
         public String getServiceName() {
             return getServiceThreadName() + this.getClass().getSimpleName();

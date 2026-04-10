@@ -16,13 +16,13 @@
  */
 package org.apache.rocketmq.test.schema;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 public class SchemaTest {
@@ -30,7 +30,6 @@ public class SchemaTest {
     private static final String ADD = "ADD";
     private static final String DELETE = "DELETE";
     private static final String CHANGE = "CHANGE";
-
 
 
     public void generate() throws Exception {
@@ -88,7 +87,7 @@ public class SchemaTest {
             }
         });
 
-        fileChanges.forEach((k,v) -> {
+        fileChanges.forEach((k, v) -> {
             System.out.printf("%s file %s\n", v, k);
         });
 
@@ -100,8 +99,8 @@ public class SchemaTest {
         });
 
         String message = "The schema test failed, which means you have changed the API or Protocol defined in org.apache.rocketmq.test.schema.SchemaDefiner.\n" +
-            "Please submit a pr only contains the API/Protocol changes and request at least one PMC Member's review.\n" +
-            "For original motivation of this test, please refer to https://github.com/apache/rocketmq/pull/4565 .";
+                "Please submit a pr only contains the API/Protocol changes and request at least one PMC Member's review.\n" +
+                "For original motivation of this test, please refer to https://github.com/apache/rocketmq/pull/4565 .";
         Assert.assertTrue(message, fileChanges.isEmpty() && changesByFile.isEmpty());
     }
 

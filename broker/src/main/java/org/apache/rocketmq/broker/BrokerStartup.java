@@ -16,13 +16,6 @@
  */
 package org.apache.rocketmq.broker;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -41,6 +34,14 @@ import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.srvutil.ServerUtil;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker 进程入口：解析命令行与配置文件，构建并启动 {@link BrokerController}。
@@ -74,8 +75,8 @@ public class BrokerStartup {
             controller.start();
 
             String tip = String.format("The broker[%s, %s] boot success. serializeType=%s",
-                controller.getBrokerConfig().getBrokerName(), controller.getBrokerAddr(),
-                RemotingCommand.getSerializeTypeConfigInThisServer());
+                    controller.getBrokerConfig().getBrokerName(), controller.getBrokerAddr(),
+                    RemotingCommand.getSerializeTypeConfigInThisServer());
 
             if (null != controller.getBrokerConfig().getNamesrvAddr()) {
                 tip += " and name server is " + controller.getBrokerConfig().getNamesrvAddr();
@@ -114,7 +115,7 @@ public class BrokerStartup {
     public static ConfigContext parseCmdLine(String[] args) throws Exception {
         Options options = ServerUtil.buildCommandlineOptions(new Options());
         CommandLine commandLine = ServerUtil.parseCmdLine(
-            "mqbroker", args, buildCommandlineOptions(options), new DefaultParser());
+                "mqbroker", args, buildCommandlineOptions(options), new DefaultParser());
         if (null == commandLine) {
             System.exit(-1);
         }
@@ -185,14 +186,14 @@ public class BrokerStartup {
         }
 
         return new ConfigContext.Builder()
-            .configFilePath(filePath)
-            .properties(properties)
-            .brokerConfig(brokerConfig)
-            .messageStoreConfig(messageStoreConfig)
-            .nettyServerConfig(nettyServerConfig)
-            .nettyClientConfig(nettyClientConfig)
-            .authConfig(authConfig)
-            .build();
+                .configFilePath(filePath)
+                .properties(properties)
+                .brokerConfig(brokerConfig)
+                .messageStoreConfig(messageStoreConfig)
+                .nettyServerConfig(nettyServerConfig)
+                .nettyClientConfig(nettyClientConfig)
+                .authConfig(authConfig)
+                .build();
     }
 
     /**
@@ -214,7 +215,7 @@ public class BrokerStartup {
 
         if (null == brokerConfig.getRocketmqHome()) {
             System.out.printf("Please set the %s variable in your environment " +
-                "to match the location of the RocketMQ installation", MixAll.ROCKETMQ_HOME_ENV);
+                    "to match the location of the RocketMQ installation", MixAll.ROCKETMQ_HOME_ENV);
             System.exit(-2);
         }
 
@@ -228,7 +229,7 @@ public class BrokerStartup {
                 }
             } catch (Exception e) {
                 System.out.printf("The Name Server Address[%s] illegal, please set it as follows, " +
-                    "\"127.0.0.1:9876;192.168.0.1:9876\"%n", namesrvAddr);
+                        "\"127.0.0.1:9876;192.168.0.1:9876\"%n", namesrvAddr);
                 System.exit(-3);
             }
         }
@@ -285,7 +286,7 @@ public class BrokerStartup {
         authConfig.setAuthConfigPath(messageStoreConfig.getStorePathRootDir() + File.separator + "config");
 
         final BrokerController controller = new BrokerController(
-            brokerConfig, nettyServerConfig, nettyClientConfig, messageStoreConfig, authConfig);
+                brokerConfig, nettyServerConfig, nettyClientConfig, messageStoreConfig, authConfig);
 
         // Remember all configs to prevent discard
         controller.getConfiguration().registerConfig(properties);
@@ -304,8 +305,8 @@ public class BrokerStartup {
      */
     public static Runnable buildShutdownHook(BrokerController brokerController) {
         return new Runnable() {
-            private volatile boolean hasShutdown = false;
             private final AtomicInteger shutdownTimes = new AtomicInteger(0);
+            private volatile boolean hasShutdown = false;
 
             @Override
             public void run() {
@@ -393,12 +394,12 @@ public class BrokerStartup {
             LOGGER.error("[SystemConfigFileHelper] update no thing.");
         }
 
-        public void setFile(String file) {
-            this.file = file;
-        }
-
         public String getFile() {
             return file;
+        }
+
+        public void setFile(String file) {
+            this.file = file;
         }
     }
 }

@@ -67,28 +67,28 @@ public class RegisterBrokerToControllerRequestHeader implements CommandCustomHea
         return clusterName;
     }
 
-    public String getBrokerName() {
-        return brokerName;
-    }
-
-    public Long getBrokerId() {
-        return brokerId;
-    }
-
-    public String getBrokerAddress() {
-        return brokerAddress;
-    }
-
     public void setClusterName(String clusterName) {
         this.clusterName = clusterName;
+    }
+
+    public String getBrokerName() {
+        return brokerName;
     }
 
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }
 
+    public Long getBrokerId() {
+        return brokerId;
+    }
+
     public void setBrokerId(Long brokerId) {
         this.brokerId = brokerId;
+    }
+
+    public String getBrokerAddress() {
+        return brokerAddress;
     }
 
     public void setBrokerAddress(String brokerAddress) {

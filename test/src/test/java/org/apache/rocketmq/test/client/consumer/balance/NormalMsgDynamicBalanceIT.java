@@ -17,8 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.balance;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.base.BaseConf;
@@ -32,6 +30,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -57,27 +58,27 @@ public class NormalMsgDynamicBalanceIT extends BaseConf {
         int msgSize = 400;
         RMQNormalConsumer consumer1 = getConsumer(NAMESRV_ADDR, topic, "*", new RMQNormalListener());
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         TestUtils.waitForSeconds(WAIT_TIME);
 
         producer.send(msgSize);
 
         MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(), consumer1.getListener(),
-            consumer2.getListener());
+                consumer2.getListener());
         consumer2.shutdown();
 
         producer.send(msgSize);
         Assert.assertEquals("Not all are sent", msgSize * 2, producer.getAllUndupMsgBody().size());
 
         boolean recvAll = MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(),
-            consumer1.getListener(), consumer2.getListener());
+                consumer1.getListener(), consumer2.getListener());
         assertThat(recvAll).isEqualTo(true);
 
         boolean balance = VerifyUtils.verifyBalance(msgSize,
-            VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-                consumer1.getListener().getAllUndupMsgBody()).size() - msgSize,
-            VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-                consumer2.getListener().getAllUndupMsgBody()).size());
+                VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
+                        consumer1.getListener().getAllUndupMsgBody()).size() - msgSize,
+                VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
+                        consumer2.getListener().getAllUndupMsgBody()).size());
         assertThat(balance).isEqualTo(true);
     }
 
@@ -86,15 +87,15 @@ public class NormalMsgDynamicBalanceIT extends BaseConf {
         int msgSize = 400;
         RMQNormalConsumer consumer1 = getConsumer(NAMESRV_ADDR, topic, "*", new RMQNormalListener());
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         RMQNormalConsumer consumer3 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         TestUtils.waitForSeconds(WAIT_TIME);
 
         producer.send(msgSize);
 
         MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(), consumer1.getListener(),
-            consumer2.getListener(), consumer3.getListener());
+                consumer2.getListener(), consumer3.getListener());
         consumer3.shutdown();
         TestUtils.waitForSeconds(WAIT_TIME);
 
@@ -106,14 +107,14 @@ public class NormalMsgDynamicBalanceIT extends BaseConf {
         Assert.assertEquals("Not all are sent", msgSize, producer.getAllUndupMsgBody().size());
 
         boolean recvAll = MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(),
-            consumer1.getListener(), consumer2.getListener());
+                consumer1.getListener(), consumer2.getListener());
         assertThat(recvAll).isEqualTo(true);
 
         boolean balance = VerifyUtils.verifyBalance(msgSize,
-            VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-                consumer1.getListener().getAllUndupMsgBody()).size(),
-            VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-                consumer2.getListener().getAllUndupMsgBody()).size());
+                VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
+                        consumer1.getListener().getAllUndupMsgBody()).size(),
+                VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
+                        consumer2.getListener().getAllUndupMsgBody()).size());
         assertThat(balance).isEqualTo(true);
     }
 
@@ -127,7 +128,7 @@ public class NormalMsgDynamicBalanceIT extends BaseConf {
 
         // Without message queue listener
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
 
         Assert.assertTrue(latch.await(30, TimeUnit.SECONDS));
     }

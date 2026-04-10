@@ -18,94 +18,62 @@ package org.apache.rocketmq.common.config;
 
 import com.google.common.collect.Maps;
 import io.netty.buffer.PooledByteBufAllocator;
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.ThreadUtils;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactRangeOptions;
-import org.rocksdb.CompactionOptions;
-import org.rocksdb.CompressionType;
-import org.rocksdb.DBOptions;
-import org.rocksdb.Env;
-import org.rocksdb.FlushOptions;
-import org.rocksdb.LiveFileMetaData;
-import org.rocksdb.Priority;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.Slice;
-import org.rocksdb.Statistics;
-import org.rocksdb.Status;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
+
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 
 public abstract class AbstractRocksDBStorage {
-    protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.ROCKSDB_LOGGER_NAME);
-
     /**
      * Direct Jemalloc allocator
      */
     public static final PooledByteBufAllocator POOLED_ALLOCATOR = new PooledByteBufAllocator(true);
-
     public static final byte CTRL_0 = '\u0000';
     public static final byte CTRL_1 = '\u0001';
     public static final byte CTRL_2 = '\u0002';
-
+    protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.ROCKSDB_LOGGER_NAME);
     private static final String SPACE = " | ";
-
-    protected final String dbPath;
-    protected boolean readOnly;
-    protected RocksDB db;
-    protected DBOptions options;
-
-    protected WriteOptions writeOptions;
-    protected WriteOptions ableWalWriteOptions;
-
-    protected ReadOptions readOptions;
-    protected ReadOptions totalOrderReadOptions;
-
-    protected CompactionOptions compactionOptions;
-    protected CompactRangeOptions compactRangeOptions;
-
-    protected FlushOptions flushOptions;
-
-    protected ColumnFamilyHandle defaultCFHandle;
-    protected final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
-    protected final List<ColumnFamilyHandle> cfHandles = new ArrayList<>();
-
-    protected volatile boolean loaded;
-    protected CompressionType compressionType = CompressionType.LZ4_COMPRESSION;
-    private volatile boolean closed;
-
-    private final Semaphore reloadPermit = new Semaphore(1);
-    private final ScheduledExecutorService reloadScheduler = ThreadUtils.newScheduledThreadPool(1, new ThreadFactoryImpl("RocksDBStorageReloadService_"));
-    private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(
-        1, 1, 1000 * 60, TimeUnit.MILLISECONDS,
-        new ArrayBlockingQueue<>(1),
-        new ThreadFactoryImpl("RocksDBManualCompactionService_"),
-        new ThreadPoolExecutor.DiscardOldestPolicy());
 
     static {
         RocksDB.loadLibrary();
     }
+
+    protected final String dbPath;
+    protected final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
+    protected final List<ColumnFamilyHandle> cfHandles = new ArrayList<>();
+    private final Semaphore reloadPermit = new Semaphore(1);
+    private final ScheduledExecutorService reloadScheduler = ThreadUtils.newScheduledThreadPool(1, new ThreadFactoryImpl("RocksDBStorageReloadService_"));
+    private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(
+            1, 1, 1000 * 60, TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new ThreadFactoryImpl("RocksDBManualCompactionService_"),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
+    protected boolean readOnly;
+    protected RocksDB db;
+    protected DBOptions options;
+    protected WriteOptions writeOptions;
+    protected WriteOptions ableWalWriteOptions;
+    protected ReadOptions readOptions;
+    protected ReadOptions totalOrderReadOptions;
+    protected CompactionOptions compactionOptions;
+    protected CompactRangeOptions compactRangeOptions;
+    protected FlushOptions flushOptions;
+    protected ColumnFamilyHandle defaultCFHandle;
+    protected volatile boolean loaded;
+    protected CompressionType compressionType = CompressionType.LZ4_COMPRESSION;
+    private volatile boolean closed;
 
     public AbstractRocksDBStorage(String dbPath) {
         this.dbPath = dbPath;
@@ -188,8 +156,8 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected void put(ColumnFamilyHandle cfHandle, WriteOptions writeOptions,
-        final byte[] keyBytes, final int keyLen,
-        final byte[] valueBytes, final int valueLen) throws RocksDBException {
+                       final byte[] keyBytes, final int keyLen,
+                       final byte[] valueBytes, final int valueLen) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -205,7 +173,7 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected void put(ColumnFamilyHandle cfHandle, WriteOptions writeOptions,
-        final ByteBuffer keyBB, final ByteBuffer valueBB) throws RocksDBException {
+                       final ByteBuffer keyBB, final ByteBuffer valueBB) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -247,7 +215,7 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected int get(ColumnFamilyHandle cfHandle, ReadOptions readOptions, final ByteBuffer keyBB,
-        final ByteBuffer valueBB) throws RocksDBException {
+                      final ByteBuffer valueBB) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -262,8 +230,8 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected List<byte[]> multiGet(final ReadOptions readOptions,
-        final List<ColumnFamilyHandle> columnFamilyHandleList,
-        final List<byte[]> keys) throws RocksDBException {
+                                    final List<ColumnFamilyHandle> columnFamilyHandleList,
+                                    final List<byte[]> keys) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -278,7 +246,7 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected void delete(ColumnFamilyHandle cfHandle, WriteOptions writeOptions,
-        byte[] keyBytes) throws RocksDBException {
+                          byte[] keyBytes) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -293,7 +261,7 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected void delete(ColumnFamilyHandle cfHandle, WriteOptions writeOptions, ByteBuffer keyBB)
-        throws RocksDBException {
+            throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -308,7 +276,7 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected void rangeDelete(ColumnFamilyHandle cfHandle, WriteOptions writeOptions, final byte[] startKey,
-        final byte[] endKey) throws RocksDBException {
+                               final byte[] endKey) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -324,7 +292,7 @@ public abstract class AbstractRocksDBStorage {
     }
 
     public void iterate(ColumnFamilyHandle columnFamilyHandle, final byte[] prefix, BiConsumer<byte[], byte[]> callback)
-        throws RocksDBException {
+            throws RocksDBException {
 
         if (ArrayUtils.isEmpty(prefix)) {
             throw new RocksDBException("Prefix is not allowed to be null");
@@ -334,11 +302,11 @@ public abstract class AbstractRocksDBStorage {
     }
 
     public void iterate(ColumnFamilyHandle columnFamilyHandle, byte[] prefix,
-        final byte[] start, final byte[] end, BiConsumer<byte[], byte[]> callback) throws RocksDBException {
+                        final byte[] start, final byte[] end, BiConsumer<byte[], byte[]> callback) throws RocksDBException {
 
         if (ArrayUtils.isEmpty(prefix) && ArrayUtils.isEmpty(start)) {
             throw new RocksDBException("To determine lower boundary, prefix and start may not be null at the same "
-                + "time.");
+                    + "time.");
         }
 
         if (ArrayUtils.isEmpty(prefix) && ArrayUtils.isEmpty(end)) {
@@ -707,7 +675,7 @@ public abstract class AbstractRocksDBStorage {
             String memTableMemUsage = this.db.getProperty("rocksdb.cur-size-all-mem-tables");
             String blocksPinnedByIteratorMemUsage = this.db.getProperty("rocksdb.block-cache-pinned-usage");
             logger.info("RocksDB Memory Usage: BlockCache: {}, IndexesAndFilterBlock: {}, MemTable: {}, BlocksPinnedByIterator: {}",
-                blockCacheMemUsage, indexesAndFilterBlockMemUsage, memTableMemUsage, blocksPinnedByIteratorMemUsage);
+                    blockCacheMemUsage, indexesAndFilterBlockMemUsage, memTableMemUsage, blocksPinnedByIteratorMemUsage);
 
             // Log file metadata by level
             List<LiveFileMetaData> liveFileMetaDataList = this.getCompactionStatus();
@@ -718,12 +686,12 @@ public abstract class AbstractRocksDBStorage {
             for (LiveFileMetaData metaData : liveFileMetaDataList) {
                 StringBuilder sb = map.computeIfAbsent(metaData.level(), k -> new StringBuilder(256));
                 sb.append(new String(metaData.columnFamilyName(), StandardCharsets.UTF_8)).append(SPACE).
-                    append(metaData.fileName()).append(SPACE).
-                    append("file-size: ").append(metaData.size()).append(SPACE).
-                    append("number-of-entries: ").append(metaData.numEntries()).append(SPACE).
-                    append("file-read-times: ").append(metaData.numReadsSampled()).append(SPACE).
-                    append("deletions: ").append(metaData.numDeletions()).append(SPACE).
-                    append("being-compacted: ").append(metaData.beingCompacted()).append("\n");
+                        append(metaData.fileName()).append(SPACE).
+                        append("file-size: ").append(metaData.size()).append(SPACE).
+                        append("number-of-entries: ").append(metaData.numEntries()).append(SPACE).
+                        append("file-read-times: ").append(metaData.numReadsSampled()).append(SPACE).
+                        append("deletions: ").append(metaData.numDeletions()).append(SPACE).
+                        append("being-compacted: ").append(metaData.beingCompacted()).append("\n");
             }
             map.forEach((key, value) -> logger.info("level: {}\n{}", key, value.toString()));
         } catch (Exception ignored) {

@@ -32,7 +32,7 @@ public class SessionCredentials {
     public static final String SECURITY_TOKEN = "SecurityToken";
 
     public static final String KEY_FILE = System.getProperty("rocketmq.client.keyFile",
-        System.getProperty("user.home") + File.separator + "key");
+            System.getProperty("user.home") + File.separator + "key");
 
     private String accessKey;
     private String secretKey;
@@ -156,6 +156,6 @@ public class SessionCredentials {
     @Override
     public String toString() {
         return "SessionCredentials [accessKey=" + accessKey + ", secretKey=" + secretKey + ", signature="
-            + signature + ", SecurityToken=" + securityToken + "]";
+                + signature + ", SecurityToken=" + securityToken + "]";
     }
 }

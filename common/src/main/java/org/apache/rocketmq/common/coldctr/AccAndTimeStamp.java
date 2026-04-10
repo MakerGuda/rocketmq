@@ -55,9 +55,9 @@ public class AccAndTimeStamp {
     @Override
     public String toString() {
         return "AccAndTimeStamp{" +
-            "coldAcc=" + coldAcc +
-            ", lastColdReadTimeMills=" + lastColdReadTimeMills +
-            ", createTimeMills=" + createTimeMills +
-            '}';
+                "coldAcc=" + coldAcc +
+                ", lastColdReadTimeMills=" + lastColdReadTimeMills +
+                ", createTimeMills=" + createTimeMills +
+                '}';
     }
 }

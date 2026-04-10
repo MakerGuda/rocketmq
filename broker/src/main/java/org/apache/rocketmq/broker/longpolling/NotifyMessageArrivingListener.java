@@ -17,10 +17,11 @@
 
 package org.apache.rocketmq.broker.longpolling;
 
-import java.util.Map;
 import org.apache.rocketmq.broker.processor.NotificationProcessor;
 import org.apache.rocketmq.broker.processor.PopMessageProcessor;
 import org.apache.rocketmq.store.MessageArrivingListener;
+
+import java.util.Map;
 
 /**
  * 监听器 <b>NotifyMessageArrivingListener</b>，在注册点被触发时接收事件并执行回调逻辑。
@@ -41,10 +42,10 @@ public class NotifyMessageArrivingListener implements MessageArrivingListener {
                          long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
 
         this.pullRequestHoldService.notifyMessageArriving(
-            topic, queueId, logicOffset, tagsCode, msgStoreTime, filterBitMap, properties);
+                topic, queueId, logicOffset, tagsCode, msgStoreTime, filterBitMap, properties);
         this.popMessageProcessor.notifyMessageArriving(
-            topic, queueId, logicOffset, tagsCode, msgStoreTime, filterBitMap, properties);
+                topic, queueId, logicOffset, tagsCode, msgStoreTime, filterBitMap, properties);
         this.notificationProcessor.notifyMessageArriving(
-            topic, queueId, logicOffset, tagsCode, msgStoreTime, filterBitMap, properties);
+                topic, queueId, logicOffset, tagsCode, msgStoreTime, filterBitMap, properties);
     }
 }

@@ -23,12 +23,7 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
-import org.rocksdb.CompressionType;
-import org.rocksdb.FlushOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.Statistics;
-import org.rocksdb.WriteBatch;
+import org.rocksdb.*;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -38,27 +33,23 @@ import java.util.function.BiConsumer;
  * <b>RocksDBConfigManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
  */
 public class RocksDBConfigManager {
-    protected static final Logger BROKER_LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
     public static final Charset CHARSET = StandardCharsets.UTF_8;
-
-    public ConfigRocksDBStorage configRocksDBStorage = null;
-    private FlushOptions flushOptions = null;
-    private volatile long lastFlushMemTableMicroSecond = 0;
+    public static final byte[] KV_DATA_VERSION_COLUMN_FAMILY_NAME = "kvDataVersion".getBytes(CHARSET);
+    public static final byte[] KV_DATA_VERSION_KEY = "kvDataVersionKey".getBytes(CHARSET);
+    protected static final Logger BROKER_LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final String filePath;
     private final long memTableFlushInterval;
     private final CompressionType compressionType;
-    private DataVersion kvDataVersion = new DataVersion();
-
-    public static final byte[] KV_DATA_VERSION_COLUMN_FAMILY_NAME = "kvDataVersion".getBytes(CHARSET);
-    public static final byte[] KV_DATA_VERSION_KEY = "kvDataVersionKey".getBytes(CHARSET);
-
     private final String defaultCF;
     private final String versionCF;
+    public ConfigRocksDBStorage configRocksDBStorage = null;
+    private FlushOptions flushOptions = null;
+    private volatile long lastFlushMemTableMicroSecond = 0;
+    private DataVersion kvDataVersion = new DataVersion();
 
 
     public RocksDBConfigManager(String filePath, long memTableFlushInterval, CompressionType compressionType,
-        String defaultCF, String versionCF) {
+                                String defaultCF, String versionCF) {
         this.filePath = filePath;
         this.memTableFlushInterval = memTableFlushInterval;
         this.compressionType = compressionType;
@@ -165,7 +156,7 @@ public class RocksDBConfigManager {
     public void updateKvDataVersion() throws Exception {
         kvDataVersion.nextVersion();
         this.configRocksDBStorage.put(versionCF, KV_DATA_VERSION_KEY, KV_DATA_VERSION_KEY.length,
-            JSON.toJSONString(kvDataVersion).getBytes(StandardCharsets.UTF_8));
+                JSON.toJSONString(kvDataVersion).getBytes(StandardCharsets.UTF_8));
     }
 
     public DataVersion getKvDataVersion() {

@@ -41,6 +41,41 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
     private static final String TOPICS_JSON_CONFIG = "topics";
     private static final String SUBSCRIPTION_GROUP_JSON_CONFIG = "subscriptionGroups";
 
+    private static void handleExportMetadata(ConfigRocksDBStorage kvStore, String configType, boolean jsonEnable) {
+        if (jsonEnable) {
+            final Map<String, JSONObject> jsonConfig = new HashMap<>();
+            final Map<String, JSONObject> configTable = new HashMap<>();
+            iterateKvStore(kvStore, (key, value) -> {
+                        final String configKey = new String(key, DataConverter.CHARSET_UTF8);
+                        final String configValue = new String(value, DataConverter.CHARSET_UTF8);
+                        final JSONObject jsonObject = JSONObject.parseObject(configValue);
+                        configTable.put(configKey, jsonObject);
+                    }
+            );
+
+            jsonConfig.put(configType.equalsIgnoreCase(TOPICS_JSON_CONFIG) ? "topicConfigTable" : "subscriptionGroupTable",
+                    (JSONObject) JSON.toJSON(configTable));
+            final String jsonConfigStr = JSONObject.toJSONString(jsonConfig, JSONWriter.Feature.PrettyFormat);
+            System.out.print(jsonConfigStr + "\n");
+        } else {
+            AtomicLong count = new AtomicLong(0);
+            iterateKvStore(kvStore, (key, value) -> {
+                final String configKey = new String(key, DataConverter.CHARSET_UTF8);
+                final String configValue = new String(value, DataConverter.CHARSET_UTF8);
+                System.out.printf("%d, Key: %s, Value: %s%n", count.incrementAndGet(), configKey, configValue);
+            });
+        }
+    }
+
+    private static void iterateKvStore(ConfigRocksDBStorage kvStore, BiConsumer<byte[], byte[]> biConsumer) {
+        try (RocksIterator iterator = kvStore.iterator()) {
+            iterator.seekToFirst();
+            for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+                biConsumer.accept(iterator.key(), iterator.value());
+            }
+        }
+    }
+
     @Override
     public String commandName() {
         return "exportMetadataInRocksDB";
@@ -54,17 +89,17 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
     @Override
     public Options buildCommandlineOptions(Options options) {
         Option pathOption = new Option("p", "path", true,
-            "Absolute path for the metadata directory");
+                "Absolute path for the metadata directory");
         pathOption.setRequired(true);
         options.addOption(pathOption);
 
         Option configTypeOption = new Option("t", "configType", true, "Name of kv config, e.g. " +
-            "topics/subscriptionGroups");
+                "topics/subscriptionGroups");
         configTypeOption.setRequired(true);
         options.addOption(configTypeOption);
 
         Option jsonEnableOption = new Option("j", "jsonEnable", true,
-            "Json format enable, Default: false");
+                "Json format enable, Default: false");
         jsonEnableOption.setRequired(false);
         options.addOption(jsonEnableOption);
 
@@ -93,7 +128,7 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
 
         ConfigRocksDBStorage kvStore = new ConfigRocksDBStorage(path, true /* readOnly */);
         if (!kvStore.start()) {
-            System.out.printf("RocksDB load error, path=%s\n" , path);
+            System.out.printf("RocksDB load error, path=%s\n", path);
             return;
         }
 
@@ -105,41 +140,6 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
             }
         } finally {
             kvStore.shutdown();
-        }
-    }
-
-    private static void handleExportMetadata(ConfigRocksDBStorage kvStore, String configType, boolean jsonEnable) {
-        if (jsonEnable) {
-            final Map<String, JSONObject> jsonConfig = new HashMap<>();
-            final Map<String, JSONObject> configTable = new HashMap<>();
-            iterateKvStore(kvStore, (key, value) -> {
-                    final String configKey = new String(key, DataConverter.CHARSET_UTF8);
-                    final String configValue = new String(value, DataConverter.CHARSET_UTF8);
-                    final JSONObject jsonObject = JSONObject.parseObject(configValue);
-                    configTable.put(configKey, jsonObject);
-                }
-            );
-
-            jsonConfig.put(configType.equalsIgnoreCase(TOPICS_JSON_CONFIG) ? "topicConfigTable" : "subscriptionGroupTable",
-                (JSONObject) JSON.toJSON(configTable));
-            final String jsonConfigStr = JSONObject.toJSONString(jsonConfig, JSONWriter.Feature.PrettyFormat);
-            System.out.print(jsonConfigStr + "\n");
-        } else {
-            AtomicLong count = new AtomicLong(0);
-            iterateKvStore(kvStore, (key, value) -> {
-                final String configKey = new String(key, DataConverter.CHARSET_UTF8);
-                final String configValue = new String(value, DataConverter.CHARSET_UTF8);
-                System.out.printf("%d, Key: %s, Value: %s%n", count.incrementAndGet(), configKey, configValue);
-            });
-        }
-    }
-
-    private static void iterateKvStore(ConfigRocksDBStorage kvStore, BiConsumer<byte[], byte[]> biConsumer) {
-        try (RocksIterator iterator = kvStore.iterator()) {
-            iterator.seekToFirst();
-            for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
-                biConsumer.accept(iterator.key(), iterator.value());
-            }
         }
     }
 }

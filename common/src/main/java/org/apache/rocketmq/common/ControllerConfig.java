@@ -16,16 +16,16 @@
  */
 package org.apache.rocketmq.common;
 
-import java.io.File;
-import java.util.Arrays;
 import org.apache.rocketmq.common.metrics.MetricsExporterType;
 
+import java.io.File;
+import java.util.Arrays;
+
 public class ControllerConfig {
-    private String rocketmqHome = MixAll.ROCKETMQ_HOME_DIR;
-    private String configStorePath = System.getProperty("user.home") + File.separator + "controller" + File.separator + "controller.properties";
     public static final String DLEDGER_CONTROLLER = "DLedger";
     public static final String JRAFT_CONTROLLER = "jRaft";
-
+    private String rocketmqHome = MixAll.ROCKETMQ_HOME_DIR;
+    private String configStorePath = System.getProperty("user.home") + File.separator + "controller" + File.separator + "controller.properties";
     private JraftConfig jraftConfig = new JraftConfig();
 
     private String controllerType = DLEDGER_CONTROLLER;
@@ -225,8 +225,8 @@ public class ControllerConfig {
 
     public String getDLedgerAddress() {
         return Arrays.stream(this.controllerDLegerPeers.split(";"))
-            .filter(x -> this.controllerDLegerSelfId.equals(x.split("-")[0]))
-            .map(x -> x.split("-")[1]).findFirst().get();
+                .filter(x -> this.controllerDLegerSelfId.equals(x.split("-")[0]))
+                .map(x -> x.split("-")[1]).findFirst().get();
     }
 
     public MetricsExporterType getMetricsExporterType() {

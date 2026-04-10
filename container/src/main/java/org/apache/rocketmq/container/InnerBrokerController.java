@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.container;
 
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.out.BrokerOuterAPI;
@@ -30,14 +28,17 @@ import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.MessageStore;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 public class InnerBrokerController extends BrokerController {
     protected BrokerContainer brokerContainer;
 
     public InnerBrokerController(
-        final BrokerContainer brokerContainer,
-        final BrokerConfig brokerConfig,
-        final MessageStoreConfig messageStoreConfig,
-        final AuthConfig authConfig
+            final BrokerContainer brokerContainer,
+            final BrokerConfig brokerConfig,
+            final MessageStoreConfig messageStoreConfig,
+            final AuthConfig authConfig
     ) {
         super(brokerConfig, messageStoreConfig, authConfig);
         this.brokerContainer = brokerContainer;

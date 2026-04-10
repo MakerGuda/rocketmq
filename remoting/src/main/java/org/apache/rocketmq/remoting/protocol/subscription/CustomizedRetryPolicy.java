@@ -18,6 +18,7 @@
 package org.apache.rocketmq.remoting.protocol.subscription;
 
 import com.google.common.base.MoreObjects;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,25 +28,25 @@ import java.util.concurrent.TimeUnit;
  */
 public class CustomizedRetryPolicy implements RetryPolicy {
     // 1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
-    private long[] next = new long[] {
-        TimeUnit.SECONDS.toMillis(1),
-        TimeUnit.SECONDS.toMillis(5),
-        TimeUnit.SECONDS.toMillis(10),
-        TimeUnit.SECONDS.toMillis(30),
-        TimeUnit.MINUTES.toMillis(1),
-        TimeUnit.MINUTES.toMillis(2),
-        TimeUnit.MINUTES.toMillis(3),
-        TimeUnit.MINUTES.toMillis(4),
-        TimeUnit.MINUTES.toMillis(5),
-        TimeUnit.MINUTES.toMillis(6),
-        TimeUnit.MINUTES.toMillis(7),
-        TimeUnit.MINUTES.toMillis(8),
-        TimeUnit.MINUTES.toMillis(9),
-        TimeUnit.MINUTES.toMillis(10),
-        TimeUnit.MINUTES.toMillis(20),
-        TimeUnit.MINUTES.toMillis(30),
-        TimeUnit.HOURS.toMillis(1),
-        TimeUnit.HOURS.toMillis(2)
+    private long[] next = new long[]{
+            TimeUnit.SECONDS.toMillis(1),
+            TimeUnit.SECONDS.toMillis(5),
+            TimeUnit.SECONDS.toMillis(10),
+            TimeUnit.SECONDS.toMillis(30),
+            TimeUnit.MINUTES.toMillis(1),
+            TimeUnit.MINUTES.toMillis(2),
+            TimeUnit.MINUTES.toMillis(3),
+            TimeUnit.MINUTES.toMillis(4),
+            TimeUnit.MINUTES.toMillis(5),
+            TimeUnit.MINUTES.toMillis(6),
+            TimeUnit.MINUTES.toMillis(7),
+            TimeUnit.MINUTES.toMillis(8),
+            TimeUnit.MINUTES.toMillis(9),
+            TimeUnit.MINUTES.toMillis(10),
+            TimeUnit.MINUTES.toMillis(20),
+            TimeUnit.MINUTES.toMillis(30),
+            TimeUnit.HOURS.toMillis(1),
+            TimeUnit.HOURS.toMillis(2)
     };
 
     public CustomizedRetryPolicy() {
@@ -66,8 +67,8 @@ public class CustomizedRetryPolicy implements RetryPolicy {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("next", next)
-            .toString();
+                .add("next", next)
+                .toString();
     }
 
     /**

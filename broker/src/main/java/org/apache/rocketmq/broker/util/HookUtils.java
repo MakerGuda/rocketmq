@@ -16,20 +16,12 @@
  */
 package org.apache.rocketmq.broker.util;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.schedule.ScheduleMessageService;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.QueueTypeUtils;
@@ -39,6 +31,11 @@ import org.apache.rocketmq.store.PutMessageResult;
 import org.apache.rocketmq.store.PutMessageStatus;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.timer.TimerMessageStore;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 消息写入路径上的通用校验与变换工具：在真正调用 {@link org.apache.rocketmq.store.MessageStore} 落盘前，
@@ -62,7 +59,9 @@ public class HookUtils {
      * The actual limitation is the number of bytes in the path and file components,
      * which might correspond to an equal number of characters.
      */
-    /** Topic 名称最大长度（字节级约束与常见文件系统文件名上限对齐，见上方英文说明）。 */
+    /**
+     * Topic 名称最大长度（字节级约束与常见文件系统文件名上限对齐，见上方英文说明）。
+     */
     private static final Integer MAX_TOPIC_LENGTH = 255;
 
     /**
@@ -100,13 +99,13 @@ public class HookUtils {
         boolean retryTopic = msg.getTopic() != null && msg.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX);
         if (!retryTopic && topicData.length > Byte.MAX_VALUE) {
             LOG.warn("putMessage message topic[{}] length too long {}, but it is not supported by broker",
-                msg.getTopic(), topicData.length);
+                    msg.getTopic(), topicData.length);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
 
         if (topicData.length > MAX_TOPIC_LENGTH) {
             LOG.warn("putMessage message topic[{}] length too long {}, but it is not supported by broker",
-                msg.getTopic(), topicData.length);
+                    msg.getTopic(), topicData.length);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
 
@@ -126,7 +125,7 @@ public class HookUtils {
      */
     public static PutMessageResult checkInnerBatch(BrokerController brokerController, final MessageExt msg) {
         if (msg.getProperties().containsKey(MessageConst.PROPERTY_INNER_NUM)
-            && !MessageSysFlag.check(msg.getSysFlag(), MessageSysFlag.INNER_BATCH_FLAG)) {
+                && !MessageSysFlag.check(msg.getSysFlag(), MessageSysFlag.INNER_BATCH_FLAG)) {
             LOG.warn("[BUG]The message had property {} but is not an inner batch", MessageConst.PROPERTY_INNER_NUM);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
@@ -146,10 +145,10 @@ public class HookUtils {
      * 处理定时轮、延迟等级（schedule topic）等与时间相关的消息变换；在事务未提交类消息上也会按规则分支。
      */
     public static PutMessageResult handleScheduleMessage(BrokerController brokerController,
-        final MessageExtBrokerInner msg) {
+                                                         final MessageExtBrokerInner msg) {
         final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());
         if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE
-            || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
+                || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
             if (!isRolledTimerMessage(msg)) {
                 if (checkIfTimerMessage(msg)) {
                     if (!brokerController.getMessageStoreConfig().isTimerWheelEnable()) {
@@ -196,7 +195,7 @@ public class HookUtils {
     }
 
     private static PutMessageResult transformTimerMessage(BrokerController brokerController,
-        MessageExtBrokerInner msg) {
+                                                          MessageExtBrokerInner msg) {
         //do transform
         int delayLevel = msg.getDelayTimeLevel();
         long deliverMs;
@@ -254,7 +253,7 @@ public class HookUtils {
     }
 
     public static boolean sendMessageBack(BrokerController brokerController, List<MessageExt> msgList,
-        String brokerName, String brokerAddr) {
+                                          String brokerName, String brokerAddr) {
         try {
             Iterator<MessageExt> it = msgList.iterator();
             while (it.hasNext()) {

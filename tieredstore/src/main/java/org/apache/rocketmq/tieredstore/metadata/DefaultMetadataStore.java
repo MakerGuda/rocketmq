@@ -100,18 +100,18 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
     public void decode(String jsonString) {
         if (jsonString != null) {
             TieredMetadataSerializeWrapper dataWrapper =
-                TieredMetadataSerializeWrapper.fromJson(jsonString, TieredMetadataSerializeWrapper.class);
+                    TieredMetadataSerializeWrapper.fromJson(jsonString, TieredMetadataSerializeWrapper.class);
             if (dataWrapper != null) {
                 this.topicSequenceNumber.set(dataWrapper.getTopicSerialNumber().get());
                 this.topicMetadataTable.putAll(dataWrapper.getTopicMetadataTable());
                 dataWrapper.getQueueMetadataTable().forEach(
-                    (topic, entry) -> this.queueMetadataTable.put(topic, new ConcurrentHashMap<>(entry)));
+                        (topic, entry) -> this.queueMetadataTable.put(topic, new ConcurrentHashMap<>(entry)));
                 dataWrapper.getCommitLogFileSegmentTable().forEach(
-                    (filePath, entry) -> this.commitLogFileSegmentTable.put(filePath, new ConcurrentHashMap<>(entry)));
+                        (filePath, entry) -> this.commitLogFileSegmentTable.put(filePath, new ConcurrentHashMap<>(entry)));
                 dataWrapper.getConsumeQueueFileSegmentTable().forEach(
-                    (filePath, entry) -> this.consumeQueueFileSegmentTable.put(filePath, new ConcurrentHashMap<>(entry)));
+                        (filePath, entry) -> this.consumeQueueFileSegmentTable.put(filePath, new ConcurrentHashMap<>(entry)));
                 dataWrapper.getIndexFileSegmentTable().forEach(
-                    (filePath, entry) -> this.indexFileSegmentTable.put(filePath, new ConcurrentHashMap<>(entry)));
+                        (filePath, entry) -> this.indexFileSegmentTable.put(filePath, new ConcurrentHashMap<>(entry)));
             }
         }
     }
@@ -176,7 +176,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
         }
         QueueMetadata metadata = new QueueMetadata(mq, baseOffset, baseOffset);
         queueMetadataTable.computeIfAbsent(mq.getTopic(), topic -> new ConcurrentHashMap<>())
-            .put(mq.getQueueId(), metadata);
+                .put(mq.getQueueId(), metadata);
         persist();
         return metadata;
     }
@@ -204,7 +204,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
 
     @VisibleForTesting
     public Map<String, ConcurrentMap<Long, FileSegmentMetadata>> getTableByFileType(
-        FileSegmentType fileType) {
+            FileSegmentType fileType) {
 
         switch (fileType) {
             case COMMIT_LOG:
@@ -219,18 +219,18 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
 
     @Override
     public FileSegmentMetadata getFileSegment(
-        String basePath, FileSegmentType fileType, long baseOffset) {
+            String basePath, FileSegmentType fileType, long baseOffset) {
 
         return Optional.ofNullable(this.getTableByFileType(fileType).get(basePath))
-            .map(fileMap -> fileMap.get(baseOffset)).orElse(null);
+                .map(fileMap -> fileMap.get(baseOffset)).orElse(null);
     }
 
     @Override
     public void updateFileSegment(FileSegmentMetadata fileSegmentMetadata) {
         FileSegmentType fileType =
-            FileSegmentType.valueOf(fileSegmentMetadata.getType());
+                FileSegmentType.valueOf(fileSegmentMetadata.getType());
         ConcurrentMap<Long, FileSegmentMetadata> offsetTable = this.getTableByFileType(fileType)
-            .computeIfAbsent(fileSegmentMetadata.getPath(), s -> new ConcurrentHashMap<>());
+                .computeIfAbsent(fileSegmentMetadata.getPath(), s -> new ConcurrentHashMap<>());
         offsetTable.put(fileSegmentMetadata.getBaseOffset(), fileSegmentMetadata);
         persist();
     }
@@ -238,17 +238,17 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
     @Override
     public void iterateFileSegment(Consumer<FileSegmentMetadata> callback) {
         commitLogFileSegmentTable
-            .forEach((filePath, map) -> map.forEach((offset, metadata) -> callback.accept(metadata)));
+                .forEach((filePath, map) -> map.forEach((offset, metadata) -> callback.accept(metadata)));
         consumeQueueFileSegmentTable
-            .forEach((filePath, map) -> map.forEach((offset, metadata) -> callback.accept(metadata)));
+                .forEach((filePath, map) -> map.forEach((offset, metadata) -> callback.accept(metadata)));
         indexFileSegmentTable
-            .forEach((filePath, map) -> map.forEach((offset, metadata) -> callback.accept(metadata)));
+                .forEach((filePath, map) -> map.forEach((offset, metadata) -> callback.accept(metadata)));
     }
 
     @Override
     public void iterateFileSegment(String basePath, FileSegmentType fileType, Consumer<FileSegmentMetadata> callback) {
         this.getTableByFileType(fileType).getOrDefault(basePath, new ConcurrentHashMap<>())
-            .forEach((offset, metadata) -> callback.accept(metadata));
+                .forEach((offset, metadata) -> callback.accept(metadata));
     }
 
     @Override
@@ -314,7 +314,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
         }
 
         public void setTopicMetadataTable(
-            ConcurrentMap<String, TopicMetadata> topicMetadataTable) {
+                ConcurrentMap<String, TopicMetadata> topicMetadataTable) {
             this.topicMetadataTable = topicMetadataTable;
         }
 
@@ -323,7 +323,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
         }
 
         public void setQueueMetadataTable(
-            ConcurrentMap<String, ConcurrentMap<Integer, QueueMetadata>> queueMetadataTable) {
+                ConcurrentMap<String, ConcurrentMap<Integer, QueueMetadata>> queueMetadataTable) {
             this.queueMetadataTable = queueMetadataTable;
         }
 
@@ -332,7 +332,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
         }
 
         public void setCommitLogFileSegmentTable(
-            ConcurrentMap<String, ConcurrentMap<Long, FileSegmentMetadata>> commitLogFileSegmentTable) {
+                ConcurrentMap<String, ConcurrentMap<Long, FileSegmentMetadata>> commitLogFileSegmentTable) {
             this.commitLogFileSegmentTable = commitLogFileSegmentTable;
         }
 
@@ -341,7 +341,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
         }
 
         public void setConsumeQueueFileSegmentTable(
-            ConcurrentMap<String, ConcurrentMap<Long, FileSegmentMetadata>> consumeQueueFileSegmentTable) {
+                ConcurrentMap<String, ConcurrentMap<Long, FileSegmentMetadata>> consumeQueueFileSegmentTable) {
             this.consumeQueueFileSegmentTable = consumeQueueFileSegmentTable;
         }
 
@@ -350,7 +350,7 @@ public class DefaultMetadataStore extends ConfigManager implements MetadataStore
         }
 
         public void setIndexFileSegmentTable(
-            ConcurrentMap<String, ConcurrentMap<Long, FileSegmentMetadata>> indexFileSegmentTable) {
+                ConcurrentMap<String, ConcurrentMap<Long, FileSegmentMetadata>> indexFileSegmentTable) {
             this.indexFileSegmentTable = indexFileSegmentTable;
         }
     }

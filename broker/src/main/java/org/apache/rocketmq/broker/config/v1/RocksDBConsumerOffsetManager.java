@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * <b>RocksDBConsumerOffsetManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
- * 
+ * <p>
  * 继承关系：<code>ConsumerOffsetManager</code>。
  */
 public class RocksDBConsumerOffsetManager extends ConsumerOffsetManager {
@@ -47,27 +47,26 @@ public class RocksDBConsumerOffsetManager extends ConsumerOffsetManager {
 
     private static final String VERSION_COLUMN_FAMILY = "consumerOffsetVersion";
     private static final String OFFSET_COLUMN_FAMILY = "consumerOffset";
-
-    protected transient RocksDBConfigManager rocksDBConfigManager;
     private final boolean useSingleRocksDBForAllConfigs;
     private final String storePathRootDir;
+    protected transient RocksDBConfigManager rocksDBConfigManager;
 
     public RocksDBConsumerOffsetManager(BrokerController brokerController, boolean useSingleRocksDB,
-        String storePathRootDir) {
+                                        String storePathRootDir) {
         super(brokerController);
 
         this.useSingleRocksDBForAllConfigs = useSingleRocksDB;
         this.storePathRootDir = StringUtils.isBlank(storePathRootDir) ?
-            brokerController.getMessageStoreConfig().getStorePathRootDir() : storePathRootDir;
+                brokerController.getMessageStoreConfig().getStorePathRootDir() : storePathRootDir;
 
         long flushInterval = brokerController.getMessageStoreConfig().getMemTableFlushIntervalMs();
         CompressionType compressionType =
-            CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
+                CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
         String rocksDBPath = rocksdbConfigFilePath(storePathRootDir, useSingleRocksDB);
 
         this.rocksDBConfigManager = useSingleRocksDB ? new RocksDBConfigManager(rocksDBPath, flushInterval,
-            compressionType, OFFSET_COLUMN_FAMILY, VERSION_COLUMN_FAMILY) : new RocksDBConfigManager(rocksDBPath,
-            flushInterval, compressionType);
+                compressionType, OFFSET_COLUMN_FAMILY, VERSION_COLUMN_FAMILY) : new RocksDBConfigManager(rocksDBPath,
+                flushInterval, compressionType);
     }
 
     public RocksDBConsumerOffsetManager(BrokerController brokerController, boolean useSingleRocksDBForAllConfigs) {
@@ -226,7 +225,7 @@ public class RocksDBConsumerOffsetManager extends ConsumerOffsetManager {
         // Check if separate RocksDB exists
         if (!UtilAll.isPathExists(separateRocksDBPath)) {
             log.info("Separate RocksDB for consumer offsets does not exist at {}, no migration needed",
-                separateRocksDBPath);
+                    separateRocksDBPath);
             return;
         }
 
@@ -237,10 +236,10 @@ public class RocksDBConsumerOffsetManager extends ConsumerOffsetManager {
         try {
             long memTableFlushIntervalMs = brokerController.getMessageStoreConfig().getMemTableFlushIntervalMs();
             org.rocksdb.CompressionType compressionType =
-                org.rocksdb.CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
+                    org.rocksdb.CompressionType.getCompressionType(brokerController.getMessageStoreConfig().getRocksdbCompressionType());
 
             separateRocksDBConfigManager = new RocksDBConfigManager(separateRocksDBPath, memTableFlushIntervalMs,
-                compressionType);
+                    compressionType);
 
             // Initialize in read-only mode
             if (!separateRocksDBConfigManager.init(true)) {

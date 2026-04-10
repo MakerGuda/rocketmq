@@ -108,13 +108,13 @@ public class ConsumerSendMsgBackRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("offset", offset)
-            .add("group", group)
-            .add("delayLevel", delayLevel)
-            .add("originMsgId", originMsgId)
-            .add("originTopic", originTopic)
-            .add("unitMode", unitMode)
-            .add("maxReconsumeTimes", maxReconsumeTimes)
-            .toString();
+                .add("offset", offset)
+                .add("group", group)
+                .add("delayLevel", delayLevel)
+                .add("originMsgId", originMsgId)
+                .add("originTopic", originTopic)
+                .add("unitMode", unitMode)
+                .add("maxReconsumeTimes", maxReconsumeTimes)
+                .toString();
     }
 }

@@ -50,9 +50,9 @@ import java.util.concurrent.TimeUnit;
 
 public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
 
+    protected final Map<String /* group @ channelId as longText */, RemoteChannel> remoteChannelMap = new ConcurrentHashMap<>();
     protected ThreadPoolExecutor threadPoolExecutor;
     protected ConsumerManager consumerManager;
-    protected final Map<String /* group @ channelId as longText */, RemoteChannel> remoteChannelMap = new ConcurrentHashMap<>();
     protected String localProxyId;
 
     public HeartbeatSyncer(TopicRouteService topicRouteService, AdminService adminService,
@@ -63,15 +63,19 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
         this.init();
     }
 
+    private static String buildKey(String group, Channel channel) {
+        return group + "@" + channel.id().asLongText();
+    }
+
     protected void init() {
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         this.threadPoolExecutor = ThreadPoolMonitor.createAndMonitor(
-            proxyConfig.getHeartbeatSyncerThreadPoolNums(),
-            proxyConfig.getHeartbeatSyncerThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "HeartbeatSyncer",
-            proxyConfig.getHeartbeatSyncerThreadPoolQueueCapacity()
+                proxyConfig.getHeartbeatSyncerThreadPoolNums(),
+                proxyConfig.getHeartbeatSyncerThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "HeartbeatSyncer",
+                proxyConfig.getHeartbeatSyncerThreadPoolQueueCapacity()
         );
         this.consumerManager.appendConsumerIdsChangeListener(new ConsumerIdsChangeListener() {
             @Override
@@ -105,8 +109,8 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
     }
 
     public void onConsumerRegister(String consumerGroup, ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
-        Set<SubscriptionData> subList) {
+                                   ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
+                                   Set<SubscriptionData> subList) {
         if (clientChannelInfo == null || ChannelHelper.isRemote(clientChannelInfo.getChannel())) {
             return;
         }
@@ -118,16 +122,16 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
                         return;
                     }
                     HeartbeatSyncerData data = new HeartbeatSyncerData(
-                        HeartbeatType.REGISTER,
-                        clientChannelInfo.getClientId(),
-                        clientChannelInfo.getLanguage(),
-                        clientChannelInfo.getVersion(),
-                        consumerGroup,
-                        consumeType,
-                        messageModel,
-                        consumeFromWhere,
-                        localProxyId,
-                        remoteChannel.encode()
+                            HeartbeatType.REGISTER,
+                            clientChannelInfo.getClientId(),
+                            clientChannelInfo.getLanguage(),
+                            clientChannelInfo.getVersion(),
+                            consumerGroup,
+                            consumeType,
+                            messageModel,
+                            consumeFromWhere,
+                            localProxyId,
+                            remoteChannel.encode()
                     );
                     data.setSubscriptionDataSet(subList);
 
@@ -135,12 +139,12 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
                     this.sendSystemMessage(data);
                 } catch (Throwable t) {
                     log.error("heartbeat register broadcast failed. group:{}, clientChannelInfo:{}, consumeType:{}, messageModel:{}, consumeFromWhere:{}, subList:{}",
-                        consumerGroup, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList, t);
+                            consumerGroup, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList, t);
                 }
             });
         } catch (Throwable t) {
             log.error("heartbeat submit register broadcast failed. group:{}, clientChannelInfo:{}, consumeType:{}, messageModel:{}, consumeFromWhere:{}, subList:{}",
-                consumerGroup, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList, t);
+                    consumerGroup, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList, t);
         }
     }
 
@@ -156,28 +160,28 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
                         return;
                     }
                     HeartbeatSyncerData data = new HeartbeatSyncerData(
-                        HeartbeatType.UNREGISTER,
-                        clientChannelInfo.getClientId(),
-                        clientChannelInfo.getLanguage(),
-                        clientChannelInfo.getVersion(),
-                        consumerGroup,
-                        null,
-                        null,
-                        null,
-                        localProxyId,
-                        remoteChannel.encode()
+                            HeartbeatType.UNREGISTER,
+                            clientChannelInfo.getClientId(),
+                            clientChannelInfo.getLanguage(),
+                            clientChannelInfo.getVersion(),
+                            consumerGroup,
+                            null,
+                            null,
+                            null,
+                            localProxyId,
+                            remoteChannel.encode()
                     );
 
                     log.debug("sync unregister heart beat. topic:{}, data:{}", this.getBroadcastTopicName(), data);
                     this.sendSystemMessage(data);
                 } catch (Throwable t) {
                     log.error("heartbeat unregister broadcast failed. group:{}, clientChannelInfo:{}, consumeType:{}",
-                        consumerGroup, clientChannelInfo, t);
+                            consumerGroup, clientChannelInfo, t);
                 }
             });
         } catch (Throwable t) {
             log.error("heartbeat submit unregister broadcast failed. group:{}, clientChannelInfo:{}, consumeType:{}",
-                consumerGroup, clientChannelInfo, t);
+                    consumerGroup, clientChannelInfo, t);
         }
     }
 
@@ -198,27 +202,27 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
                 RemoteChannel channel = remoteChannelMap.computeIfAbsent(buildKey(data.getGroup(), decodedChannel), key -> decodedChannel);
                 channel.setExtendAttribute(decodedChannel.getChannelExtendAttribute());
                 ClientChannelInfo clientChannelInfo = new ClientChannelInfo(
-                    channel,
-                    data.getClientId(),
-                    data.getLanguage(),
-                    data.getVersion()
+                        channel,
+                        data.getClientId(),
+                        data.getLanguage(),
+                        data.getVersion()
                 );
                 log.debug("start process remote channel. data:{}, clientChannelInfo:{}", data, clientChannelInfo);
                 if (data.getHeartbeatType().equals(HeartbeatType.REGISTER)) {
                     this.consumerManager.registerConsumer(
-                        data.getGroup(),
-                        clientChannelInfo,
-                        data.getConsumeType(),
-                        data.getMessageModel(),
-                        data.getConsumeFromWhere(),
-                        data.getSubscriptionDataSet(),
-                        false
+                            data.getGroup(),
+                            clientChannelInfo,
+                            data.getConsumeType(),
+                            data.getMessageModel(),
+                            data.getConsumeFromWhere(),
+                            data.getSubscriptionDataSet(),
+                            false
                     );
                 } else {
                     this.consumerManager.unregisterConsumer(
-                        data.getGroup(),
-                        clientChannelInfo,
-                        false
+                            data.getGroup(),
+                            clientChannelInfo,
+                            false
                     );
                 }
             } catch (Throwable t) {
@@ -233,9 +237,5 @@ public class HeartbeatSyncer extends AbstractSystemMessageSyncer {
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         // use local address, remoting port and grpc port to build unique local proxy Id
         return proxyConfig.getLocalServeAddr() + "%" + proxyConfig.getRemotingListenPort() + "%" + proxyConfig.getGrpcServerPort();
-    }
-
-    private static String buildKey(String group, Channel channel) {
-        return group + "@" + channel.id().asLongText();
     }
 }

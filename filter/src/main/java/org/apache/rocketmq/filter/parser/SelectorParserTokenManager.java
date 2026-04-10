@@ -24,9 +24,78 @@ package org.apache.rocketmq.filter.parser;
 public class SelectorParserTokenManager implements SelectorParserConstants {
 
     /**
+     * Token literal values.
+     */
+    public static final String[] JJ_STR_LITERAL_IMAGES = {
+            "", null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, "\75",
+            "\74\76", "\76", "\76\75", "\74", "\74\75", "\50", "\54", "\51", "\53", "\55",};
+    /**
+     * Lexer state names.
+     */
+    public static final String[] LEX_STATE_NAMES = {
+            "DEFAULT",
+    };
+    static final long[] JJ_BIT_VEC_0 = {
+            0xfffffffffffffffeL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL
+    };
+    static final long[] JJ_BIT_VEC_2 = {
+            0x0L, 0x0L, 0xffffffffffffffffL, 0xffffffffffffffffL
+    };
+    static final int[] JJ_NEXT_STATES = {
+            30, 31, 36, 37, 24, 25, 26, 1, 2, 4, 8, 9, 11, 20, 21, 34,
+            35, 38, 39,
+    };
+    static final long[] JJ_TO_TOKEN = {
+            0xfffbfff01L,
+    };
+    static final long[] JJ_TO_SKIP = {
+            0xfeL,
+    };
+    static final long[] JJ_TO_SPECIAL = {
+            0x3eL,
+    };
+    private final int[] jjrounds = new int[40];
+    private final int[] jjstateSet = new int[80];
+    /**
      * Debug output.
      */
     public java.io.PrintStream debugStream = System.out;
+    protected SimpleCharStream inputStream;
+    protected char curChar;
+    int curLexState = 0;
+    int defaultLexState = 0;
+    int jjnewStateCnt;
+    int jjround;
+    int jjmatchedPos;
+    int jjmatchedKind;
+
+    /**
+     * Constructor.
+     */
+    public SelectorParserTokenManager(SimpleCharStream stream) {
+        if (SimpleCharStream.STATIC_FLAG)
+            throw new Error("ERROR: Cannot use a static CharStream class with a non-static lexical analyzer.");
+        inputStream = stream;
+    }
+    /**
+     * Constructor.
+     */
+    public SelectorParserTokenManager(SimpleCharStream stream, int lexState) {
+        this(stream);
+        SwitchTo(lexState);
+    }
+
+    private static final boolean jjCanMove_0(int hiByte, int i1, int i2, long l1, long l2) {
+        switch (hiByte) {
+            case 0:
+                return (JJ_BIT_VEC_2[i2] & l2) != 0L;
+            default:
+                if ((JJ_BIT_VEC_0[i1] & l1) != 0L)
+                    return true;
+                return false;
+        }
+    }
 
     /**
      * Set debug output.
@@ -511,13 +580,6 @@ public class SelectorParserTokenManager implements SelectorParserConstants {
         return jjMoveNfa_0(5, 9);
     }
 
-    static final long[] JJ_BIT_VEC_0 = {
-        0xfffffffffffffffeL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL
-    };
-    static final long[] JJ_BIT_VEC_2 = {
-        0x0L, 0x0L, 0xffffffffffffffffL, 0xffffffffffffffffL
-    };
-
     private int jjMoveNfa_0(int startState, int curPos) {
         int strKind = jjmatchedKind;
         int strPos = jjmatchedPos;
@@ -847,67 +909,6 @@ public class SelectorParserTokenManager implements SelectorParserConstants {
         return toRet;
     }
 
-    static final int[] JJ_NEXT_STATES = {
-        30, 31, 36, 37, 24, 25, 26, 1, 2, 4, 8, 9, 11, 20, 21, 34,
-        35, 38, 39,
-    };
-
-    private static final boolean jjCanMove_0(int hiByte, int i1, int i2, long l1, long l2) {
-        switch (hiByte) {
-            case 0:
-                return (JJ_BIT_VEC_2[i2] & l2) != 0L;
-            default:
-                if ((JJ_BIT_VEC_0[i1] & l1) != 0L)
-                    return true;
-                return false;
-        }
-    }
-
-    /**
-     * Token literal values.
-     */
-    public static final String[] JJ_STR_LITERAL_IMAGES = {
-        "", null, null, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null, null, "\75",
-        "\74\76", "\76", "\76\75", "\74", "\74\75", "\50", "\54", "\51", "\53", "\55",};
-
-    /**
-     * Lexer state names.
-     */
-    public static final String[] LEX_STATE_NAMES = {
-        "DEFAULT",
-    };
-    static final long[] JJ_TO_TOKEN = {
-        0xfffbfff01L,
-    };
-    static final long[] JJ_TO_SKIP = {
-        0xfeL,
-    };
-    static final long[] JJ_TO_SPECIAL = {
-        0x3eL,
-    };
-    protected SimpleCharStream inputStream;
-    private final int[] jjrounds = new int[40];
-    private final int[] jjstateSet = new int[80];
-    protected char curChar;
-
-    /**
-     * Constructor.
-     */
-    public SelectorParserTokenManager(SimpleCharStream stream) {
-        if (SimpleCharStream.STATIC_FLAG)
-            throw new Error("ERROR: Cannot use a static CharStream class with a non-static lexical analyzer.");
-        inputStream = stream;
-    }
-
-    /**
-     * Constructor.
-     */
-    public SelectorParserTokenManager(SimpleCharStream stream, int lexState) {
-        this(stream);
-        SwitchTo(lexState);
-    }
-
     /**
      * Reinitialise parser.
      */
@@ -965,13 +966,6 @@ public class SelectorParserTokenManager implements SelectorParserConstants {
 
         return t;
     }
-
-    int curLexState = 0;
-    int defaultLexState = 0;
-    int jjnewStateCnt;
-    int jjround;
-    int jjmatchedPos;
-    int jjmatchedKind;
 
     /**
      * Get the next Token.

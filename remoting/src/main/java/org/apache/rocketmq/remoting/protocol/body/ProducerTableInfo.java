@@ -17,16 +17,17 @@
 
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.List;
+import java.util.Map;
+
 public class ProducerTableInfo extends RemotingSerializable {
+    private Map<String, List<ProducerInfo>> data;
+
     public ProducerTableInfo(Map<String, List<ProducerInfo>> data) {
         this.data = data;
     }
-
-    private Map<String, List<ProducerInfo>> data;
 
     public Map<String, List<ProducerInfo>> getData() {
         return data;

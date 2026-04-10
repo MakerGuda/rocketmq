@@ -30,10 +30,6 @@ public enum MessageType {
         this.shortName = shortName;
     }
 
-    public String getShortName() {
-        return shortName;
-    }
-
     public static MessageType getByShortName(String shortName) {
         for (MessageType msgType : MessageType.values()) {
             if (msgType.getShortName().equals(shortName)) {
@@ -41,5 +37,9 @@ public enum MessageType {
             }
         }
         return Normal_Msg;
+    }
+
+    public String getShortName() {
+        return shortName;
     }
 }

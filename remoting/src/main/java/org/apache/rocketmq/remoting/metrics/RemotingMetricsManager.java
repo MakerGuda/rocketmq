@@ -22,24 +22,16 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.sdk.metrics.Aggregation;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.InstrumentType;
-import io.opentelemetry.sdk.metrics.View;
-import io.opentelemetry.sdk.metrics.ViewBuilder;
+import io.opentelemetry.sdk.metrics.*;
+import org.apache.rocketmq.common.Pair;
+import org.apache.rocketmq.common.metrics.NopLongHistogram;
+
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
-import org.apache.rocketmq.common.Pair;
-import org.apache.rocketmq.common.metrics.NopLongHistogram;
 
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.HISTOGRAM_RPC_LATENCY;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_PROTOCOL_TYPE;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.PROTOCOL_TYPE_REMOTING;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.RESULT_CANCELED;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.RESULT_SUCCESS;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.RESULT_WRITE_CHANNEL_FAILED;
+import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.*;
 
 public class RemotingMetricsManager {
     private LongHistogram rpcLatency = new NopLongHistogram();
@@ -53,36 +45,36 @@ public class RemotingMetricsManager {
             return Attributes.builder();
         }
         return this.attributesBuilderSupplier.get()
-            .put(LABEL_PROTOCOL_TYPE, PROTOCOL_TYPE_REMOTING);
+                .put(LABEL_PROTOCOL_TYPE, PROTOCOL_TYPE_REMOTING);
     }
 
     public void initMetrics(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier) {
         this.attributesBuilderSupplier = attributesBuilderSupplier;
         this.rpcLatency = meter.histogramBuilder(HISTOGRAM_RPC_LATENCY)
-            .setDescription("Rpc latency")
-            .setUnit("milliseconds")
-            .ofLongs()
-            .build();
+                .setDescription("Rpc latency")
+                .setUnit("milliseconds")
+                .ofLongs()
+                .build();
     }
 
     public List<Pair<InstrumentSelector, ViewBuilder>> getMetricsView() {
         List<Double> rpcCostTimeBuckets = Arrays.asList(
-            (double) Duration.ofMillis(1).toMillis(),
-            (double) Duration.ofMillis(3).toMillis(),
-            (double) Duration.ofMillis(5).toMillis(),
-            (double) Duration.ofMillis(7).toMillis(),
-            (double) Duration.ofMillis(10).toMillis(),
-            (double) Duration.ofMillis(100).toMillis(),
-            (double) Duration.ofSeconds(1).toMillis(),
-            (double) Duration.ofSeconds(2).toMillis(),
-            (double) Duration.ofSeconds(3).toMillis()
+                (double) Duration.ofMillis(1).toMillis(),
+                (double) Duration.ofMillis(3).toMillis(),
+                (double) Duration.ofMillis(5).toMillis(),
+                (double) Duration.ofMillis(7).toMillis(),
+                (double) Duration.ofMillis(10).toMillis(),
+                (double) Duration.ofMillis(100).toMillis(),
+                (double) Duration.ofSeconds(1).toMillis(),
+                (double) Duration.ofSeconds(2).toMillis(),
+                (double) Duration.ofSeconds(3).toMillis()
         );
         InstrumentSelector selector = InstrumentSelector.builder()
-            .setType(InstrumentType.HISTOGRAM)
-            .setName(HISTOGRAM_RPC_LATENCY)
-            .build();
+                .setType(InstrumentType.HISTOGRAM)
+                .setName(HISTOGRAM_RPC_LATENCY)
+                .build();
         ViewBuilder viewBuilder = View.builder()
-            .setAggregation(Aggregation.explicitBucketHistogram(rpcCostTimeBuckets));
+                .setAggregation(Aggregation.explicitBucketHistogram(rpcCostTimeBuckets));
         return Lists.newArrayList(new Pair<>(selector, viewBuilder));
     }
 

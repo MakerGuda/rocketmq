@@ -20,7 +20,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-public class PlainAccessConfig  implements Serializable {
+public class PlainAccessConfig implements Serializable {
     private static final long serialVersionUID = -4517357000307227637L;
 
     private String accessKey;
@@ -106,17 +106,18 @@ public class PlainAccessConfig  implements Serializable {
     @Override
     public String toString() {
         return "PlainAccessConfig{" +
-            "accessKey='" + accessKey + '\'' +
-            ", whiteRemoteAddress='" + whiteRemoteAddress + '\'' +
-            ", admin=" + admin +
-            ", defaultTopicPerm='" + defaultTopicPerm + '\'' +
-            ", defaultGroupPerm='" + defaultGroupPerm + '\'' +
-            ", topicPerms=" + topicPerms +
-            ", groupPerms=" + groupPerms +
-            '}';
+                "accessKey='" + accessKey + '\'' +
+                ", whiteRemoteAddress='" + whiteRemoteAddress + '\'' +
+                ", admin=" + admin +
+                ", defaultTopicPerm='" + defaultTopicPerm + '\'' +
+                ", defaultGroupPerm='" + defaultGroupPerm + '\'' +
+                ", topicPerms=" + topicPerms +
+                ", groupPerms=" + groupPerms +
+                '}';
     }
 
-    @Override public boolean equals(Object o) {
+    @Override
+    public boolean equals(Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
@@ -125,7 +126,8 @@ public class PlainAccessConfig  implements Serializable {
         return admin == config.admin && Objects.equals(accessKey, config.accessKey) && Objects.equals(secretKey, config.secretKey) && Objects.equals(whiteRemoteAddress, config.whiteRemoteAddress) && Objects.equals(defaultTopicPerm, config.defaultTopicPerm) && Objects.equals(defaultGroupPerm, config.defaultGroupPerm) && Objects.equals(topicPerms, config.topicPerms) && Objects.equals(groupPerms, config.groupPerms);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         return Objects.hash(accessKey, secretKey, whiteRemoteAddress, admin, defaultTopicPerm, defaultGroupPerm, topicPerms, groupPerms);
     }
 }

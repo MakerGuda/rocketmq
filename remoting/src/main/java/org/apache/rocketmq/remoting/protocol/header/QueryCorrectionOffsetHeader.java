@@ -26,8 +26,8 @@ import org.apache.rocketmq.common.resource.ResourceType;
 import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
 
 @RocketMQAction(value = RequestCode.QUERY_CORRECTION_OFFSET, action = Action.GET)
 public class QueryCorrectionOffsetHeader extends TopicRequestHeader {

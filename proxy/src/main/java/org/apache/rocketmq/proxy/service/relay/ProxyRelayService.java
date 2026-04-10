@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.proxy.service.relay;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.service.transaction.TransactionData;
@@ -27,24 +26,26 @@ import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequest
 import org.apache.rocketmq.remoting.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerRunningInfoRequestHeader;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface ProxyRelayService {
 
     CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> processGetConsumerRunningInfo(
-        ProxyContext context,
-        RemotingCommand command,
-        GetConsumerRunningInfoRequestHeader header
+            ProxyContext context,
+            RemotingCommand command,
+            GetConsumerRunningInfoRequestHeader header
     );
 
     CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> processConsumeMessageDirectly(
-        ProxyContext context,
-        RemotingCommand command,
-        ConsumeMessageDirectlyResultRequestHeader header
+            ProxyContext context,
+            RemotingCommand command,
+            ConsumeMessageDirectlyResultRequestHeader header
     );
 
     RelayData<TransactionData, Void> processCheckTransactionState(
-        ProxyContext context,
-        RemotingCommand command,
-        CheckTransactionStateRequestHeader header,
-        MessageExt messageExt
+            ProxyContext context,
+            RemotingCommand command,
+            CheckTransactionStateRequestHeader header,
+            MessageExt messageExt
     );
 }

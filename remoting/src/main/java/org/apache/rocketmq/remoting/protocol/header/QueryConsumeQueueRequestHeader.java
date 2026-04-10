@@ -22,8 +22,8 @@ import org.apache.rocketmq.common.action.RocketMQAction;
 import org.apache.rocketmq.common.resource.ResourceType;
 import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 
 @RocketMQAction(value = RequestCode.QUERY_CONSUME_QUEUE, action = Action.GET)
 public class QueryConsumeQueueRequestHeader extends TopicQueueRequestHeader {

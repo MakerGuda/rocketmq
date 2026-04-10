@@ -22,17 +22,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.haproxy.HAProxyCommand;
-import io.netty.handler.codec.haproxy.HAProxyMessage;
-import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
-import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
-import io.netty.handler.codec.haproxy.HAProxyTLV;
+import io.netty.handler.codec.haproxy.*;
 import io.netty.util.Attribute;
 import io.netty.util.DefaultAttributeMap;
-import java.lang.reflect.Field;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.ArrayUtils;
@@ -47,12 +39,17 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.apache.rocketmq.remoting.netty.AttributeKeys;
 
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+
 public class HAProxyMessageForwarder extends ChannelInboundHandlerAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_REMOTING_NAME);
 
     private static final Field FIELD_ATTRIBUTE =
-        FieldUtils.getField(DefaultAttributeMap.class, "attributes", true);
+            FieldUtils.getField(DefaultAttributeMap.class, "attributes", true);
 
     private final Channel outboundChannel;
 
@@ -127,12 +124,12 @@ public class HAProxyMessageForwarder extends ChannelInboundHandlerAdapter {
         }
 
         HAProxyProxiedProtocol proxiedProtocol = AclUtils.isColon(sourceAddress) ? HAProxyProxiedProtocol.TCP6 :
-            HAProxyProxiedProtocol.TCP4;
+                HAProxyProxiedProtocol.TCP4;
 
         List<HAProxyTLV> haProxyTLVs = buildHAProxyTLV(inboundChannel);
 
         return new HAProxyMessage(HAProxyProtocolVersion.V2, HAProxyCommand.PROXY,
-            proxiedProtocol, sourceAddress, destinationAddress, sourcePort, destinationPort, haProxyTLVs);
+                proxiedProtocol, sourceAddress, destinationAddress, sourcePort, destinationPort, haProxyTLVs);
     }
 
     protected List<HAProxyTLV> buildHAProxyTLV(Channel inboundChannel) throws IllegalAccessException, DecoderException {

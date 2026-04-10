@@ -17,24 +17,6 @@
 package org.apache.rocketmq.broker.out;
 
 import com.alibaba.fastjson2.JSON;
-import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.rocketmq.acl.common.AclClientRPCHook;
@@ -46,24 +28,10 @@ import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.impl.consumer.PullResultExt;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
-import org.apache.rocketmq.common.BrokerIdentity;
-import org.apache.rocketmq.common.LockCallback;
-import org.apache.rocketmq.common.MixAll;
-import org.apache.rocketmq.common.Pair;
-import org.apache.rocketmq.common.ThreadFactoryImpl;
-import org.apache.rocketmq.common.TopicConfig;
-import org.apache.rocketmq.common.UnlockCallback;
-import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.*;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.filter.ExpressionType;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageBatch;
-import org.apache.rocketmq.common.message.MessageClientIDSetter;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.namesrv.DefaultTopAddressing;
 import org.apache.rocketmq.common.namesrv.TopAddressing;
 import org.apache.rocketmq.common.sysflag.PullSysFlag;
@@ -74,74 +42,16 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.InvokeCallback;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.RemotingClient;
-import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.exception.RemotingConnectException;
-import org.apache.rocketmq.remoting.exception.RemotingException;
-import org.apache.rocketmq.remoting.exception.RemotingSendRequestException;
-import org.apache.rocketmq.remoting.exception.RemotingTimeoutException;
-import org.apache.rocketmq.remoting.exception.RemotingTooMuchRequestException;
+import org.apache.rocketmq.remoting.exception.*;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyRemotingClient;
 import org.apache.rocketmq.remoting.netty.ResponseFuture;
-import org.apache.rocketmq.remoting.protocol.BrokerSyncInfo;
-import org.apache.rocketmq.remoting.protocol.DataVersion;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
-import org.apache.rocketmq.remoting.protocol.RequestCode;
-import org.apache.rocketmq.remoting.protocol.ResponseCode;
-import org.apache.rocketmq.remoting.protocol.body.BrokerMemberGroup;
-import org.apache.rocketmq.remoting.protocol.body.ClusterInfo;
-import org.apache.rocketmq.remoting.protocol.body.ConsumerOffsetSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.ElectMasterResponseBody;
-import org.apache.rocketmq.remoting.protocol.body.GetBrokerMemberGroupResponseBody;
-import org.apache.rocketmq.remoting.protocol.body.KVTable;
-import org.apache.rocketmq.remoting.protocol.body.LockBatchRequestBody;
-import org.apache.rocketmq.remoting.protocol.body.LockBatchResponseBody;
-import org.apache.rocketmq.remoting.protocol.body.MessageRequestModeSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.RegisterBrokerBody;
-import org.apache.rocketmq.remoting.protocol.body.SubscriptionGroupWrapper;
-import org.apache.rocketmq.remoting.protocol.body.SyncStateSet;
-import org.apache.rocketmq.remoting.protocol.body.TopicConfigAndMappingSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.TopicConfigSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.UnlockBatchRequestBody;
-import org.apache.rocketmq.remoting.protocol.header.ExchangeHAInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ExchangeHAInfoResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetAllSubscriptionGroupRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetAllSubscriptionGroupResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetAllTopicConfigRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetAllTopicConfigResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetBrokerMemberGroupRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMaxOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMaxOffsetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMinOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMinOffsetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.LockBatchMqRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PullMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PullMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeaderV2;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.UnlockBatchMqRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.AlterSyncStateSetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetMetaDataResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.ApplyBrokerIdRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.ApplyBrokerIdResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextBrokerIdRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextBrokerIdResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.RegisterBrokerToControllerRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.RegisterBrokerToControllerResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.BrokerHeartbeatRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.GetRouteInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.QueryDataVersionRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.QueryDataVersionResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.RegisterBrokerRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.RegisterBrokerResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.RegisterTopicRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.UnRegisterBrokerRequestHeader;
+import org.apache.rocketmq.remoting.protocol.*;
+import org.apache.rocketmq.remoting.protocol.body.*;
+import org.apache.rocketmq.remoting.protocol.header.*;
+import org.apache.rocketmq.remoting.protocol.header.controller.*;
+import org.apache.rocketmq.remoting.protocol.header.controller.register.*;
+import org.apache.rocketmq.remoting.protocol.header.namesrv.*;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.remoting.protocol.namesrv.RegisterBrokerResult;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
@@ -155,6 +65,12 @@ import org.apache.rocketmq.remoting.rpc.RpcClientImpl;
 import org.apache.rocketmq.remoting.rpchook.DynamicalExtFieldRPCHook;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
 import org.apache.rocketmq.store.timer.TimerMetrics;
+
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.concurrent.*;
 
 import static org.apache.rocketmq.remoting.protocol.RemotingSysResponseCode.SUCCESS;
 import static org.apache.rocketmq.remoting.protocol.ResponseCode.CONTROLLER_MASTER_STILL_EXIST;
@@ -184,12 +100,38 @@ public class BrokerOuterAPI {
         this.rpcClient = new RpcClientImpl(this.clientMetadata, this.remotingClient);
     }
 
+    private static RemotingCommand buildSendMessageRequest(MessageExt msg, String group) {
+        SendMessageRequestHeaderV2 requestHeaderV2 = buildSendMessageRequestHeaderV2(msg, group);
+        RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE_V2, requestHeaderV2);
+
+        request.setBody(msg.getBody());
+        return request;
+    }
+
+    private static SendMessageRequestHeaderV2 buildSendMessageRequestHeaderV2(MessageExt msg, String group) {
+        SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
+        requestHeader.setProducerGroup(group);
+        requestHeader.setTopic(msg.getTopic());
+        requestHeader.setDefaultTopic(TopicValidator.AUTO_CREATE_TOPIC_KEY_TOPIC);
+        requestHeader.setDefaultTopicQueueNums(8);
+        requestHeader.setQueueId(msg.getQueueId());
+        requestHeader.setSysFlag(msg.getSysFlag());
+        requestHeader.setBornTimestamp(msg.getBornTimestamp());
+        requestHeader.setFlag(msg.getFlag());
+        requestHeader.setProperties(MessageDecoder.messageProperties2String(msg.getProperties()));
+        requestHeader.setReconsumeTimes(msg.getReconsumeTimes());
+        requestHeader.setBatch(false);
+
+        SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);
+        return requestHeaderV2;
+    }
+
     private RPCHook newAclRPCHook(AuthConfig config) {
         if (config == null || StringUtils.isBlank(config.getInnerClientAuthenticationCredentials())) {
             return null;
         }
         SessionCredentials sessionCredentials =
-            JSON.parseObject(config.getInnerClientAuthenticationCredentials(), SessionCredentials.class);
+                JSON.parseObject(config.getInnerClientAuthenticationCredentials(), SessionCredentials.class);
         if (StringUtils.isBlank(sessionCredentials.getAccessKey()) || StringUtils.isBlank(sessionCredentials.getSecretKey())) {
             return null;
         }
@@ -260,13 +202,13 @@ public class BrokerOuterAPI {
     }
 
     public BrokerMemberGroup syncBrokerMemberGroup(String clusterName, String brokerName)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         return syncBrokerMemberGroup(clusterName, brokerName, false);
     }
 
     public BrokerMemberGroup syncBrokerMemberGroup(String clusterName, String brokerName,
-        boolean isCompatibleWithOldNameSrv)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+                                                   boolean isCompatibleWithOldNameSrv)
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         if (isCompatibleWithOldNameSrv) {
             return getBrokerMemberGroupCompatible(clusterName, brokerName);
         } else {
@@ -275,7 +217,7 @@ public class BrokerOuterAPI {
     }
 
     public BrokerMemberGroup getBrokerMemberGroup(String clusterName, String brokerName)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         BrokerMemberGroup brokerMemberGroup = new BrokerMemberGroup(clusterName, brokerName);
 
         GetBrokerMemberGroupRequestHeader requestHeader = new GetBrokerMemberGroupRequestHeader();
@@ -293,7 +235,7 @@ public class BrokerOuterAPI {
                 byte[] body = response.getBody();
                 if (body != null) {
                     GetBrokerMemberGroupResponseBody brokerMemberGroupResponseBody =
-                        GetBrokerMemberGroupResponseBody.decode(body, GetBrokerMemberGroupResponseBody.class);
+                            GetBrokerMemberGroupResponseBody.decode(body, GetBrokerMemberGroupResponseBody.class);
 
                     return brokerMemberGroupResponseBody.getBrokerMemberGroup();
                 }
@@ -306,7 +248,7 @@ public class BrokerOuterAPI {
     }
 
     public BrokerMemberGroup getBrokerMemberGroupCompatible(String clusterName, String brokerName)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         BrokerMemberGroup brokerMemberGroup = new BrokerMemberGroup(clusterName, brokerName);
 
         GetRouteInfoRequestHeader requestHeader = new GetRouteInfoRequestHeader();
@@ -325,8 +267,8 @@ public class BrokerOuterAPI {
                     TopicRouteData topicRouteData = TopicRouteData.decode(body, TopicRouteData.class);
                     for (BrokerData brokerData : topicRouteData.getBrokerDatas()) {
                         if (brokerData != null
-                            && brokerData.getBrokerName().equals(brokerName)
-                            && brokerData.getCluster().equals(clusterName)) {
+                                && brokerData.getBrokerName().equals(brokerName)
+                                && brokerData.getCluster().equals(clusterName)) {
                             brokerMemberGroup.getBrokerAddrs().putAll(brokerData.getBrokerAddrs());
                             break;
                         }
@@ -342,13 +284,13 @@ public class BrokerOuterAPI {
     }
 
     public void sendHeartbeatViaDataVersion(
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final Long brokerId,
-        final int timeoutMillis,
-        final DataVersion dataVersion,
-        final boolean isInBrokerContainer) {
+            final String clusterName,
+            final String brokerAddr,
+            final String brokerName,
+            final Long brokerId,
+            final int timeoutMillis,
+            final DataVersion dataVersion,
+            final boolean isInBrokerContainer) {
         List<String> nameServerAddressList = this.remotingClient.getAvailableNameSrvList();
         if (nameServerAddressList != null && !nameServerAddressList.isEmpty()) {
             final QueryDataVersionRequestHeader requestHeader = new QueryDataVersionRequestHeader();
@@ -373,11 +315,11 @@ public class BrokerOuterAPI {
     }
 
     public void sendHeartbeat(final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final Long brokerId,
-        final int timeoutMills,
-        final boolean isInBrokerContainer) {
+                              final String brokerAddr,
+                              final String brokerName,
+                              final Long brokerId,
+                              final int timeoutMills,
+                              final boolean isInBrokerContainer) {
         List<String> nameServerAddressList = this.remotingClient.getAvailableNameSrvList();
 
         final BrokerHeartbeatRequestHeader requestHeader = new BrokerHeartbeatRequestHeader();
@@ -404,8 +346,8 @@ public class BrokerOuterAPI {
     }
 
     public BrokerSyncInfo retrieveBrokerHaInfo(String masterBrokerAddr)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException,
-        MQBrokerException, RemotingCommandException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException,
+            MQBrokerException, RemotingCommandException {
         ExchangeHAInfoRequestHeader requestHeader = new ExchangeHAInfoRequestHeader();
         requestHeader.setMasterHaAddress(null);
 
@@ -426,7 +368,7 @@ public class BrokerOuterAPI {
     }
 
     public void sendBrokerHaInfo(String brokerAddr, String masterHaAddr, long brokerInitMaxOffset, String masterAddr)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException, MQBrokerException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException, MQBrokerException {
         ExchangeHAInfoRequestHeader requestHeader = new ExchangeHAInfoRequestHeader();
         requestHeader.setMasterHaAddress(masterHaAddr);
         requestHeader.setMasterFlushOffset(brokerInitMaxOffset);
@@ -449,30 +391,30 @@ public class BrokerOuterAPI {
     }
 
     public List<RegisterBrokerResult> registerBrokerAll(
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final long brokerId,
-        final String haServerAddr,
-        final TopicConfigSerializeWrapper topicConfigWrapper,
-        final List<String> filterServerList,
-        final boolean oneway,
-        final int timeoutMills,
-        final boolean enableActingMaster,
-        final boolean compressed,
-        final BrokerIdentity brokerIdentity) {
+            final String clusterName,
+            final String brokerAddr,
+            final String brokerName,
+            final long brokerId,
+            final String haServerAddr,
+            final TopicConfigSerializeWrapper topicConfigWrapper,
+            final List<String> filterServerList,
+            final boolean oneway,
+            final int timeoutMills,
+            final boolean enableActingMaster,
+            final boolean compressed,
+            final BrokerIdentity brokerIdentity) {
         return registerBrokerAll(clusterName,
-            brokerAddr,
-            brokerName,
-            brokerId,
-            haServerAddr,
-            topicConfigWrapper,
-            filterServerList,
-            oneway, timeoutMills,
-            enableActingMaster,
-            compressed,
-            null,
-            brokerIdentity);
+                brokerAddr,
+                brokerName,
+                brokerId,
+                haServerAddr,
+                topicConfigWrapper,
+                filterServerList,
+                oneway, timeoutMills,
+                enableActingMaster,
+                compressed,
+                null,
+                brokerIdentity);
     }
 
     /**
@@ -492,19 +434,19 @@ public class BrokerOuterAPI {
      * @return
      */
     public List<RegisterBrokerResult> registerBrokerAll(
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final long brokerId,
-        final String haServerAddr,
-        final TopicConfigSerializeWrapper topicConfigWrapper,
-        final List<String> filterServerList,
-        final boolean oneway,
-        final int timeoutMills,
-        final boolean enableActingMaster,
-        final boolean compressed,
-        final Long heartbeatTimeoutMillis,
-        final BrokerIdentity brokerIdentity) {
+            final String clusterName,
+            final String brokerAddr,
+            final String brokerName,
+            final long brokerId,
+            final String haServerAddr,
+            final TopicConfigSerializeWrapper topicConfigWrapper,
+            final List<String> filterServerList,
+            final boolean oneway,
+            final int timeoutMills,
+            final boolean enableActingMaster,
+            final boolean compressed,
+            final Long heartbeatTimeoutMillis,
+            final BrokerIdentity brokerIdentity) {
 
         final List<RegisterBrokerResult> registerBrokerResultList = new CopyOnWriteArrayList<>();
         List<String> nameServerAddressList = this.remotingClient.getAvailableNameSrvList();
@@ -561,13 +503,13 @@ public class BrokerOuterAPI {
     }
 
     private RegisterBrokerResult registerBroker(
-        final String namesrvAddr,
-        final boolean oneway,
-        final int timeoutMills,
-        final RegisterBrokerRequestHeader requestHeader,
-        final byte[] body
+            final String namesrvAddr,
+            final boolean oneway,
+            final int timeoutMills,
+            final RegisterBrokerRequestHeader requestHeader,
+            final byte[] body
     ) throws RemotingCommandException, MQBrokerException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
-        InterruptedException {
+            InterruptedException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.REGISTER_BROKER, requestHeader);
         request.setBody(body);
 
@@ -601,10 +543,10 @@ public class BrokerOuterAPI {
     }
 
     public void unregisterBrokerAll(
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final long brokerId
+            final String clusterName,
+            final String brokerAddr,
+            final String brokerName,
+            final long brokerId
     ) {
         List<String> nameServerAddressList = this.remotingClient.getNameServerAddressList();
         if (nameServerAddressList != null) {
@@ -620,11 +562,11 @@ public class BrokerOuterAPI {
     }
 
     public void unregisterBroker(
-        final String namesrvAddr,
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final long brokerId
+            final String namesrvAddr,
+            final String clusterName,
+            final String brokerAddr,
+            final String brokerName,
+            final long brokerId
     ) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException, MQBrokerException {
         UnRegisterBrokerRequestHeader requestHeader = new UnRegisterBrokerRequestHeader();
         requestHeader.setBrokerAddr(brokerAddr);
@@ -651,9 +593,9 @@ public class BrokerOuterAPI {
      * This method is used to replace incremental broker registration feature.
      */
     public void registerSingleTopicAll(
-        final String brokerName,
-        final TopicConfig topicConfig,
-        final int timeoutMills) {
+            final String brokerName,
+            final TopicConfig topicConfig,
+            final int timeoutMills) {
         String topic = topicConfig.getTopicName();
         RegisterTopicRequestHeader requestHeader = new RegisterTopicRequestHeader();
         requestHeader.setTopic(topic);
@@ -705,13 +647,13 @@ public class BrokerOuterAPI {
     }
 
     public List<Boolean> needRegister(
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final long brokerId,
-        final TopicConfigSerializeWrapper topicConfigWrapper,
-        final int timeoutMills,
-        final boolean isInBrokerContainer) {
+            final String clusterName,
+            final String brokerAddr,
+            final String brokerName,
+            final long brokerId,
+            final TopicConfigSerializeWrapper topicConfigWrapper,
+            final int timeoutMills,
+            final boolean isInBrokerContainer) {
         final List<Boolean> changedList = new CopyOnWriteArrayList<>();
         List<String> nameServerAddressList = this.remotingClient.getNameServerAddressList();
         if (nameServerAddressList != null && nameServerAddressList.size() > 0) {
@@ -734,7 +676,7 @@ public class BrokerOuterAPI {
                             switch (response.getCode()) {
                                 case ResponseCode.SUCCESS: {
                                     QueryDataVersionResponseHeader queryDataVersionResponseHeader =
-                                        response.decodeCommandCustomHeader(QueryDataVersionResponseHeader.class);
+                                            response.decodeCommandCustomHeader(QueryDataVersionResponseHeader.class);
                                     changed = queryDataVersionResponseHeader.getChanged();
                                     byte[] body = response.getBody();
                                     if (body != null) {
@@ -771,8 +713,8 @@ public class BrokerOuterAPI {
     }
 
     public TopicConfigAndMappingSerializeWrapper getAllTopicConfig(final String addr)
-        throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
-        InterruptedException, MQBrokerException, RemotingCommandException {
+            throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
+            InterruptedException, MQBrokerException, RemotingCommandException {
 
         DataVersion topicConfigDataVersion = null;
         DataVersion mappingDataVersion = null;
@@ -791,18 +733,18 @@ public class BrokerOuterAPI {
             requestHeader.setTopicSeq(topicSeq);
             requestHeader.setMaxTopicNum(getMaxPageSize());
             requestHeader.setDataVersion(Optional.ofNullable(topicConfigDataVersion).
-                map(DataVersion::toJson).orElse(StringUtils.EMPTY));
+                    map(DataVersion::toJson).orElse(StringUtils.EMPTY));
             LOGGER.info("getAllTopicConfig from seq {}, max {}, dataVersion {}",
                     topicSeq, requestHeader.getMaxTopicNum(), requestHeader.getDataVersion());
             RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ALL_TOPIC_CONFIG, requestHeader);
 
             RemotingCommand response = this.remotingClient.invokeSync(
-                MixAll.brokerVIPChannel(true, addr), request, 30000);
+                    MixAll.brokerVIPChannel(true, addr), request, 30000);
 
             assert response != null;
             if (response.getCode() == SUCCESS) {
                 TopicConfigAndMappingSerializeWrapper topicConfigSerializeWrapper =
-                    TopicConfigAndMappingSerializeWrapper.decode(response.getBody(), TopicConfigAndMappingSerializeWrapper.class);
+                        TopicConfigAndMappingSerializeWrapper.decode(response.getBody(), TopicConfigAndMappingSerializeWrapper.class);
                 topicConfigTable.putAll(topicConfigSerializeWrapper.getTopicConfigTable());
                 topicQueueMappingDetailMap.putAll(topicConfigSerializeWrapper.getTopicQueueMappingDetailMap());
                 topicSeq += topicConfigSerializeWrapper.getTopicConfigTable().size();
@@ -816,9 +758,9 @@ public class BrokerOuterAPI {
                 }
 
                 GetAllTopicConfigResponseHeader responseHeader =
-                    response.decodeCommandCustomHeader(GetAllTopicConfigResponseHeader.class);
+                        response.decodeCommandCustomHeader(GetAllTopicConfigResponseHeader.class);
                 Integer totalTopicNum = Optional.ofNullable(responseHeader)
-                    .map(GetAllTopicConfigResponseHeader::getTotalTopicNum).orElse(null);
+                        .map(GetAllTopicConfigResponseHeader::getTotalTopicNum).orElse(null);
 
                 if (Objects.isNull(totalTopicNum)) {       // compatible with old version server
                     // the server side don't support totalTopicNum, all data is returned
@@ -853,8 +795,8 @@ public class BrokerOuterAPI {
     }
 
     public TimerCheckpoint getTimerCheckPoint(
-        final String addr) throws RemotingConnectException, RemotingSendRequestException,
-        RemotingTimeoutException, InterruptedException, MQBrokerException {
+            final String addr) throws RemotingConnectException, RemotingSendRequestException,
+            RemotingTimeoutException, InterruptedException, MQBrokerException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_TIMER_CHECK_POINT, null);
 
         RemotingCommand response = this.remotingClient.invokeSync(MixAll.brokerVIPChannel(true, addr), request, 3000);
@@ -871,8 +813,8 @@ public class BrokerOuterAPI {
     }
 
     public TimerMetrics.TimerMetricsSerializeWrapper getTimerMetrics(
-        final String addr) throws RemotingConnectException, RemotingSendRequestException,
-        RemotingTimeoutException, InterruptedException, MQBrokerException {
+            final String addr) throws RemotingConnectException, RemotingSendRequestException,
+            RemotingTimeoutException, InterruptedException, MQBrokerException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_TIMER_METRICS, null);
 
         RemotingCommand response = this.remotingClient.invokeSync(MixAll.brokerVIPChannel(true, addr), request, 3000);
@@ -889,8 +831,8 @@ public class BrokerOuterAPI {
     }
 
     public ConsumerOffsetSerializeWrapper getAllConsumerOffset(
-        final String addr) throws InterruptedException, RemotingTimeoutException,
-        RemotingSendRequestException, RemotingConnectException, MQBrokerException {
+            final String addr) throws InterruptedException, RemotingTimeoutException,
+            RemotingSendRequestException, RemotingConnectException, MQBrokerException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ALL_CONSUMER_OFFSET, null);
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
@@ -906,8 +848,8 @@ public class BrokerOuterAPI {
     }
 
     public String getAllDelayOffset(
-        final String addr) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException,
-        RemotingConnectException, MQBrokerException, UnsupportedEncodingException {
+            final String addr) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException,
+            RemotingConnectException, MQBrokerException, UnsupportedEncodingException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ALL_DELAY_OFFSET, null);
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
@@ -923,8 +865,8 @@ public class BrokerOuterAPI {
     }
 
     public SubscriptionGroupWrapper getAllSubscriptionGroupConfig(final String addr)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException,
-        RemotingConnectException, MQBrokerException, RemotingCommandException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException,
+            RemotingConnectException, MQBrokerException, RemotingCommandException {
 
         long timeoutMills = getTimeoutMillis();
         DataVersion currentDataVersion = null;
@@ -943,7 +885,7 @@ public class BrokerOuterAPI {
             requestHeader.setGroupSeq(groupSeq);
             requestHeader.setMaxGroupNum(getMaxPageSize());
             requestHeader.setDataVersion(Optional.ofNullable(currentDataVersion)
-                .map(DataVersion::toJson).orElse(StringUtils.EMPTY));
+                    .map(DataVersion::toJson).orElse(StringUtils.EMPTY));
             LOGGER.info("getAllSubscriptionGroup from seq {}, max {}, dataVersion {}",
                     groupSeq, requestHeader.getMaxGroupNum(), requestHeader.getDataVersion());
             RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ALL_SUBSCRIPTIONGROUP_CONFIG, requestHeader);
@@ -952,7 +894,7 @@ public class BrokerOuterAPI {
             assert response != null;
             if (response.getCode() == SUCCESS) {
                 SubscriptionGroupWrapper subscriptionGroupWrapper =
-                    SubscriptionGroupWrapper.decode(response.getBody(), SubscriptionGroupWrapper.class);
+                        SubscriptionGroupWrapper.decode(response.getBody(), SubscriptionGroupWrapper.class);
                 subscriptionGroupTable.putAll(subscriptionGroupWrapper.getSubscriptionGroupTable());
                 forbiddenTable.putAll(subscriptionGroupWrapper.getForbiddenTable());
 
@@ -965,9 +907,9 @@ public class BrokerOuterAPI {
                 groupSeq += subscriptionGroupWrapper.getSubscriptionGroupTable().size();
 
                 GetAllSubscriptionGroupResponseHeader responseHeader =
-                    response.decodeCommandCustomHeader(GetAllSubscriptionGroupResponseHeader.class);
+                        response.decodeCommandCustomHeader(GetAllSubscriptionGroupResponseHeader.class);
                 Integer totalGroupNum = Optional.ofNullable(responseHeader)
-                    .map(GetAllSubscriptionGroupResponseHeader::getTotalGroupNum).orElse(null);
+                        .map(GetAllSubscriptionGroupResponseHeader::getTotalGroupNum).orElse(null);
 
                 if (Objects.isNull(totalGroupNum)) {
                     // the server side don't support totalGroupNum, all data is returned
@@ -976,7 +918,7 @@ public class BrokerOuterAPI {
 
                 if (!Objects.equals(currentDataVersion, newDataVersion)) {
                     LOGGER.error("dataVersion changed, currentDataVersion: {}, newDataVersion: {}",
-                        currentDataVersion, newDataVersion);
+                            currentDataVersion, newDataVersion);
                     currentDataVersion = newDataVersion;
                     groupSeq = 0;
                     subscriptionGroupTable.clear();
@@ -1009,8 +951,8 @@ public class BrokerOuterAPI {
     }
 
     public long getMaxOffset(final String addr, final String topic, final int queueId, final boolean committed,
-        final boolean isOnlyThisBroker)
-        throws RemotingException, MQBrokerException, InterruptedException {
+                             final boolean isOnlyThisBroker)
+            throws RemotingException, MQBrokerException, InterruptedException {
         GetMaxOffsetRequestHeader requestHeader = new GetMaxOffsetRequestHeader();
         requestHeader.setTopic(topic);
         requestHeader.setQueueId(queueId);
@@ -1033,7 +975,7 @@ public class BrokerOuterAPI {
     }
 
     public long getMinOffset(final String addr, final String topic, final int queueId, final boolean isOnlyThisBroker)
-        throws RemotingException, MQBrokerException, InterruptedException {
+            throws RemotingException, MQBrokerException, InterruptedException {
         GetMinOffsetRequestHeader requestHeader = new GetMinOffsetRequestHeader();
         requestHeader.setTopic(topic);
         requestHeader.setQueueId(queueId);
@@ -1055,10 +997,10 @@ public class BrokerOuterAPI {
     }
 
     public void lockBatchMQAsync(
-        final String addr,
-        final LockBatchRequestBody requestBody,
-        final long timeoutMillis,
-        final LockCallback callback) throws RemotingException, InterruptedException {
+            final String addr,
+            final LockBatchRequestBody requestBody,
+            final long timeoutMillis,
+            final LockCallback callback) throws RemotingException, InterruptedException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.LOCK_BATCH_MQ, new LockBatchMqRequestHeader());
 
         request.setBody(requestBody.encode());
@@ -1075,7 +1017,7 @@ public class BrokerOuterAPI {
                 }
                 if (response.getCode() == ResponseCode.SUCCESS) {
                     LockBatchResponseBody responseBody = LockBatchResponseBody.decode(response.getBody(),
-                        LockBatchResponseBody.class);
+                            LockBatchResponseBody.class);
                     Set<MessageQueue> messageQueues = responseBody.getLockOKMQSet();
                     callback.onSuccess(messageQueues);
                 } else {
@@ -1094,10 +1036,10 @@ public class BrokerOuterAPI {
     }
 
     public void unlockBatchMQAsync(
-        final String addr,
-        final UnlockBatchRequestBody requestBody,
-        final long timeoutMillis,
-        final UnlockCallback callback) throws RemotingException, InterruptedException {
+            final String addr,
+            final UnlockBatchRequestBody requestBody,
+            final long timeoutMillis,
+            final UnlockCallback callback) throws RemotingException, InterruptedException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.UNLOCK_BATCH_MQ, new UnlockBatchMqRequestHeader());
 
         request.setBody(requestBody.encode());
@@ -1135,8 +1077,8 @@ public class BrokerOuterAPI {
     }
 
     public SendResult sendMessageToSpecificBroker(String brokerAddr, final String brokerName,
-        final MessageExt msg, String group,
-        long timeoutMillis) throws RemotingException, MQBrokerException, InterruptedException {
+                                                  final MessageExt msg, String group,
+                                                  long timeoutMillis) throws RemotingException, MQBrokerException, InterruptedException {
 
         RemotingCommand request = buildSendMessageRequest(msg, group);
         RemotingCommand response = this.remotingClient.invokeSync(brokerAddr, request, timeoutMillis);
@@ -1144,8 +1086,8 @@ public class BrokerOuterAPI {
     }
 
     public CompletableFuture<SendResult> sendMessageToSpecificBrokerAsync(String brokerAddr, final String brokerName,
-        final MessageExt msg, String group,
-        long timeoutMillis) {
+                                                                          final MessageExt msg, String group,
+                                                                          long timeoutMillis) {
         RemotingCommand request = buildSendMessageRequest(msg, group);
 
         CompletableFuture<SendResult> cf = new CompletableFuture<>();
@@ -1180,36 +1122,10 @@ public class BrokerOuterAPI {
         return cf;
     }
 
-    private static RemotingCommand buildSendMessageRequest(MessageExt msg, String group) {
-        SendMessageRequestHeaderV2 requestHeaderV2 = buildSendMessageRequestHeaderV2(msg, group);
-        RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE_V2, requestHeaderV2);
-
-        request.setBody(msg.getBody());
-        return request;
-    }
-
-    private static SendMessageRequestHeaderV2 buildSendMessageRequestHeaderV2(MessageExt msg, String group) {
-        SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
-        requestHeader.setProducerGroup(group);
-        requestHeader.setTopic(msg.getTopic());
-        requestHeader.setDefaultTopic(TopicValidator.AUTO_CREATE_TOPIC_KEY_TOPIC);
-        requestHeader.setDefaultTopicQueueNums(8);
-        requestHeader.setQueueId(msg.getQueueId());
-        requestHeader.setSysFlag(msg.getSysFlag());
-        requestHeader.setBornTimestamp(msg.getBornTimestamp());
-        requestHeader.setFlag(msg.getFlag());
-        requestHeader.setProperties(MessageDecoder.messageProperties2String(msg.getProperties()));
-        requestHeader.setReconsumeTimes(msg.getReconsumeTimes());
-        requestHeader.setBatch(false);
-
-        SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);
-        return requestHeaderV2;
-    }
-
     private SendResult processSendResponse(
-        final String brokerName,
-        final Message msg,
-        final RemotingCommand response
+            final String brokerName,
+            final Message msg,
+            final RemotingCommand response
     ) throws MQBrokerException, RemotingCommandException {
         SendStatus sendStatus = null;
         switch (response.getCode()) {
@@ -1246,8 +1162,8 @@ public class BrokerOuterAPI {
                 uniqMsgId = sb.toString();
             }
             SendResult sendResult = new SendResult(sendStatus,
-                uniqMsgId,
-                responseHeader.getMsgId(), messageQueue, responseHeader.getQueueOffset());
+                    uniqMsgId,
+                    responseHeader.getMsgId(), messageQueue, responseHeader.getQueueOffset());
             sendResult.setTransactionId(responseHeader.getTransactionId());
             String regionId = response.getExtFields().get(MessageConst.PROPERTY_MSG_REGION);
             String traceOn = response.getExtFields().get(MessageConst.PROPERTY_TRACE_SWITCH);
@@ -1271,12 +1187,12 @@ public class BrokerOuterAPI {
     }
 
     public TopicRouteData getTopicRouteInfoFromNameServer(final String topic, final long timeoutMillis)
-        throws RemotingException, MQBrokerException, InterruptedException {
+            throws RemotingException, MQBrokerException, InterruptedException {
         return getTopicRouteInfoFromNameServer(topic, timeoutMillis, true);
     }
 
     public TopicRouteData getTopicRouteInfoFromNameServer(final String topic, final long timeoutMillis,
-        boolean allowTopicNotExist) throws MQBrokerException, InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+                                                          boolean allowTopicNotExist) throws MQBrokerException, InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         GetRouteInfoRequestHeader requestHeader = new GetRouteInfoRequestHeader();
         requestHeader.setTopic(topic);
 
@@ -1321,7 +1237,7 @@ public class BrokerOuterAPI {
     }
 
     public void forwardRequest(String brokerAddr, RemotingCommand request, long timeoutMillis,
-        InvokeCallback invokeCallback) throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException, RemotingTooMuchRequestException, RemotingConnectException {
+                               InvokeCallback invokeCallback) throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException, RemotingTooMuchRequestException, RemotingConnectException {
         this.remotingClient.invokeAsync(brokerAddr, request, timeoutMillis, invokeCallback);
     }
 
@@ -1339,8 +1255,8 @@ public class BrokerOuterAPI {
     }
 
     public MessageRequestModeSerializeWrapper getAllMessageRequestMode(
-        final String addr) throws RemotingSendRequestException, RemotingConnectException,
-        MQBrokerException, RemotingTimeoutException, InterruptedException {
+            final String addr) throws RemotingSendRequestException, RemotingConnectException,
+            MQBrokerException, RemotingTimeoutException, InterruptedException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ALL_MESSAGE_REQUEST_MODE, null);
         RemotingCommand response = this.remotingClient.invokeSync(addr, request, 3000);
         assert response != null;
@@ -1369,10 +1285,10 @@ public class BrokerOuterAPI {
      * Alter syncStateSet
      */
     public SyncStateSet alterSyncStateSet(
-        final String controllerAddress,
-        final String brokerName,
-        final Long masterBrokerId, final int masterEpoch,
-        final Set<Long> newSyncStateSet, final int syncStateSetEpoch) throws Exception {
+            final String controllerAddress,
+            final String brokerName,
+            final Long masterBrokerId, final int masterEpoch,
+            final Set<Long> newSyncStateSet, final int syncStateSetEpoch) throws Exception {
 
         final AlterSyncStateSetRequestHeader requestHeader = new AlterSyncStateSetRequestHeader(brokerName, masterBrokerId, masterEpoch);
         final RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_ALTER_SYNC_STATE_SET, requestHeader);
@@ -1392,8 +1308,8 @@ public class BrokerOuterAPI {
      * Broker try to elect itself as a master in broker set
      */
     public Pair<ElectMasterResponseHeader, Set<Long>> brokerElect(String controllerAddress, String clusterName,
-        String brokerName,
-        Long brokerId) throws Exception {
+                                                                  String brokerName,
+                                                                  Long brokerId) throws Exception {
 
         final ElectMasterRequestHeader requestHeader = ElectMasterRequestHeader.ofBrokerTrigger(clusterName, brokerName, brokerId);
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_ELECT_MASTER, requestHeader);
@@ -1412,7 +1328,7 @@ public class BrokerOuterAPI {
     }
 
     public GetNextBrokerIdResponseHeader getNextBrokerId(final String clusterName, final String brokerName,
-        final String controllerAddress) throws Exception {
+                                                         final String controllerAddress) throws Exception {
         final GetNextBrokerIdRequestHeader requestHeader = new GetNextBrokerIdRequestHeader(clusterName, brokerName);
         final RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_GET_NEXT_BROKER_ID, requestHeader);
         final RemotingCommand response = this.remotingClient.invokeSync(controllerAddress, request, 3000);
@@ -1424,7 +1340,7 @@ public class BrokerOuterAPI {
     }
 
     public ApplyBrokerIdResponseHeader applyBrokerId(final String clusterName, final String brokerName,
-        final Long brokerId, final String registerCheckCode, final String controllerAddress) throws Exception {
+                                                     final Long brokerId, final String registerCheckCode, final String controllerAddress) throws Exception {
         final ApplyBrokerIdRequestHeader requestHeader = new ApplyBrokerIdRequestHeader(clusterName, brokerName, brokerId, registerCheckCode);
         final RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_APPLY_BROKER_ID, requestHeader);
         final RemotingCommand response = this.remotingClient.invokeSync(controllerAddress, request, 3000);
@@ -1436,8 +1352,8 @@ public class BrokerOuterAPI {
     }
 
     public Pair<RegisterBrokerToControllerResponseHeader, Set<Long>> registerBrokerToController(
-        final String clusterName, final String brokerName, final Long brokerId, final String brokerAddress,
-        final String controllerAddress) throws Exception {
+            final String clusterName, final String brokerName, final Long brokerId, final String brokerAddress,
+            final String controllerAddress) throws Exception {
         final RegisterBrokerToControllerRequestHeader requestHeader = new RegisterBrokerToControllerRequestHeader(clusterName, brokerName, brokerId, brokerAddress);
         final RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_REGISTER_BROKER, requestHeader);
         final RemotingCommand response = this.remotingClient.invokeSync(controllerAddress, request, 3000);
@@ -1454,7 +1370,7 @@ public class BrokerOuterAPI {
      * Get broker replica info
      */
     public Pair<GetReplicaInfoResponseHeader, SyncStateSet> getReplicaInfo(final String controllerAddress,
-        final String brokerName) throws Exception {
+                                                                           final String brokerName) throws Exception {
         final GetReplicaInfoRequestHeader requestHeader = new GetReplicaInfoRequestHeader(brokerName);
         final RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONTROLLER_GET_REPLICA_INFO, requestHeader);
         final RemotingCommand response = this.remotingClient.invokeSync(controllerAddress, request, 3000);
@@ -1474,17 +1390,17 @@ public class BrokerOuterAPI {
      * Send heartbeat to controller
      */
     public void sendHeartbeatToController(final String controllerAddress,
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final Long brokerId,
-        final int sendHeartBeatTimeoutMills,
-        final boolean isInBrokerContainer,
-        final int epoch,
-        final long maxOffset,
-        final long confirmOffset,
-        final long controllerHeartBeatTimeoutMills,
-        final int electionPriority) {
+                                          final String clusterName,
+                                          final String brokerAddr,
+                                          final String brokerName,
+                                          final Long brokerId,
+                                          final int sendHeartBeatTimeoutMills,
+                                          final boolean isInBrokerContainer,
+                                          final int epoch,
+                                          final long maxOffset,
+                                          final long confirmOffset,
+                                          final long controllerHeartBeatTimeoutMills,
+                                          final int electionPriority) {
         if (StringUtils.isEmpty(controllerAddress)) {
             return;
         }
@@ -1515,8 +1431,8 @@ public class BrokerOuterAPI {
 
     // Triple<PullResult, info, needRetry>, should check info and retry if and only if PullResult is null
     public CompletableFuture<Triple<PullResult, String, Boolean>> pullMessageFromSpecificBrokerAsync(String brokerName, String brokerAddr,
-        String consumerGroup, String topic, int queueId, long offset,
-        int maxNums, long timeoutMillis) throws RemotingException, InterruptedException {
+                                                                                                     String consumerGroup, String topic, int queueId, long offset,
+                                                                                                     int maxNums, long timeoutMillis) throws RemotingException, InterruptedException {
         PullMessageRequestHeader requestHeader = new PullMessageRequestHeader();
         requestHeader.setConsumerGroup(consumerGroup);
         requestHeader.setTopic(topic);
@@ -1561,8 +1477,8 @@ public class BrokerOuterAPI {
     }
 
     private PullResultExt processPullResponse(
-        final RemotingCommand response,
-        final String addr) throws MQBrokerException, RemotingCommandException {
+            final RemotingCommand response,
+            final String addr) throws MQBrokerException, RemotingCommandException {
         PullStatus pullStatus = PullStatus.NO_NEW_MSG;
         switch (response.getCode()) {
             case ResponseCode.SUCCESS:
@@ -1585,7 +1501,7 @@ public class BrokerOuterAPI {
         PullMessageResponseHeader responseHeader = response.decodeCommandCustomHeader(PullMessageResponseHeader.class);
 
         return new PullResultExt(pullStatus, responseHeader.getNextBeginOffset(), responseHeader.getMinOffset(),
-            responseHeader.getMaxOffset(), null, responseHeader.getSuggestWhichBrokerId(), response.getBody(), responseHeader.getOffsetDelta());
+                responseHeader.getMaxOffset(), null, responseHeader.getSuggestWhichBrokerId(), response.getBody(), responseHeader.getOffsetDelta());
 
     }
 
@@ -1594,10 +1510,10 @@ public class BrokerOuterAPI {
         if (PullStatus.FOUND == pullResult.getPullStatus()) {
             ByteBuffer byteBuffer = ByteBuffer.wrap(pullResult.getMessageBinary());
             List<MessageExt> msgList = MessageDecoder.decodesBatch(
-                byteBuffer,
-                true,
-                true,
-                true
+                    byteBuffer,
+                    true,
+                    true,
+                    true
             );
 
             // Currently batch messages are not supported
@@ -1607,9 +1523,9 @@ public class BrokerOuterAPI {
                     msg.setTransactionId(msg.getProperty(MessageConst.PROPERTY_UNIQ_CLIENT_MESSAGE_ID_KEYIDX));
                 }
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_MIN_OFFSET,
-                    Long.toString(pullResult.getMinOffset()));
+                        Long.toString(pullResult.getMinOffset()));
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_MAX_OFFSET,
-                    Long.toString(pullResult.getMaxOffset()));
+                        Long.toString(pullResult.getMaxOffset()));
                 msg.setBrokerName(brokerName);
                 msg.setQueueId(queueId);
                 if (pullResult.getOffsetDelta() != null) {

@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.store.timer;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -34,12 +29,17 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TimerWheel {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     public static final String TIMER_WHEEL_FILE_NAME = "timerwheel";
     public static final int BLANK = -1, IGNORE = -2;
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     public final int slotsTotal;
     public final int precisionMs;
     private final String fileName;
@@ -60,6 +60,7 @@ public class TimerWheel {
     public TimerWheel(String fileName, int slotsTotal, int precisionMs) throws IOException {
         this(fileName, slotsTotal, precisionMs, -1);
     }
+
     public TimerWheel(String fileName, int slotsTotal, int precisionMs, long snapOffset) throws IOException {
         this.slotsTotal = slotsTotal;
         this.precisionMs = precisionMs;
@@ -74,9 +75,9 @@ public class TimerWheel {
         try {
             randomAccessFile = new RandomAccessFile(finalFileName, "rw");
             if (file.exists() && randomAccessFile.length() != 0 &&
-                randomAccessFile.length() != wheelLength) {
+                    randomAccessFile.length() != wheelLength) {
                 throw new RuntimeException(String.format("Timer wheel length:%d != expected:%s",
-                    randomAccessFile.length(), wheelLength));
+                        randomAccessFile.length(), wheelLength));
             }
             randomAccessFile.setLength(wheelLength);
             if (snapOffset < 0) {
@@ -97,6 +98,31 @@ public class TimerWheel {
             log.error("map file " + finalFileName + " Failed. ", e);
             throw e;
         }
+    }
+
+    /**
+     * Get the maximum flag from existing snapshot files.
+     *
+     * @return The maximum flag value, or -1 if no snapshot files exist
+     */
+    public static long getMaxSnapshotFlag(String timerWheelPath) {
+        File dir = new File(timerWheelPath).getParentFile();
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return -1;
+        }
+
+        long maxFlag = -1;
+        for (File file : files) {
+            String fileName = file.getName();
+            if (fileName.startsWith(TIMER_WHEEL_FILE_NAME + ".")) {
+                long flag = UtilAll.asLong(fileName.substring(TIMER_WHEEL_FILE_NAME.length() + 1), -1);
+                if (flag > maxFlag) {
+                    maxFlag = flag;
+                }
+            }
+        }
+        return maxFlag;
     }
 
     public void shutdown() {
@@ -228,44 +254,6 @@ public class TimerWheel {
         }
     }
 
-    /**
-     * Get the maximum flag from existing snapshot files.
-     *
-     * @return The maximum flag value, or -1 if no snapshot files exist
-     */
-    public static long getMaxSnapshotFlag(String timerWheelPath) {
-        File dir = new File(timerWheelPath).getParentFile();
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return -1;
-        }
-
-        long maxFlag = -1;
-        for (File file : files) {
-            String fileName = file.getName();
-            if (fileName.startsWith(TIMER_WHEEL_FILE_NAME + ".")) {
-                long flag = UtilAll.asLong(fileName.substring(TIMER_WHEEL_FILE_NAME.length() + 1), -1);
-                if (flag > maxFlag) {
-                    maxFlag = flag;
-                }
-            }
-        }
-        return maxFlag;
-    }
-
-    /**
-     * Wrapper class for file and flag
-     */
-    private static class FileWithFlag {
-        final File file;
-        final long flag;
-
-        FileWithFlag(File file, long flag) {
-            this.file = file;
-            this.flag = flag;
-        }
-    }
-
     public Slot getSlot(long timeMs) {
         Slot slot = getRawSlot(timeMs);
         if (slot.timeMs != timeMs / precisionMs * precisionMs) {
@@ -278,7 +266,7 @@ public class TimerWheel {
     public Slot getRawSlot(long timeMs) {
         localBuffer.get().position(getSlotIndex(timeMs) * Slot.SIZE);
         return new Slot(localBuffer.get().getLong() * precisionMs,
-            localBuffer.get().getLong(), localBuffer.get().getLong(), localBuffer.get().getInt(), localBuffer.get().getInt());
+                localBuffer.get().getLong(), localBuffer.get().getLong(), localBuffer.get().getInt(), localBuffer.get().getInt());
     }
 
     public int getSlotIndex(long timeMs) {
@@ -364,5 +352,18 @@ public class TimerWheel {
 
     public String getFileName() {
         return fileName;
+    }
+
+    /**
+     * Wrapper class for file and flag
+     */
+    private static class FileWithFlag {
+        final File file;
+        final long flag;
+
+        FileWithFlag(File file, long flag) {
+            this.file = file;
+            this.flag = flag;
+        }
     }
 }

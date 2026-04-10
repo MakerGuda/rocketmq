@@ -17,9 +17,6 @@
 
 package org.apache.rocketmq.store.ha;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -31,6 +28,10 @@ import org.apache.rocketmq.store.PutMessageSpinLock;
 import org.apache.rocketmq.store.PutMessageStatus;
 import org.apache.rocketmq.store.ha.autoswitch.AutoSwitchHAConnection;
 import org.apache.rocketmq.store.ha.autoswitch.AutoSwitchHAService;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * GroupTransferService Service
@@ -135,7 +136,7 @@ public class GroupTransferService extends ServiceThread {
 
                 if (!transferOK) {
                     log.warn("transfer message to slave timeout, offset : {}, request acks: {}",
-                        req.getNextOffset(), req.getAckNums());
+                            req.getNextOffset(), req.getAckNums());
                 }
 
                 req.wakeupCustomer(transferOK ? PutMessageStatus.PUT_OK : PutMessageStatus.FLUSH_SLAVE_TIMEOUT);

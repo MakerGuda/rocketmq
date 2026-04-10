@@ -31,28 +31,102 @@ public class SimpleCharStream {
      * Whether parser is static.
      */
     public static final boolean STATIC_FLAG = false;
-    int bufsize;
-    int available;
-    int tokenBegin;
     /**
      * Position in buffer.
      */
     public int bufpos = -1;
     protected int[] bufline;
     protected int[] bufcolumn;
-
     protected int column = 0;
     protected int line = 1;
-
     protected boolean prevCharIsCR = false;
     protected boolean prevCharIsLF = false;
-
     protected java.io.Reader inputStream;
-
     protected char[] buffer;
     protected int maxNextCharInd = 0;
     protected int inBuf = 0;
     protected int tabSize = 8;
+    int bufsize;
+    int available;
+    int tokenBegin;
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.Reader dstream, int startline,
+                            int startcolumn, int buffersize) {
+        inputStream = dstream;
+        line = startline;
+        column = startcolumn - 1;
+
+        available = bufsize = buffersize;
+        buffer = new char[buffersize];
+        bufline = new int[buffersize];
+        bufcolumn = new int[buffersize];
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.Reader dstream, int startline,
+                            int startcolumn) {
+        this(dstream, startline, startcolumn, 4096);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.Reader dstream) {
+        this(dstream, 1, 1, 4096);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.InputStream dstream, String encoding, int startline,
+                            int startcolumn, int buffersize) throws java.io.UnsupportedEncodingException {
+        this(encoding == null ?
+                new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8) :
+                new java.io.InputStreamReader(dstream, encoding), startline, startcolumn, buffersize);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.InputStream dstream, int startline,
+                            int startcolumn, int buffersize) {
+        this(new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8), startline, startcolumn, buffersize);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.InputStream dstream, String encoding, int startline,
+                            int startcolumn) throws java.io.UnsupportedEncodingException {
+        this(dstream, encoding, startline, startcolumn, 4096);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.InputStream dstream, int startline,
+                            int startcolumn) {
+        this(dstream, startline, startcolumn, 4096);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.InputStream dstream, String encoding) throws java.io.UnsupportedEncodingException {
+        this(dstream, encoding, 1, 1, 4096);
+    }
+
+    /**
+     * Constructor.
+     */
+    public SimpleCharStream(java.io.InputStream dstream) {
+        this(dstream, 1, 1, 4096);
+    }
 
     protected void setTabSize(int i) {
         tabSize = i;
@@ -263,40 +337,10 @@ public class SimpleCharStream {
     }
 
     /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.Reader dstream, int startline,
-        int startcolumn, int buffersize) {
-        inputStream = dstream;
-        line = startline;
-        column = startcolumn - 1;
-
-        available = bufsize = buffersize;
-        buffer = new char[buffersize];
-        bufline = new int[buffersize];
-        bufcolumn = new int[buffersize];
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.Reader dstream, int startline,
-        int startcolumn) {
-        this(dstream, startline, startcolumn, 4096);
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.Reader dstream) {
-        this(dstream, 1, 1, 4096);
-    }
-
-    /**
      * Reinitialise.
      */
     public void ReInit(java.io.Reader dstream, int startline,
-        int startcolumn, int buffersize) {
+                       int startcolumn, int buffersize) {
         inputStream = dstream;
         line = startline;
         column = startcolumn - 1;
@@ -316,7 +360,7 @@ public class SimpleCharStream {
      * Reinitialise.
      */
     public void ReInit(java.io.Reader dstream, int startline,
-        int startcolumn) {
+                       int startcolumn) {
         ReInit(dstream, startline, startcolumn, 4096);
     }
 
@@ -328,68 +372,20 @@ public class SimpleCharStream {
     }
 
     /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.InputStream dstream, String encoding, int startline,
-        int startcolumn, int buffersize) throws java.io.UnsupportedEncodingException {
-        this(encoding == null ?
-            new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8) :
-            new java.io.InputStreamReader(dstream, encoding), startline, startcolumn, buffersize);
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.InputStream dstream, int startline,
-        int startcolumn, int buffersize) {
-        this(new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8), startline, startcolumn, buffersize);
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.InputStream dstream, String encoding, int startline,
-        int startcolumn) throws java.io.UnsupportedEncodingException {
-        this(dstream, encoding, startline, startcolumn, 4096);
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.InputStream dstream, int startline,
-        int startcolumn) {
-        this(dstream, startline, startcolumn, 4096);
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.InputStream dstream, String encoding) throws java.io.UnsupportedEncodingException {
-        this(dstream, encoding, 1, 1, 4096);
-    }
-
-    /**
-     * Constructor.
-     */
-    public SimpleCharStream(java.io.InputStream dstream) {
-        this(dstream, 1, 1, 4096);
-    }
-
-    /**
      * Reinitialise.
      */
     public void ReInit(java.io.InputStream dstream, String encoding, int startline,
-        int startcolumn, int buffersize) throws java.io.UnsupportedEncodingException {
+                       int startcolumn, int buffersize) throws java.io.UnsupportedEncodingException {
         ReInit(encoding == null ?
-            new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8) :
-            new java.io.InputStreamReader(dstream, encoding), startline, startcolumn, buffersize);
+                new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8) :
+                new java.io.InputStreamReader(dstream, encoding), startline, startcolumn, buffersize);
     }
 
     /**
      * Reinitialise.
      */
     public void ReInit(java.io.InputStream dstream, int startline,
-        int startcolumn, int buffersize) {
+                       int startcolumn, int buffersize) {
         ReInit(new java.io.InputStreamReader(dstream, StandardCharsets.UTF_8), startline, startcolumn, buffersize);
     }
 
@@ -411,7 +407,7 @@ public class SimpleCharStream {
      * Reinitialise.
      */
     public void ReInit(java.io.InputStream dstream, String encoding, int startline,
-        int startcolumn) throws java.io.UnsupportedEncodingException {
+                       int startcolumn) throws java.io.UnsupportedEncodingException {
         ReInit(dstream, encoding, startline, startcolumn, 4096);
     }
 
@@ -419,7 +415,7 @@ public class SimpleCharStream {
      * Reinitialise.
      */
     public void ReInit(java.io.InputStream dstream, int startline,
-        int startcolumn) {
+                       int startcolumn) {
         ReInit(dstream, startline, startcolumn, 4096);
     }
 
@@ -431,7 +427,7 @@ public class SimpleCharStream {
             return new String(buffer, tokenBegin, bufpos - tokenBegin + 1);
         else
             return new String(buffer, tokenBegin, bufsize - tokenBegin) +
-                new String(buffer, 0, bufpos + 1);
+                    new String(buffer, 0, bufpos + 1);
     }
 
     /**
@@ -444,7 +440,7 @@ public class SimpleCharStream {
             System.arraycopy(buffer, bufpos - len + 1, ret, 0, len);
         else {
             System.arraycopy(buffer, bufsize - (len - bufpos - 1), ret, 0,
-                len - bufpos - 1);
+                    len - bufpos - 1);
             System.arraycopy(buffer, 0, ret, len - bufpos - 1, bufpos + 1);
         }
 

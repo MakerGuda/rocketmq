@@ -17,13 +17,13 @@
 
 package org.apache.rocketmq.common.stats;
 
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+
 import java.util.LinkedList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
-
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
 
 public class StatsItem {
     private final LongAdder value = new LongAdder();
@@ -38,10 +38,9 @@ public class StatsItem {
 
     private final String statsName;
     private final String statsKey;
-    private long lastUpdateTimestamp = System.currentTimeMillis();
     private final ScheduledExecutorService scheduledExecutorService;
-
     private final Logger logger;
+    private long lastUpdateTimestamp = System.currentTimeMillis();
 
     public StatsItem(String statsName, String statsKey, ScheduledExecutorService scheduledExecutorService, Logger logger) {
         this.statsName = statsName;
@@ -159,7 +158,7 @@ public class StatsItem {
                 this.csListMinute.add(new CallSnapshot(System.currentTimeMillis() - 10 * 1000, 0, 0));
             }
             this.csListMinute.add(new CallSnapshot(System.currentTimeMillis(), this.times.sum(), this.value
-                .sum()));
+                    .sum()));
             if (this.csListMinute.size() > 7) {
                 this.csListMinute.removeFirst();
             }
@@ -172,7 +171,7 @@ public class StatsItem {
                 this.csListHour.add(new CallSnapshot(System.currentTimeMillis() - 10 * 60 * 1000, 0, 0));
             }
             this.csListHour.add(new CallSnapshot(System.currentTimeMillis(), this.times.sum(), this.value
-                .sum()));
+                    .sum()));
             if (this.csListHour.size() > 7) {
                 this.csListHour.removeFirst();
             }
@@ -185,7 +184,7 @@ public class StatsItem {
                 this.csListDay.add(new CallSnapshot(System.currentTimeMillis() - 1 * 60 * 60 * 1000, 0, 0));
             }
             this.csListDay.add(new CallSnapshot(System.currentTimeMillis(), this.times.sum(), this.value
-                .sum()));
+                    .sum()));
             if (this.csListDay.size() > 25) {
                 this.csListDay.removeFirst();
             }

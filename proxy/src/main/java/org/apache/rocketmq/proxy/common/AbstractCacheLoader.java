@@ -19,8 +19,9 @@ package org.apache.rocketmq.proxy.common;
 import com.google.common.cache.CacheLoader;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-import java.util.concurrent.ThreadPoolExecutor;
+
 import javax.annotation.Nonnull;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public abstract class AbstractCacheLoader<K, V> extends CacheLoader<K, V> {
     private final ThreadPoolExecutor cacheRefreshExecutor;

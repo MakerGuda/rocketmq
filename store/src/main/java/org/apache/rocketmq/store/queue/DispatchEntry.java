@@ -17,9 +17,10 @@
 
 package org.apache.rocketmq.store.queue;
 
-import java.nio.charset.StandardCharsets;
-import javax.annotation.Nonnull;
 import org.apache.rocketmq.store.DispatchRequest;
+
+import javax.annotation.Nonnull;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Use Record when Java 16 is available

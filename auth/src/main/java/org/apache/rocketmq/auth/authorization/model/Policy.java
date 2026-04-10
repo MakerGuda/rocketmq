@@ -16,14 +16,15 @@
  */
 package org.apache.rocketmq.auth.authorization.model;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.rocketmq.auth.authorization.enums.Decision;
+import org.apache.rocketmq.auth.authorization.enums.PolicyType;
+import org.apache.rocketmq.common.action.Action;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.rocketmq.common.action.Action;
-import org.apache.rocketmq.auth.authorization.enums.Decision;
-import org.apache.rocketmq.auth.authorization.enums.PolicyType;
 
 public class Policy {
 
@@ -32,18 +33,18 @@ public class Policy {
     private List<PolicyEntry> entries;
 
     public static Policy of(List<Resource> resources, List<Action> actions, Environment environment,
-        Decision decision) {
+                            Decision decision) {
         return of(PolicyType.CUSTOM, resources, actions, environment, decision);
     }
 
     public static Policy of(PolicyType policyType, List<Resource> resources, List<Action> actions,
-        Environment environment,
-        Decision decision) {
+                            Environment environment,
+                            Decision decision) {
         Policy policy = new Policy();
         policy.setPolicyType(policyType);
         List<PolicyEntry> entries = resources.stream()
-            .map(resource -> PolicyEntry.of(resource, actions, environment, decision))
-            .collect(Collectors.toList());
+                .map(resource -> PolicyEntry.of(resource, actions, environment, decision))
+                .collect(Collectors.toList());
         policy.setEntries(entries);
         return policy;
     }

@@ -43,6 +43,7 @@ public abstract class MetadataFile {
         String dataStr = MixAll.file2String(filePath);
         decodeFromStr(dataStr);
     }
+
     public boolean fileExists() {
         File file = new File(filePath);
         return file.exists();

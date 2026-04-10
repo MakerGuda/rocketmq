@@ -18,12 +18,13 @@
 package org.apache.rocketmq.remoting.protocol.body;
 
 import com.google.common.base.Objects;
+import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+import org.apache.rocketmq.remoting.protocol.route.BrokerData;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
-import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 
 public class ClusterInfo extends RemotingSerializable {
     private Map<String/* brokerName */, BrokerData> brokerAddrTable;
@@ -57,11 +58,11 @@ public class ClusterInfo extends RemotingSerializable {
             }
         }
 
-        return addrs.toArray(new String[] {});
+        return addrs.toArray(new String[]{});
     }
 
     public String[] retrieveAllClusterNames() {
-        return clusterAddrTable.keySet().toArray(new String[] {});
+        return clusterAddrTable.keySet().toArray(new String[]{});
     }
 
     @Override

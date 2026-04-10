@@ -17,12 +17,13 @@
 
 package org.apache.rocketmq.tieredstore.common;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.rocketmq.store.GetMessageResult;
 import org.apache.rocketmq.store.GetMessageStatus;
 import org.apache.rocketmq.store.MessageFilter;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GetMessageResultExt extends GetMessageResult {
 
@@ -68,7 +69,7 @@ public class GetMessageResultExt extends GetMessageResult {
 
             long offset = this.getMessageQueueOffset().get(i);
             result.addMessage(new SelectMappedBufferResult(bufferResult.getStartOffset(),
-                bufferResult.getByteBuffer().asReadOnlyBuffer(), bufferResult.getSize(), null), offset);
+                    bufferResult.getByteBuffer().asReadOnlyBuffer(), bufferResult.getSize(), null), offset);
         }
 
         if (result.getBufferTotalSize() == 0) {

@@ -17,13 +17,14 @@
 
 package org.apache.rocketmq.test.route;
 
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
 import org.apache.rocketmq.test.base.BaseConf;
 import org.apache.rocketmq.test.util.MQAdminTestUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -80,8 +81,8 @@ public class CreateAndUpdateTopicIT extends BaseConf {
             // The route info of testTopic2 will be removed from broker1 after the registration
             TopicRouteData finalRoute = MQAdminTestUtils.examineTopicRouteInfo(NAMESRV_ADDR, testTopic2);
             return finalRoute.getBrokerDatas().size() == 2
-                && finalRoute.getQueueDatas().get(0).getBrokerName().equals(BROKER2_NAME)
-                && finalRoute.getQueueDatas().get(1).getBrokerName().equals(BROKER3_NAME);
+                    && finalRoute.getQueueDatas().get(0).getBrokerName().equals(BROKER2_NAME)
+                    && finalRoute.getQueueDatas().get(1).getBrokerName().equals(BROKER3_NAME);
         });
 
         brokerController1.getBrokerConfig().setEnableSingleTopicRegister(false);

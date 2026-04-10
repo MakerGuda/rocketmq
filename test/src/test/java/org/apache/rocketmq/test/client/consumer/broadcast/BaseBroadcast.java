@@ -28,30 +28,30 @@ public class BaseBroadcast extends BaseConf {
     private static Logger logger = LoggerFactory.getLogger(BaseBroadcast.class);
 
     public static RMQBroadCastConsumer getBroadCastConsumer(String nsAddr, String topic,
-        String subExpression,
-        AbstractListener listener) {
+                                                            String subExpression,
+                                                            AbstractListener listener) {
         String consumerGroup = initConsumerGroup();
         return getBroadCastConsumer(nsAddr, consumerGroup, topic, subExpression, listener);
     }
 
     public static RMQBroadCastConsumer getBroadCastConsumer(String nsAddr, String consumerGroup,
-        String topic, String subExpression,
-        AbstractListener listener) {
+                                                            String topic, String subExpression,
+                                                            AbstractListener listener) {
         RMQBroadCastConsumer consumer = ConsumerFactory.getRMQBroadCastConsumer(nsAddr,
-            consumerGroup, topic, subExpression, listener);
+                consumerGroup, topic, subExpression, listener);
 
         consumer.setDebug();
 
         mqClients.add(consumer);
         logger.info(String.format("consumer[%s] start,topic[%s],subExpression[%s]", consumerGroup,
-            topic, subExpression));
+                topic, subExpression));
         return consumer;
     }
 
     public void printSeparator() {
         for (int i = 0; i < 3; i++) {
             logger.info(
-                "<<<<<<<<================================================================================>>>>>>>>");
+                    "<<<<<<<<================================================================================>>>>>>>>");
         }
     }
 }

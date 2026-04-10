@@ -111,13 +111,13 @@ public class NotificationRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("pollTime", pollTime)
-            .add("bornTime", bornTime)
-            .add("order", order)
-            .add("attemptId", attemptId)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("pollTime", pollTime)
+                .add("bornTime", bornTime)
+                .add("order", order)
+                .add("attemptId", attemptId)
+                .toString();
     }
 }

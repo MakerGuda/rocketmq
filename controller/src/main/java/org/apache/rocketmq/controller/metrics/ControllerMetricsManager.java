@@ -21,22 +21,13 @@ import com.google.common.base.Splitter;
 import io.openmessaging.storage.dledger.MemberState;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongGauge;
+import io.opentelemetry.api.metrics.*;
 import io.opentelemetry.exporter.logging.otlp.OtlpJsonLoggingMetricExporter;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporterBuilder;
 import io.opentelemetry.exporter.prometheus.PrometheusHttpServer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.metrics.Aggregation;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.InstrumentType;
-import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
-import io.opentelemetry.sdk.metrics.View;
+import io.opentelemetry.sdk.metrics.*;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
@@ -45,11 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ControllerConfig;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.metrics.MetricsExporterType;
-import org.apache.rocketmq.common.metrics.NopLongCounter;
-import org.apache.rocketmq.common.metrics.NopLongHistogram;
-import org.apache.rocketmq.common.metrics.NopLongUpDownCounter;
-import org.apache.rocketmq.common.metrics.NopObservableLongGauge;
+import org.apache.rocketmq.common.metrics.*;
 import org.apache.rocketmq.controller.ControllerManager;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -62,49 +49,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.AGGREGATION_DELTA;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.COUNTER_DLEDGER_OP_TOTAL;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.COUNTER_ELECTION_TOTAL;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.COUNTER_REQUEST_TOTAL;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.GAUGE_ACTIVE_BROKER_NUM;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.GAUGE_DLEDGER_DISK_USAGE;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.GAUGE_ROLE;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.HISTOGRAM_DLEDGER_OP_LATENCY;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.HISTOGRAM_REQUEST_LATENCY;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_ADDRESS;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_AGGREGATION;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_BROKER_SET;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_CLUSTER_NAME;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_GROUP;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_PEER_ID;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.OPEN_TELEMETRY_METER_NAME;
+import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.*;
 
 public class ControllerMetricsManager {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggerName.CONTROLLER_LOGGER_NAME);
-
-    private static volatile ControllerMetricsManager instance;
-
     private static final Map<String, String> LABEL_MAP = new HashMap<>();
-
     // metrics about node status
     public static LongUpDownCounter role = new NopLongUpDownCounter();
-
     public static ObservableLongGauge dLedgerDiskUsage = new NopObservableLongGauge();
-
     public static ObservableLongGauge activeBrokerNum = new NopObservableLongGauge();
-
     public static LongCounter requestTotal = new NopLongCounter();
-
     public static LongCounter dLedgerOpTotal = new NopLongCounter();
-
     public static LongCounter electionTotal = new NopLongCounter();
-
     // metrics about latency
     public static LongHistogram requestLatency = new NopLongHistogram();
-
     public static LongHistogram dLedgerOpLatency = new NopLongHistogram();
-
+    private static volatile ControllerMetricsManager instance;
     private static double us = 1d;
 
     private static double ms = 1000 * us;
@@ -125,6 +86,21 @@ public class ControllerMetricsManager {
 
     private MetricExporter loggingMetricExporter;
 
+    private ControllerMetricsManager(ControllerManager controllerManager) {
+        this.controllerManager = controllerManager;
+        this.config = this.controllerManager.getControllerConfig();
+        if (config.getControllerType().equals(ControllerConfig.JRAFT_CONTROLLER)) {
+            this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getJraftConfig().getjRaftAddress());
+            this.LABEL_MAP.put(LABEL_GROUP, this.config.getJraftConfig().getjRaftGroupId());
+            this.LABEL_MAP.put(LABEL_PEER_ID, this.config.getJraftConfig().getjRaftServerId());
+        } else {
+            this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getDLedgerAddress());
+            this.LABEL_MAP.put(LABEL_GROUP, this.config.getControllerDLegerGroup());
+            this.LABEL_MAP.put(LABEL_PEER_ID, this.config.getControllerDLegerSelfId());
+        }
+        this.init();
+    }
+
     public static ControllerMetricsManager getInstance(ControllerManager controllerManager) {
         if (instance == null) {
             synchronized (ControllerMetricsManager.class) {
@@ -144,7 +120,7 @@ public class ControllerMetricsManager {
 
     public static void recordRole(MemberState.Role newRole, MemberState.Role oldRole) {
         role.add(getRoleValue(newRole) - getRoleValue(oldRole),
-            newAttributesBuilder().build());
+                newAttributesBuilder().build());
     }
 
     private static int getRoleValue(MemberState.Role role) {
@@ -161,21 +137,6 @@ public class ControllerMetricsManager {
                 logger.error("Unknown role {}", role);
                 return 0;
         }
-    }
-
-    private ControllerMetricsManager(ControllerManager controllerManager) {
-        this.controllerManager = controllerManager;
-        this.config = this.controllerManager.getControllerConfig();
-        if (config.getControllerType().equals(ControllerConfig.JRAFT_CONTROLLER)) {
-            this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getJraftConfig().getjRaftAddress());
-            this.LABEL_MAP.put(LABEL_GROUP, this.config.getJraftConfig().getjRaftGroupId());
-            this.LABEL_MAP.put(LABEL_PEER_ID, this.config.getJraftConfig().getjRaftServerId());
-        } else {
-            this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getDLedgerAddress());
-            this.LABEL_MAP.put(LABEL_GROUP, this.config.getControllerDLegerGroup());
-            this.LABEL_MAP.put(LABEL_PEER_ID, this.config.getControllerDLegerSelfId());
-        }
-        this.init();
     }
 
     private boolean checkConfig() {
@@ -201,29 +162,29 @@ public class ControllerMetricsManager {
     private void registerMetricsView(SdkMeterProviderBuilder providerBuilder) {
         // define latency bucket
         List<Double> latencyBuckets = Arrays.asList(
-            1 * us, 3 * us, 5 * us,
-            10 * us, 30 * us, 50 * us,
-            100 * us, 300 * us, 500 * us,
-            1 * ms, 3 * ms, 5 * ms,
-            10 * ms, 30 * ms, 50 * ms,
-            100 * ms, 300 * ms, 500 * ms,
-            1 * s, 3 * s, 5 * s,
-            10 * s
+                1 * us, 3 * us, 5 * us,
+                10 * us, 30 * us, 50 * us,
+                100 * us, 300 * us, 500 * us,
+                1 * ms, 3 * ms, 5 * ms,
+                10 * ms, 30 * ms, 50 * ms,
+                100 * ms, 300 * ms, 500 * ms,
+                1 * s, 3 * s, 5 * s,
+                10 * s
         );
 
         View latencyView = View.builder()
-            .setAggregation(Aggregation.explicitBucketHistogram(latencyBuckets))
-            .build();
+                .setAggregation(Aggregation.explicitBucketHistogram(latencyBuckets))
+                .build();
 
         InstrumentSelector requestLatencySelector = InstrumentSelector.builder()
-            .setType(InstrumentType.HISTOGRAM)
-            .setName(HISTOGRAM_REQUEST_LATENCY)
-            .build();
+                .setType(InstrumentType.HISTOGRAM)
+                .setName(HISTOGRAM_REQUEST_LATENCY)
+                .build();
 
         InstrumentSelector dLedgerOpLatencySelector = InstrumentSelector.builder()
-            .setType(InstrumentType.HISTOGRAM)
-            .setName(HISTOGRAM_DLEDGER_OP_LATENCY)
-            .build();
+                .setType(InstrumentType.HISTOGRAM)
+                .setName(HISTOGRAM_DLEDGER_OP_LATENCY)
+                .build();
 
         providerBuilder.registerView(requestLatencySelector, latencyView);
         providerBuilder.registerView(dLedgerOpLatencySelector, latencyView);
@@ -231,61 +192,61 @@ public class ControllerMetricsManager {
 
     private void initMetric(Meter meter) {
         role = meter.upDownCounterBuilder(GAUGE_ROLE)
-            .setDescription("role of current node")
-            .build();
+                .setDescription("role of current node")
+                .build();
 
         dLedgerDiskUsage = meter.gaugeBuilder(GAUGE_DLEDGER_DISK_USAGE)
-            .setDescription("disk usage of dledger")
-            .setUnit("bytes")
-            .ofLongs()
-            .buildWithCallback(measurement -> {
-                String path = config.getControllerStorePath();
-                if (!UtilAll.isPathExists(path)) {
-                    return;
-                }
-                File file = new File(path);
-                Long diskUsage = UtilAll.calculateFileSizeInPath(file);
-                if (diskUsage == -1) {
-                    logger.error("calculateFileSizeInPath error, path: {}", path);
-                    return;
-                }
-                measurement.record(diskUsage, newAttributesBuilder().build());
-            });
+                .setDescription("disk usage of dledger")
+                .setUnit("bytes")
+                .ofLongs()
+                .buildWithCallback(measurement -> {
+                    String path = config.getControllerStorePath();
+                    if (!UtilAll.isPathExists(path)) {
+                        return;
+                    }
+                    File file = new File(path);
+                    Long diskUsage = UtilAll.calculateFileSizeInPath(file);
+                    if (diskUsage == -1) {
+                        logger.error("calculateFileSizeInPath error, path: {}", path);
+                        return;
+                    }
+                    measurement.record(diskUsage, newAttributesBuilder().build());
+                });
 
         activeBrokerNum = meter.gaugeBuilder(GAUGE_ACTIVE_BROKER_NUM)
-            .setDescription("now active brokers num")
-            .ofLongs()
-            .buildWithCallback(measurement -> {
-                Map<String, Map<String, Integer>> activeBrokersNum = controllerManager.getHeartbeatManager().getActiveBrokersNum();
-                activeBrokersNum.forEach((cluster, brokerSetAndNum) -> {
-                    brokerSetAndNum.forEach((brokerSet, num) -> measurement.record(num,
-                        newAttributesBuilder().put(LABEL_CLUSTER_NAME, cluster).put(LABEL_BROKER_SET, brokerSet).build()));
+                .setDescription("now active brokers num")
+                .ofLongs()
+                .buildWithCallback(measurement -> {
+                    Map<String, Map<String, Integer>> activeBrokersNum = controllerManager.getHeartbeatManager().getActiveBrokersNum();
+                    activeBrokersNum.forEach((cluster, brokerSetAndNum) -> {
+                        brokerSetAndNum.forEach((brokerSet, num) -> measurement.record(num,
+                                newAttributesBuilder().put(LABEL_CLUSTER_NAME, cluster).put(LABEL_BROKER_SET, brokerSet).build()));
+                    });
                 });
-            });
 
         requestTotal = meter.counterBuilder(COUNTER_REQUEST_TOTAL)
-            .setDescription("total request num")
-            .build();
+                .setDescription("total request num")
+                .build();
 
         dLedgerOpTotal = meter.counterBuilder(COUNTER_DLEDGER_OP_TOTAL)
-            .setDescription("total dledger operation num")
-            .build();
+                .setDescription("total dledger operation num")
+                .build();
 
         electionTotal = meter.counterBuilder(COUNTER_ELECTION_TOTAL)
-            .setDescription("total elect num")
-            .build();
+                .setDescription("total elect num")
+                .build();
 
         requestLatency = meter.histogramBuilder(HISTOGRAM_REQUEST_LATENCY)
-            .setDescription("request latency")
-            .setUnit("us")
-            .ofLongs()
-            .build();
+                .setDescription("request latency")
+                .setUnit("us")
+                .ofLongs()
+                .build();
 
         dLedgerOpLatency = meter.histogramBuilder(HISTOGRAM_DLEDGER_OP_LATENCY)
-            .setDescription("dledger operation latency")
-            .setUnit("us")
-            .ofLongs()
-            .build();
+                .setDescription("dledger operation latency")
+                .setUnit("us")
+                .ofLongs()
+                .build();
 
     }
 
@@ -323,15 +284,15 @@ public class ControllerMetricsManager {
                 endpoint = "https://" + endpoint;
             }
             OtlpGrpcMetricExporterBuilder metricExporterBuilder = OtlpGrpcMetricExporter.builder()
-                .setEndpoint(endpoint)
-                .setTimeout(config.getMetricGrpcExporterTimeOutInMills(), TimeUnit.MILLISECONDS)
-                .setAggregationTemporalitySelector(x -> {
-                    if (config.isMetricsInDelta() &&
-                        (x == InstrumentType.COUNTER || x == InstrumentType.OBSERVABLE_COUNTER || x == InstrumentType.HISTOGRAM)) {
-                        return AggregationTemporality.DELTA;
-                    }
-                    return AggregationTemporality.CUMULATIVE;
-                });
+                    .setEndpoint(endpoint)
+                    .setTimeout(config.getMetricGrpcExporterTimeOutInMills(), TimeUnit.MILLISECONDS)
+                    .setAggregationTemporalitySelector(x -> {
+                        if (config.isMetricsInDelta() &&
+                                (x == InstrumentType.COUNTER || x == InstrumentType.OBSERVABLE_COUNTER || x == InstrumentType.HISTOGRAM)) {
+                            return AggregationTemporality.DELTA;
+                        }
+                        return AggregationTemporality.CUMULATIVE;
+                    });
 
             String headers = config.getMetricsGrpcExporterHeader();
             if (StringUtils.isNotBlank(headers)) {
@@ -351,8 +312,8 @@ public class ControllerMetricsManager {
             metricExporter = metricExporterBuilder.build();
 
             periodicMetricReader = PeriodicMetricReader.builder(metricExporter)
-                .setInterval(config.getMetricGrpcExporterIntervalInMills(), TimeUnit.MILLISECONDS)
-                .build();
+                    .setInterval(config.getMetricGrpcExporterIntervalInMills(), TimeUnit.MILLISECONDS)
+                    .build();
 
             providerBuilder.registerMetricReader(periodicMetricReader);
         }
@@ -363,9 +324,9 @@ public class ControllerMetricsManager {
                 promExporterHost = "0.0.0.0";
             }
             prometheusHttpServer = PrometheusHttpServer.builder()
-                .setHost(promExporterHost)
-                .setPort(config.getMetricsPromExporterPort())
-                .build();
+                    .setHost(promExporterHost)
+                    .setPort(config.getMetricsPromExporterPort())
+                    .build();
             providerBuilder.registerMetricReader(prometheusHttpServer);
         }
 
@@ -375,15 +336,15 @@ public class ControllerMetricsManager {
             loggingMetricExporter = OtlpJsonLoggingMetricExporter.create(config.isMetricsInDelta() ? AggregationTemporality.DELTA : AggregationTemporality.CUMULATIVE);
             java.util.logging.Logger.getLogger(OtlpJsonLoggingMetricExporter.class.getName()).setLevel(java.util.logging.Level.FINEST);
             periodicMetricReader = PeriodicMetricReader.builder(loggingMetricExporter)
-                .setInterval(config.getMetricLoggingExporterIntervalInMills(), TimeUnit.MILLISECONDS)
-                .build();
+                    .setInterval(config.getMetricLoggingExporterIntervalInMills(), TimeUnit.MILLISECONDS)
+                    .build();
             providerBuilder.registerMetricReader(periodicMetricReader);
         }
 
         registerMetricsView(providerBuilder);
 
         controllerMeter = OpenTelemetrySdk.builder().setMeterProvider(providerBuilder.build())
-            .build().getMeter(OPEN_TELEMETRY_METER_NAME);
+                .build().getMeter(OPEN_TELEMETRY_METER_NAME);
 
         initMetric(controllerMeter);
     }

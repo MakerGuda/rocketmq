@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.broker.pop;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.remoting.protocol.header.ExtraInfoUtil;
 import org.apache.rocketmq.store.GetMessageResult;
 import org.apache.rocketmq.store.GetMessageStatus;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 上下文对象 <b>PopConsumerContext</b>，在一次 RPC 或处理链路中携带请求/响应相关数据。
@@ -55,7 +56,7 @@ public class PopConsumerContext {
     private List<PopConsumerRecord> popConsumerRecordList;
 
     public PopConsumerContext(String clientHost,
-        long popTime, long invisibleTime, String groupId, boolean fifo, int initMode, String attemptId) {
+                              long popTime, long invisibleTime, String groupId, boolean fifo, int initMode, String attemptId) {
 
         this.clientHost = clientHost;
         this.popTime = popTime;
@@ -76,7 +77,7 @@ public class PopConsumerContext {
 
     // offset is consumer last request offset
     public void addGetMessageResult(GetMessageResult result,
-        String topicId, int queueId, PopConsumerRecord.RetryType retryType, long offset) {
+                                    String topicId, int queueId, PopConsumerRecord.RetryType retryType, long offset) {
 
         if (result.getStatus() != GetMessageStatus.FOUND || result.getMessageQueueOffset().isEmpty()) {
             return;
@@ -95,7 +96,7 @@ public class PopConsumerContext {
 
         for (int i = 0; i < result.getMessageQueueOffset().size(); i++) {
             this.popConsumerRecordList.add(new PopConsumerRecord(popTime, groupId, topicId, queueId,
-                retryType.getCode(), invisibleTime, result.getMessageQueueOffset().get(i), attemptId));
+                    retryType.getCode(), invisibleTime, result.getMessageQueueOffset().get(i), attemptId));
         }
 
         ExtraInfoUtil.buildStartOffsetInfo(startOffsetInfo, topicId, queueId, offset);
@@ -140,7 +141,7 @@ public class PopConsumerContext {
 
     public int getMessageCount() {
         return getMessageResultList != null ?
-            getMessageResultList.stream().mapToInt(GetMessageResult::getMessageCount).sum() : 0;
+                getMessageResultList.stream().mapToInt(GetMessageResult::getMessageCount).sum() : 0;
     }
 
     public String getStartOffsetInfo() {
@@ -170,18 +171,18 @@ public class PopConsumerContext {
     @Override
     public String toString() {
         return "PopConsumerContext{" +
-            "clientHost=" + clientHost +
-            ", popTime=" + popTime +
-            ", invisibleTime=" + invisibleTime +
-            ", groupId=" + groupId +
-            ", isFifo=" + fifo +
-            ", attemptId=" + attemptId +
-            ", restCount=" + restCount +
-            ", startOffsetInfo=" + startOffsetInfo +
-            ", msgOffsetInfo=" + msgOffsetInfo +
-            ", orderCountInfo=" + orderCountInfo +
-            ", getMessageResultList=" + (getMessageResultList != null ? getMessageResultList.size() : 0) +
-            ", popConsumerRecordList=" + (popConsumerRecordList != null ? popConsumerRecordList.size() : 0) +
-            '}';
+                "clientHost=" + clientHost +
+                ", popTime=" + popTime +
+                ", invisibleTime=" + invisibleTime +
+                ", groupId=" + groupId +
+                ", isFifo=" + fifo +
+                ", attemptId=" + attemptId +
+                ", restCount=" + restCount +
+                ", startOffsetInfo=" + startOffsetInfo +
+                ", msgOffsetInfo=" + msgOffsetInfo +
+                ", orderCountInfo=" + orderCountInfo +
+                ", getMessageResultList=" + (getMessageResultList != null ? getMessageResultList.size() : 0) +
+                ", popConsumerRecordList=" + (popConsumerRecordList != null ? popConsumerRecordList.size() : 0) +
+                '}';
     }
 }

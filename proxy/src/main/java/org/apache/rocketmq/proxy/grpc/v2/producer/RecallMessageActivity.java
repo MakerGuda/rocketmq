@@ -39,7 +39,7 @@ public class RecallMessageActivity extends AbstractMessagingActivity {
     }
 
     public CompletableFuture<RecallMessageResponse> recallMessage(ProxyContext ctx,
-        RecallMessageRequest request) {
+                                                                  RecallMessageRequest request) {
         CompletableFuture<RecallMessageResponse> future = new CompletableFuture<>();
 
         try {
@@ -47,14 +47,14 @@ public class RecallMessageActivity extends AbstractMessagingActivity {
             validateTopic(topic);
 
             future = this.messagingProcessor.recallMessage(
-                ctx,
-                topic.getName(),
-                request.getRecallHandle(),
-                Duration.ofSeconds(2).toMillis()
+                    ctx,
+                    topic.getName(),
+                    request.getRecallHandle(),
+                    Duration.ofSeconds(2).toMillis()
             ).thenApply(result -> RecallMessageResponse.newBuilder()
-                .setMessageId(result)
-                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                .build());
+                    .setMessageId(result)
+                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                    .build());
         } catch (Throwable t) {
             future.completeExceptionally(t);
         }

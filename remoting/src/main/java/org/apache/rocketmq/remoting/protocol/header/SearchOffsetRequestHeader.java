@@ -88,10 +88,10 @@ public class SearchOffsetRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("timestamp", timestamp)
-            .add("boundaryType", boundaryType.getName())
-            .toString();
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("timestamp", timestamp)
+                .add("boundaryType", boundaryType.getName())
+                .toString();
     }
 }

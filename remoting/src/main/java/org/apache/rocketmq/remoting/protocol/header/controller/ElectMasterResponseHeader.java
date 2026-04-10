@@ -61,12 +61,12 @@ public class ElectMasterResponseHeader implements CommandCustomHeader {
         this.syncStateSetEpoch = syncStateSetEpoch;
     }
 
-    public void setMasterBrokerId(Long masterBrokerId) {
-        this.masterBrokerId = masterBrokerId;
-    }
-
     public Long getMasterBrokerId() {
         return masterBrokerId;
+    }
+
+    public void setMasterBrokerId(Long masterBrokerId) {
+        this.masterBrokerId = masterBrokerId;
     }
 
     @Override

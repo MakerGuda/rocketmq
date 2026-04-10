@@ -18,8 +18,6 @@ package org.apache.rocketmq.auth.authorization.strategy;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authorization.context.AuthorizationContext;
 import org.apache.rocketmq.auth.authorization.context.DefaultAuthorizationContext;
@@ -28,6 +26,9 @@ import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.constant.CommonConstants;
 
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 public class StatefulAuthorizationStrategy extends AbstractAuthorizationStrategy {
 
     protected Cache<String, Pair<Boolean, AuthorizationException>> authCache;
@@ -35,9 +36,9 @@ public class StatefulAuthorizationStrategy extends AbstractAuthorizationStrategy
     public StatefulAuthorizationStrategy(AuthConfig authConfig, Supplier<?> metadataService) {
         super(authConfig, metadataService);
         this.authCache = Caffeine.newBuilder()
-            .expireAfterWrite(authConfig.getStatefulAuthorizationCacheExpiredSecond(), TimeUnit.SECONDS)
-            .maximumSize(authConfig.getStatefulAuthorizationCacheMaxNum())
-            .build();
+                .expireAfterWrite(authConfig.getStatefulAuthorizationCacheExpiredSecond(), TimeUnit.SECONDS)
+                .maximumSize(authConfig.getStatefulAuthorizationCacheMaxNum())
+                .build();
     }
 
     @Override
@@ -63,10 +64,10 @@ public class StatefulAuthorizationStrategy extends AbstractAuthorizationStrategy
         if (context instanceof DefaultAuthorizationContext) {
             DefaultAuthorizationContext ctx = (DefaultAuthorizationContext) context;
             return ctx.getChannelId()
-                + (ctx.getSubject() != null ? CommonConstants.POUND + ctx.getSubjectKey() : "")
-                + CommonConstants.POUND + ctx.getResourceKey()
-                + CommonConstants.POUND + StringUtils.join(ctx.getActions(), CommonConstants.COMMA)
-                + CommonConstants.POUND + ctx.getSourceIp();
+                    + (ctx.getSubject() != null ? CommonConstants.POUND + ctx.getSubjectKey() : "")
+                    + CommonConstants.POUND + ctx.getResourceKey()
+                    + CommonConstants.POUND + StringUtils.join(ctx.getActions(), CommonConstants.COMMA)
+                    + CommonConstants.POUND + ctx.getSourceIp();
         }
         throw new AuthorizationException("The request of {} is not support.", context.getClass().getSimpleName());
     }

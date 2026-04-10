@@ -19,8 +19,6 @@ package org.apache.rocketmq.broker.processor;
 import com.alibaba.fastjson2.JSON;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import java.nio.charset.StandardCharsets;
-import java.util.BitSet;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.offset.ConsumerOffsetManager;
 import org.apache.rocketmq.broker.pop.PopConsumerLockService;
@@ -51,9 +49,12 @@ import org.apache.rocketmq.store.exception.ConsumeQueueException;
 import org.apache.rocketmq.store.pop.AckMsg;
 import org.apache.rocketmq.store.pop.BatchAckMsg;
 
+import java.nio.charset.StandardCharsets;
+import java.util.BitSet;
+
 /**
  * Netty 请求处理器：处理与「Ack Message」相关的 Remoting 请求。
- * 
+ * <p>
  * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
  */
 public class AckMessageProcessor implements NettyRequestProcessor {
@@ -66,7 +67,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     public AckMessageProcessor(final BrokerController brokerController) {
         this.brokerController = brokerController;
         this.reviveTopic = PopAckConstants.buildClusterReviveTopic(
-            this.brokerController.getBrokerConfig().getBrokerClusterName());
+                this.brokerController.getBrokerConfig().getBrokerClusterName());
         this.popReviveServices = new PopReviveService[this.brokerController.getBrokerConfig().getReviveQueueNum()];
         for (int i = 0; i < this.brokerController.getBrokerConfig().getReviveQueueNum(); i++) {
             this.popReviveServices[i] = new PopReviveService(brokerController, reviveTopic, i);
@@ -114,7 +115,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(final ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                          RemotingCommand request) throws RemotingCommandException {
         return this.processRequest(ctx.channel(), request, true);
     }
 
@@ -124,7 +125,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand processRequest(final Channel channel, RemotingCommand request,
-        boolean brokerAllowSuspend) throws RemotingCommandException {
+                                           boolean brokerAllowSuspend) throws RemotingCommandException {
         AckMessageRequestHeader requestHeader;
         BatchAckMessageRequestBody reqBody = null;
         final RemotingCommand response = RemotingCommand.createResponseCommand(ResponseCode.SUCCESS, null);
@@ -142,7 +143,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
 
             if (requestHeader.getQueueId() >= topicConfig.getReadQueueNums() || requestHeader.getQueueId() < 0) {
                 String errorInfo = String.format("queueId[%d] is illegal, topic:[%s] topicConfig.readQueueNums:[%d] consumer:[%s]",
-                    requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
+                        requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
                 POP_LOGGER.warn(errorInfo);
                 response.setCode(ResponseCode.MESSAGE_ILLEGAL);
                 response.setRemark(errorInfo);
@@ -158,7 +159,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
             }
             if (requestHeader.getOffset() < minOffset || requestHeader.getOffset() > maxOffset) {
                 String errorInfo = String.format("offset is illegal, key:%s@%d, commit:%d, store:%d~%d",
-                    requestHeader.getTopic(), requestHeader.getQueueId(), requestHeader.getOffset(), minOffset, maxOffset);
+                        requestHeader.getTopic(), requestHeader.getQueueId(), requestHeader.getOffset(), minOffset, maxOffset);
                 POP_LOGGER.warn(errorInfo);
                 response.setCode(ResponseCode.NO_MESSAGE);
                 response.setRemark(errorInfo);
@@ -194,7 +195,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     }
 
     private void appendAck(final AckMessageRequestHeader requestHeader, final BatchAck batchAck,
-        final RemotingCommand response, final Channel channel, String brokerName) throws RemotingCommandException {
+                           final RemotingCommand response, final Channel channel, String brokerName) throws RemotingCommandException {
         String[] extraInfo;
         String consumeGroup, topic;
         int qId, rqId;
@@ -308,7 +309,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
                 handlePutMessageResult(putMessageResult, ackMsg, topic, consumeGroup, popTime, qId, finalAckCount);
             }).exceptionally(throwable -> {
                 handlePutMessageResult(new PutMessageResult(PutMessageStatus.UNKNOWN_ERROR, null, false),
-                    ackMsg, topic, consumeGroup, popTime, qId, finalAckCount);
+                        ackMsg, topic, consumeGroup, popTime, qId, finalAckCount);
                 POP_LOGGER.error("put ack msg error ", throwable);
                 return null;
             });
@@ -319,7 +320,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     }
 
     private void appendAckNew(final AckMessageRequestHeader requestHeader, final BatchAck batchAck,
-        final RemotingCommand response, final Channel channel, String brokerName) throws RemotingCommandException {
+                              final RemotingCommand response, final Channel channel, String brokerName) throws RemotingCommandException {
 
         if (requestHeader != null && batchAck == null) {
             String[] extraInfo = ExtraInfoUtil.split(requestHeader.getExtraInfo());
@@ -335,7 +336,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
                 ackOrderlyNew(topicId, groupId, queueId, ackOffset, popTime, invisibleTime, channel, response);
             } else {
                 this.brokerController.getPopConsumerService().ackAsync(
-                    popTime, invisibleTime, groupId, topicId, queueId, ackOffset);
+                        popTime, invisibleTime, groupId, topicId, queueId, ackOffset);
             }
 
             this.brokerController.getBrokerStatsManager().incBrokerAckNums(1);
@@ -343,7 +344,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
         } else {
             String groupId = batchAck.getConsumerGroup();
             String topicId = ExtraInfoUtil.getRealTopic(
-                batchAck.getTopic(), batchAck.getConsumerGroup(), batchAck.getRetry());
+                    batchAck.getTopic(), batchAck.getConsumerGroup(), batchAck.getRetry());
             int queueId = batchAck.getQueueId();
             int reviveQueueId = batchAck.getReviveQueueId();
             long startOffset = batchAck.getStartOffset();
@@ -373,7 +374,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
                         ackOrderlyNew(topicId, groupId, queueId, offset, popTime, invisibleTime, channel, response);
                     } else {
                         this.brokerController.getPopConsumerService().ackAsync(
-                            popTime, invisibleTime, groupId, topicId, queueId, offset);
+                                popTime, invisibleTime, groupId, topicId, queueId, offset);
                     }
                     ackCount++;
                 }
@@ -387,11 +388,11 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     }
 
     private void handlePutMessageResult(PutMessageResult putMessageResult, AckMsg ackMsg, String topic,
-        String consumeGroup, long popTime, int qId, int ackCount) {
+                                        String consumeGroup, long popTime, int qId, int ackCount) {
         if (putMessageResult.getPutMessageStatus() != PutMessageStatus.PUT_OK
-            && putMessageResult.getPutMessageStatus() != PutMessageStatus.FLUSH_DISK_TIMEOUT
-            && putMessageResult.getPutMessageStatus() != PutMessageStatus.FLUSH_SLAVE_TIMEOUT
-            && putMessageResult.getPutMessageStatus() != PutMessageStatus.SLAVE_NOT_AVAILABLE) {
+                && putMessageResult.getPutMessageStatus() != PutMessageStatus.FLUSH_DISK_TIMEOUT
+                && putMessageResult.getPutMessageStatus() != PutMessageStatus.FLUSH_SLAVE_TIMEOUT
+                && putMessageResult.getPutMessageStatus() != PutMessageStatus.SLAVE_NOT_AVAILABLE) {
             POP_LOGGER.error("put ack msg error:" + putMessageResult);
         }
         brokerController.getBrokerMetricsManager().getPopMetricsManager().incPopReviveAckPutCount(ackMsg, putMessageResult.getPutMessageStatus());
@@ -399,7 +400,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     }
 
     protected void ackOrderly(String topic, String consumeGroup, int qId, long ackOffset, long popTime,
-        long invisibleTime, Channel channel, RemotingCommand response) {
+                              long invisibleTime, Channel channel, RemotingCommand response) {
         String lockKey = topic + PopAckConstants.SPLIT + consumeGroup + PopAckConstants.SPLIT + qId;
         long oldOffset = this.brokerController.getConsumerOffsetManager().queryOffset(consumeGroup, topic, qId);
         if (ackOffset < oldOffset) {
@@ -413,18 +414,18 @@ public class AckMessageProcessor implements NettyRequestProcessor {
                 return;
             }
             long nextOffset = brokerController.getConsumerOrderInfoManager().commitAndNext(
-                topic, consumeGroup, qId, ackOffset, popTime);
+                    topic, consumeGroup, qId, ackOffset, popTime);
             if (nextOffset > -1) {
                 if (!this.brokerController.getConsumerOffsetManager().hasOffsetReset(topic, consumeGroup, qId)) {
                     this.brokerController.getConsumerOffsetManager().commitOffset(
-                        channel.remoteAddress().toString(), consumeGroup, topic, qId, nextOffset);
+                            channel.remoteAddress().toString(), consumeGroup, topic, qId, nextOffset);
                 }
                 if (!this.brokerController.getConsumerOrderInfoManager().checkBlock(null, topic, consumeGroup, qId, invisibleTime)) {
                     this.brokerController.getPopMessageProcessor().notifyMessageArriving(topic, qId, consumeGroup);
                 }
             } else if (nextOffset == -1) {
                 String errorInfo = String.format("offset is illegal, key:%s, old:%d, commit:%d, next:%d, %s",
-                    lockKey, oldOffset, ackOffset, nextOffset, channel.remoteAddress());
+                        lockKey, oldOffset, ackOffset, nextOffset, channel.remoteAddress());
                 POP_LOGGER.warn(errorInfo);
                 response.setCode(ResponseCode.MESSAGE_ILLEGAL);
                 response.setRemark(errorInfo);
@@ -437,7 +438,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
     }
 
     protected void ackOrderlyNew(String topic, String consumeGroup, int qId, long ackOffset, long popTime,
-        long invisibleTime, Channel channel, RemotingCommand response) {
+                                 long invisibleTime, Channel channel, RemotingCommand response) {
 
         ConsumerOffsetManager consumerOffsetManager = this.brokerController.getConsumerOffsetManager();
         ConsumerOrderInfoManager consumerOrderInfoManager = brokerController.getConsumerOrderInfoManager();
@@ -477,7 +478,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
 
             if (nextOffset == -1) {
                 String errorInfo = String.format("offset is illegal, key:%s %s %s, old:%d, commit:%d, next:%d, %s",
-                    consumeGroup, topic, qId, oldOffset, ackOffset, nextOffset, channel.remoteAddress());
+                        consumeGroup, topic, qId, oldOffset, ackOffset, nextOffset, channel.remoteAddress());
                 POP_LOGGER.warn(errorInfo);
                 response.setCode(ResponseCode.MESSAGE_ILLEGAL);
                 response.setRemark(errorInfo);

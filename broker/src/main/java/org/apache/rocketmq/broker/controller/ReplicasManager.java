@@ -17,19 +17,6 @@
 
 package org.apache.rocketmq.broker.controller;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.broker.BrokerController;
@@ -56,6 +43,9 @@ import org.apache.rocketmq.store.ha.autoswitch.AutoSwitchHAService;
 import org.apache.rocketmq.store.ha.autoswitch.BrokerMetadata;
 import org.apache.rocketmq.store.ha.autoswitch.TempBrokerMetadata;
 
+import java.util.*;
+import java.util.concurrent.*;
+
 import static org.apache.rocketmq.remoting.protocol.ResponseCode.CONTROLLER_BROKER_METADATA_NOT_EXIST;
 
 /**
@@ -79,9 +69,8 @@ public class ReplicasManager {
     private final BrokerConfig brokerConfig;
     private final String brokerAddress;
     private final BrokerOuterAPI brokerOuterAPI;
-    private List<String> controllerAddresses;
     private final ConcurrentMap<String, Boolean> availableControllerAddresses;
-
+    private List<String> controllerAddresses;
     private volatile String controllerLeaderAddress = "";
     private volatile State state = State.INITIAL;
 
@@ -111,7 +100,7 @@ public class ReplicasManager {
         this.scheduledService = ThreadUtils.newScheduledThreadPool(3, new ThreadFactoryImpl("ReplicasManager_ScheduledService_", brokerController.getBrokerIdentity()));
         this.executorService = ThreadUtils.newThreadPoolExecutor(3, new ThreadFactoryImpl("ReplicasManager_ExecutorService_", brokerController.getBrokerIdentity()));
         this.scanExecutor = ThreadUtils.newThreadPoolExecutor(4, 10, 60, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(32), new ThreadFactoryImpl("ReplicasManager_scan_thread_", brokerController.getBrokerIdentity()));
+                new ArrayBlockingQueue<>(32), new ThreadFactoryImpl("ReplicasManager_scan_thread_", brokerController.getBrokerIdentity()));
         this.haService = (AutoSwitchHAService) brokerController.getMessageStore().getHaService();
         this.brokerConfig = brokerController.getBrokerConfig();
         this.availableControllerAddresses = new ConcurrentHashMap<>();
@@ -119,21 +108,6 @@ public class ReplicasManager {
         this.brokerAddress = brokerController.getBrokerAddr();
         this.brokerMetadata = new BrokerMetadata(this.brokerController.getMessageStoreConfig().getStorePathBrokerIdentity());
         this.tempBrokerMetadata = new TempBrokerMetadata(this.brokerController.getMessageStoreConfig().getStorePathBrokerIdentity() + "-temp");
-    }
-
-    enum State {
-        INITIAL,
-        FIRST_TIME_SYNC_CONTROLLER_METADATA_DONE,
-        REGISTER_TO_CONTROLLER_DONE,
-        RUNNING,
-        SHUTDOWN,
-    }
-
-    enum RegisterState {
-        INITIAL,
-        CREATE_TEMP_METADATA_FILE_DONE,
-        CREATE_METADATA_FILE_DONE,
-        REGISTERED
     }
 
     public void start() {
@@ -225,8 +199,8 @@ public class ReplicasManager {
     }
 
     public synchronized void changeBrokerRole(final Long newMasterBrokerId, final String newMasterAddress,
-        final Integer newMasterEpoch,
-        final Integer syncStateSetEpoch, final Set<Long> syncStateSet) throws Exception {
+                                              final Integer newMasterEpoch,
+                                              final Integer syncStateSetEpoch, final Set<Long> syncStateSet) throws Exception {
         if (newMasterBrokerId != null && newMasterEpoch > this.masterEpoch) {
             if (newMasterBrokerId.equals(this.brokerControllerId)) {
                 changeToMaster(newMasterEpoch, syncStateSetEpoch, syncStateSet);
@@ -284,7 +258,7 @@ public class ReplicasManager {
         synchronized (this) {
             if (newMasterEpoch > this.masterEpoch) {
                 LOGGER.info("Begin to change to slave, brokerName={}, brokerId={}, newMasterBrokerId={}, newMasterAddress={}, newMasterEpoch={}",
-                    this.brokerConfig.getBrokerName(), this.brokerControllerId, newMasterBrokerId, newMasterAddress, newMasterEpoch);
+                        this.brokerConfig.getBrokerName(), this.brokerControllerId, newMasterBrokerId, newMasterAddress, newMasterEpoch);
 
                 this.masterEpoch = newMasterEpoch;
                 if (newMasterBrokerId.equals(this.masterBrokerId)) {
@@ -331,7 +305,7 @@ public class ReplicasManager {
                 return;
             }
             LOGGER.info("Change broker [id:{}][address:{}] to {}, newMasterBrokerId:{}, newMasterAddress:{}, newMasterEpoch:{}, syncStateSetEpoch:{}",
-                this.brokerControllerId, this.brokerAddress, this.brokerController.getMessageStoreConfig().getBrokerRole(), this.masterBrokerId, this.masterAddress, this.masterEpoch, this.syncStateSetEpoch);
+                    this.brokerControllerId, this.brokerAddress, this.brokerController.getMessageStoreConfig().getBrokerRole(), this.masterBrokerId, this.masterAddress, this.masterEpoch, this.syncStateSetEpoch);
         });
 
     }
@@ -378,7 +352,7 @@ public class ReplicasManager {
         // Broker try to elect itself as a master in broker set.
         try {
             Pair<ElectMasterResponseHeader, Set<Long>> tryElectResponsePair = this.brokerOuterAPI.brokerElect(this.controllerLeaderAddress, this.brokerConfig.getBrokerClusterName(),
-                this.brokerConfig.getBrokerName(), this.brokerControllerId);
+                    this.brokerConfig.getBrokerName(), this.brokerControllerId);
             ElectMasterResponseHeader tryElectResponse = tryElectResponsePair.getObject1();
             Set<Long> syncStateSet = tryElectResponsePair.getObject2();
             final String masterAddress = tryElectResponse.getMasterAddress();
@@ -405,17 +379,17 @@ public class ReplicasManager {
         for (String controllerAddress : controllerAddresses) {
             if (StringUtils.isNotEmpty(controllerAddress)) {
                 this.brokerOuterAPI.sendHeartbeatToController(
-                    controllerAddress,
-                    this.brokerConfig.getBrokerClusterName(),
-                    this.brokerAddress,
-                    this.brokerConfig.getBrokerName(),
-                    this.brokerControllerId,
-                    this.brokerConfig.getSendHeartbeatTimeoutMillis(),
-                    this.brokerConfig.isInBrokerContainer(), this.getLastEpoch(),
-                    this.brokerController.getMessageStore().getMaxPhyOffset(),
-                    this.brokerController.getMessageStore().getConfirmOffset(),
-                    this.brokerConfig.getControllerHeartBeatTimeoutMills(),
-                    this.brokerConfig.getBrokerElectionPriority()
+                        controllerAddress,
+                        this.brokerConfig.getBrokerClusterName(),
+                        this.brokerAddress,
+                        this.brokerConfig.getBrokerName(),
+                        this.brokerControllerId,
+                        this.brokerConfig.getSendHeartbeatTimeoutMillis(),
+                        this.brokerConfig.isInBrokerContainer(), this.getLastEpoch(),
+                        this.brokerController.getMessageStore().getMaxPhyOffset(),
+                        this.brokerController.getMessageStore().getConfirmOffset(),
+                        this.brokerConfig.getControllerHeartBeatTimeoutMills(),
+                        this.brokerConfig.getBrokerElectionPriority()
                 );
             }
         }
@@ -523,7 +497,7 @@ public class ReplicasManager {
     private boolean applyBrokerId() {
         try {
             ApplyBrokerIdResponseHeader response = this.brokerOuterAPI.applyBrokerId(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName(),
-                tempBrokerMetadata.getBrokerId(), tempBrokerMetadata.getRegisterCheckCode(), this.controllerLeaderAddress);
+                    tempBrokerMetadata.getBrokerId(), tempBrokerMetadata.getRegisterCheckCode(), this.controllerLeaderAddress);
             return true;
 
         } catch (Exception e) {
@@ -613,24 +587,24 @@ public class ReplicasManager {
         if (this.registerState == RegisterState.CREATE_TEMP_METADATA_FILE_DONE) {
             if (this.tempBrokerMetadata.getClusterName() == null || !this.tempBrokerMetadata.getClusterName().equals(this.brokerConfig.getBrokerClusterName())) {
                 LOGGER.error("The clusterName: {} in broker temp metadata is different from the clusterName: {} in broker config",
-                    this.tempBrokerMetadata.getClusterName(), this.brokerConfig.getBrokerClusterName());
+                        this.tempBrokerMetadata.getClusterName(), this.brokerConfig.getBrokerClusterName());
                 return false;
             }
             if (this.tempBrokerMetadata.getBrokerName() == null || !this.tempBrokerMetadata.getBrokerName().equals(this.brokerConfig.getBrokerName())) {
                 LOGGER.error("The brokerName: {} in broker temp metadata is different from the brokerName: {} in broker config",
-                    this.tempBrokerMetadata.getBrokerName(), this.brokerConfig.getBrokerName());
+                        this.tempBrokerMetadata.getBrokerName(), this.brokerConfig.getBrokerName());
                 return false;
             }
         }
         if (this.registerState == RegisterState.CREATE_METADATA_FILE_DONE) {
             if (this.brokerMetadata.getClusterName() == null || !this.brokerMetadata.getClusterName().equals(this.brokerConfig.getBrokerClusterName())) {
                 LOGGER.error("The clusterName: {} in broker metadata is different from the clusterName: {} in broker config",
-                    this.brokerMetadata.getClusterName(), this.brokerConfig.getBrokerClusterName());
+                        this.brokerMetadata.getClusterName(), this.brokerConfig.getBrokerClusterName());
                 return false;
             }
             if (this.brokerMetadata.getBrokerName() == null || !this.brokerMetadata.getBrokerName().equals(this.brokerConfig.getBrokerName())) {
                 LOGGER.error("The brokerName: {} in broker metadata is different from the brokerName: {} in broker config",
-                    this.brokerMetadata.getBrokerName(), this.brokerConfig.getBrokerName());
+                        this.brokerMetadata.getBrokerName(), this.brokerConfig.getBrokerName());
                 return false;
             }
         }
@@ -737,7 +711,7 @@ public class ReplicasManager {
             this.checkSyncStateSetTaskFuture.cancel(false);
         }
         this.checkSyncStateSetTaskFuture = this.scheduledService.scheduleAtFixedRate(this::checkSyncStateSetAndDoReport, 3 * 1000,
-            this.brokerConfig.getCheckSyncStateSetPeriod(), TimeUnit.MILLISECONDS);
+                this.brokerConfig.getCheckSyncStateSetPeriod(), TimeUnit.MILLISECONDS);
     }
 
     private void checkSyncStateSetAndDoReport() {
@@ -766,7 +740,7 @@ public class ReplicasManager {
             }
         } catch (final Exception e) {
             LOGGER.error("Error happen when change SyncStateSet, broker:{}, masterAddress:{}, masterEpoch:{}, oldSyncStateSet:{}, newSyncStateSet:{}, syncStateSetEpoch:{}",
-                this.brokerConfig.getBrokerName(), this.masterAddress, this.masterEpoch, this.syncStateSet, newSyncStateSet, this.syncStateSetEpoch, e);
+                    this.brokerConfig.getBrokerName(), this.masterAddress, this.masterEpoch, this.syncStateSet, newSyncStateSet, this.syncStateSetEpoch, e);
         }
     }
 
@@ -884,5 +858,20 @@ public class ReplicasManager {
     public void setFenced(boolean fenced) {
         this.brokerController.setIsolated(fenced);
         this.brokerController.getMessageStore().getRunningFlags().makeFenced(fenced);
+    }
+
+    enum State {
+        INITIAL,
+        FIRST_TIME_SYNC_CONTROLLER_METADATA_DONE,
+        REGISTER_TO_CONTROLLER_DONE,
+        RUNNING,
+        SHUTDOWN,
+    }
+
+    enum RegisterState {
+        INITIAL,
+        CREATE_TEMP_METADATA_FILE_DONE,
+        CREATE_METADATA_FILE_DONE,
+        REGISTERED
     }
 }

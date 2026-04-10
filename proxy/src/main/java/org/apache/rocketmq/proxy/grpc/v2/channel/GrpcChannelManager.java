@@ -17,13 +17,6 @@
 
 package org.apache.rocketmq.proxy.grpc.v2.channel;
 
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.utils.StartAndShutdown;
 import org.apache.rocketmq.common.utils.ThreadUtils;
@@ -35,17 +28,19 @@ import org.apache.rocketmq.proxy.service.relay.ProxyRelayResult;
 import org.apache.rocketmq.proxy.service.relay.ProxyRelayService;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
-public class GrpcChannelManager implements StartAndShutdown {
-    private final ProxyRelayService proxyRelayService;
-    private final GrpcClientSettingsManager grpcClientSettingsManager;
-    protected final ConcurrentMap<String, GrpcClientChannel> clientIdChannelMap = new ConcurrentHashMap<>();
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
+public class GrpcChannelManager implements StartAndShutdown {
+    protected final ConcurrentMap<String, GrpcClientChannel> clientIdChannelMap = new ConcurrentHashMap<>();
     protected final AtomicLong nonceIdGenerator = new AtomicLong(0);
     protected final ConcurrentMap<String /* nonce */, ResultFuture> resultNonceFutureMap = new ConcurrentHashMap<>();
-
     protected final ScheduledExecutorService scheduledExecutorService = ThreadUtils.newSingleThreadScheduledExecutor(
-        new ThreadFactoryImpl("GrpcChannelManager_")
+            new ThreadFactoryImpl("GrpcChannelManager_")
     );
+    private final ProxyRelayService proxyRelayService;
+    private final GrpcClientSettingsManager grpcClientSettingsManager;
 
     public GrpcChannelManager(ProxyRelayService proxyRelayService, GrpcClientSettingsManager grpcClientSettingsManager) {
         this.proxyRelayService = proxyRelayService;
@@ -55,14 +50,14 @@ public class GrpcChannelManager implements StartAndShutdown {
 
     protected void init() {
         this.scheduledExecutorService.scheduleAtFixedRate(
-            this::scanExpireResultFuture,
-            10, 1, TimeUnit.SECONDS
+                this::scanExpireResultFuture,
+                10, 1, TimeUnit.SECONDS
         );
     }
 
     public GrpcClientChannel createChannel(ProxyContext ctx, String clientId) {
         return this.clientIdChannelMap.computeIfAbsent(clientId,
-            k -> new GrpcClientChannel(proxyRelayService, grpcClientSettingsManager, this, ctx, clientId));
+                k -> new GrpcClientChannel(proxyRelayService, grpcClientSettingsManager, this, ctx, clientId));
     }
 
     public GrpcClientChannel getChannel(String clientId) {

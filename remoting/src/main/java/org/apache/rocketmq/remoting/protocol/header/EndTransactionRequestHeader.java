@@ -136,13 +136,13 @@ public class EndTransactionRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("producerGroup", producerGroup)
-            .add("tranStateTableOffset", tranStateTableOffset)
-            .add("commitLogOffset", commitLogOffset)
-            .add("commitOrRollback", commitOrRollback)
-            .add("fromTransactionCheck", fromTransactionCheck)
-            .add("msgId", msgId)
-            .add("transactionId", transactionId)
-            .toString();
+                .add("producerGroup", producerGroup)
+                .add("tranStateTableOffset", tranStateTableOffset)
+                .add("commitLogOffset", commitLogOffset)
+                .add("commitOrRollback", commitOrRollback)
+                .add("fromTransactionCheck", fromTransactionCheck)
+                .add("msgId", msgId)
+                .add("transactionId", transactionId)
+                .toString();
     }
 }

@@ -16,15 +16,7 @@
  */
 package org.apache.rocketmq.proxy.service;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import org.apache.rocketmq.broker.client.ClientChannelInfo;
-import org.apache.rocketmq.broker.client.ConsumerGroupEvent;
-import org.apache.rocketmq.broker.client.ConsumerIdsChangeListener;
-import org.apache.rocketmq.broker.client.ConsumerManager;
-import org.apache.rocketmq.broker.client.ProducerChangeListener;
-import org.apache.rocketmq.broker.client.ProducerGroupEvent;
-import org.apache.rocketmq.broker.client.ProducerManager;
+import org.apache.rocketmq.broker.client.*;
 import org.apache.rocketmq.client.common.NameserverAccessConfig;
 import org.apache.rocketmq.client.impl.mqclient.DoNothingClientRemotingProcessor;
 import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
@@ -54,6 +46,9 @@ import org.apache.rocketmq.proxy.service.transaction.TransactionService;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.RemotingClient;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class ClusterServiceManager extends AbstractStartAndShutdown implements ServiceManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
 
@@ -78,27 +73,27 @@ public class ClusterServiceManager extends AbstractStartAndShutdown implements S
     public ClusterServiceManager(RPCHook rpcHook, ObjectCreator<RemotingClient> remotingClientCreator) {
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         NameserverAccessConfig nameserverAccessConfig = new NameserverAccessConfig(proxyConfig.getNamesrvAddr(),
-            proxyConfig.getNamesrvDomain(), proxyConfig.getNamesrvDomainSubgroup());
+                proxyConfig.getNamesrvDomain(), proxyConfig.getNamesrvDomainSubgroup());
         this.scheduledExecutorService = ThreadUtils.newScheduledThreadPool(3);
 
         this.messagingClientAPIFactory = new MQClientAPIFactory(
-            nameserverAccessConfig,
-            "ClusterMQClient_",
-            proxyConfig.getRocketmqMQClientNum(),
-            new DoNothingClientRemotingProcessor(null),
-            rpcHook,
-            scheduledExecutorService,
-            remotingClientCreator
+                nameserverAccessConfig,
+                "ClusterMQClient_",
+                proxyConfig.getRocketmqMQClientNum(),
+                new DoNothingClientRemotingProcessor(null),
+                rpcHook,
+                scheduledExecutorService,
+                remotingClientCreator
         );
 
         this.operationClientAPIFactory = new MQClientAPIFactory(
-            nameserverAccessConfig,
-            "OperationClient_",
-            1,
-            new DoNothingClientRemotingProcessor(null),
-            rpcHook,
-            this.scheduledExecutorService,
-            remotingClientCreator
+                nameserverAccessConfig,
+                "OperationClient_",
+                1,
+                new DoNothingClientRemotingProcessor(null),
+                rpcHook,
+                this.scheduledExecutorService,
+                remotingClientCreator
         );
 
         this.topicRouteService = new ClusterTopicRouteService(operationClientAPIFactory);
@@ -110,17 +105,17 @@ public class ClusterServiceManager extends AbstractStartAndShutdown implements S
         this.consumerManager = new ClusterConsumerManager(this.topicRouteService, this.adminService, this.operationClientAPIFactory, new ConsumerIdsChangeListenerImpl(), proxyConfig.getChannelExpiredTimeout(), rpcHook);
 
         this.transactionClientAPIFactory = new MQClientAPIFactory(
-            nameserverAccessConfig,
-            "ClusterTransaction_",
-            1,
-            new ProxyClientRemotingProcessor(producerManager),
-            rpcHook,
-            scheduledExecutorService,
-            remotingClientCreator
+                nameserverAccessConfig,
+                "ClusterTransaction_",
+                1,
+                new ProxyClientRemotingProcessor(producerManager),
+                rpcHook,
+                scheduledExecutorService,
+                remotingClientCreator
         );
 
         this.clusterTransactionService = new ClusterTransactionService(this.topicRouteService, this.producerManager,
-            this.transactionClientAPIFactory);
+                this.transactionClientAPIFactory);
         this.proxyRelayService = new ClusterProxyRelayService(this.clusterTransactionService);
 
         this.init();

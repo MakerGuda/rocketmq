@@ -16,14 +16,14 @@
  */
 package org.apache.rocketmq.remoting.protocol.body;
 
+import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
-
-public class BrokerReplicasInfo extends RemotingSerializable  {
+public class BrokerReplicasInfo extends RemotingSerializable {
     private Map<String/*brokerName*/, ReplicasInfo> replicasInfoTable;
 
     public BrokerReplicasInfo() {
@@ -105,12 +105,12 @@ public class BrokerReplicasInfo extends RemotingSerializable  {
             this.notInSyncReplicas = notInSyncReplicas;
         }
 
-        public void setMasterBrokerId(Long masterBrokerId) {
-            this.masterBrokerId = masterBrokerId;
-        }
-
         public Long getMasterBrokerId() {
             return masterBrokerId;
+        }
+
+        public void setMasterBrokerId(Long masterBrokerId) {
+            this.masterBrokerId = masterBrokerId;
         }
 
         public boolean isExistInSync(String brokerName, Long brokerId, String brokerAddress) {

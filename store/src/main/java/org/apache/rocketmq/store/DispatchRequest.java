@@ -16,32 +16,32 @@
  */
 package org.apache.rocketmq.store;
 
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageConst;
+
+import java.util.Map;
 
 public class DispatchRequest {
     private final String topic;
     private final int queueId;
     private final long commitLogOffset;
-    private int msgSize;
     private final long tagsCode;
     private final long storeTimestamp;
     private final long consumeQueueOffset;
     private final String keys;
     private final boolean success;
     private final String uniqKey;
-
     private final int sysFlag;
     private final long preparedTransactionOffset;
     private final Map<String, String> propertiesMap;
+    private int msgSize;
     private byte[] bitMap;
 
     private int bufferSize = -1;//the buffer size maybe larger than the msg size if the message is wrapped by something
 
     // for batch consume queue
-    private long  msgBaseOffset = -1;
+    private long msgBaseOffset = -1;
     private short batchSize = 1;
 
     private long nextReputFromOffset = -1;
@@ -49,18 +49,18 @@ public class DispatchRequest {
     private String offsetId;
 
     public DispatchRequest(
-        final String topic,
-        final int queueId,
-        final long commitLogOffset,
-        final int msgSize,
-        final long tagsCode,
-        final long storeTimestamp,
-        final long consumeQueueOffset,
-        final String keys,
-        final String uniqKey,
-        final int sysFlag,
-        final long preparedTransactionOffset,
-        final Map<String, String> propertiesMap
+            final String topic,
+            final int queueId,
+            final long commitLogOffset,
+            final int msgSize,
+            final long tagsCode,
+            final long storeTimestamp,
+            final long consumeQueueOffset,
+            final String keys,
+            final String uniqKey,
+            final int sysFlag,
+            final long preparedTransactionOffset,
+            final Map<String, String> propertiesMap
     ) {
         this.topic = topic;
         this.queueId = queueId;
@@ -143,6 +143,10 @@ public class DispatchRequest {
         return msgSize;
     }
 
+    public void setMsgSize(int msgSize) {
+        this.msgSize = msgSize;
+    }
+
     public long getStoreTimestamp() {
         return storeTimestamp;
     }
@@ -193,10 +197,6 @@ public class DispatchRequest {
 
     public void setBatchSize(short batchSize) {
         this.batchSize = batchSize;
-    }
-
-    public void setMsgSize(int msgSize) {
-        this.msgSize = msgSize;
     }
 
     public long getMsgBaseOffset() {
@@ -254,6 +254,6 @@ public class DispatchRequest {
                 ", msgBaseOffset=" + msgBaseOffset +
                 ", batchSize=" + batchSize +
                 ", nextReputFromOffset=" + nextReputFromOffset +
-            '}';
+                '}';
     }
 }

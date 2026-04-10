@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
 
@@ -39,7 +40,6 @@ public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
     }
 
 
-
     public static boolean putMappingInfo(TopicQueueMappingDetail mappingDetail, Integer globalId, List<LogicQueueMappingItem> mappingInfo) {
         if (mappingInfo.isEmpty()) {
             return true;
@@ -55,14 +55,14 @@ public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
     public static ConcurrentMap<Integer, Integer> buildIdMap(TopicQueueMappingDetail mappingDetail, int level) {
         //level 0 means current leader in this broker
         //level 1 means previous leader in this broker, reserved for
-        assert level == LEVEL_0 ;
+        assert level == LEVEL_0;
 
         if (mappingDetail.hostedQueues == null || mappingDetail.hostedQueues.isEmpty()) {
             return new ConcurrentHashMap<>();
         }
         ConcurrentMap<Integer, Integer> tmpIdMap = new ConcurrentHashMap<>();
-        for (Map.Entry<Integer, List<LogicQueueMappingItem>> entry: mappingDetail.hostedQueues.entrySet()) {
-            Integer globalId =  entry.getKey();
+        for (Map.Entry<Integer, List<LogicQueueMappingItem>> entry : mappingDetail.hostedQueues.entrySet()) {
+            Integer globalId = entry.getKey();
             List<LogicQueueMappingItem> items = entry.getValue();
             if (level == LEVEL_0
                     && items.size() >= 1) {
@@ -82,7 +82,7 @@ public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
                 || mappingItems.isEmpty()) {
             return -1;
         }
-        LogicQueueMappingItem item =  mappingItems.get(mappingItems.size() - 1);
+        LogicQueueMappingItem item = mappingItems.get(mappingItems.size() - 1);
         return item.computeMaxStaticQueueOffset();
     }
 
@@ -97,7 +97,7 @@ public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
         List<LogicQueueMappingItem> mappingItems = getMappingInfo(mappingDetail, globalId);
         return mappingItems == null
                 || mappingItems.size() == 1
-                &&  mappingItems.get(0).getLogicOffset() == 0;
+                && mappingItems.get(0).getLogicOffset() == 0;
     }
 
     public ConcurrentMap<Integer, List<LogicQueueMappingItem>> getHostedQueues() {

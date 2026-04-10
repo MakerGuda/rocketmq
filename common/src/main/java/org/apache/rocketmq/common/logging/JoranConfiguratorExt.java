@@ -18,6 +18,9 @@
 package org.apache.rocketmq.common.logging;
 
 import com.google.common.io.CharStreams;
+import org.apache.rocketmq.logging.ch.qos.logback.classic.joran.JoranConfigurator;
+import org.apache.rocketmq.logging.ch.qos.logback.core.joran.spi.JoranException;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +28,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import org.apache.rocketmq.logging.ch.qos.logback.classic.joran.JoranConfigurator;
-import org.apache.rocketmq.logging.ch.qos.logback.core.joran.spi.JoranException;
 
 public class JoranConfiguratorExt extends JoranConfigurator {
     private InputStream transformXml(InputStream in) throws IOException {

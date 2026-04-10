@@ -16,9 +16,10 @@
  */
 package org.apache.rocketmq.tieredstore.provider;
 
+import org.apache.rocketmq.tieredstore.stream.FileSegmentInputStream;
+
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
-import org.apache.rocketmq.tieredstore.stream.FileSegmentInputStream;
 
 public interface FileSegmentProvider {
 

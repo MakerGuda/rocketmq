@@ -17,6 +17,21 @@
 
 package org.apache.rocketmq.test.autoswitchrole;
 
+import org.apache.rocketmq.broker.BrokerController;
+import org.apache.rocketmq.common.BrokerConfig;
+import org.apache.rocketmq.common.ControllerConfig;
+import org.apache.rocketmq.common.message.MessageDecoder;
+import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.remoting.netty.NettyClientConfig;
+import org.apache.rocketmq.remoting.netty.NettyServerConfig;
+import org.apache.rocketmq.store.GetMessageResult;
+import org.apache.rocketmq.store.GetMessageStatus;
+import org.apache.rocketmq.store.MessageStore;
+import org.apache.rocketmq.store.PutMessageStatus;
+import org.apache.rocketmq.store.config.BrokerRole;
+import org.apache.rocketmq.store.config.FlushDiskType;
+import org.apache.rocketmq.store.config.MessageStoreConfig;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,30 +43,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.common.BrokerConfig;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.common.ControllerConfig;
-import org.apache.rocketmq.remoting.netty.NettyClientConfig;
-import org.apache.rocketmq.remoting.netty.NettyServerConfig;
-import org.apache.rocketmq.store.GetMessageResult;
-import org.apache.rocketmq.store.GetMessageStatus;
-import org.apache.rocketmq.store.MessageStore;
-import org.apache.rocketmq.store.PutMessageStatus;
-import org.apache.rocketmq.store.config.BrokerRole;
-import org.apache.rocketmq.store.config.FlushDiskType;
-import org.apache.rocketmq.store.config.MessageStoreConfig;
 
 import static org.awaitility.Awaitility.await;
-
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class AutoSwitchRoleBase {
 
     protected static final String STORE_PATH_ROOT_PARENT_DIR = System.getProperty("user.home") + File.separator +
-        UUID.randomUUID().toString().replace("-", "");
+            UUID.randomUUID().toString().replace("-", "");
     private static final String STORE_PATH_ROOT_DIR = STORE_PATH_ROOT_PARENT_DIR + File.separator + "store";
     private static final String STORE_MESSAGE = "Once, there was a chance for me!";
     private static final byte[] MESSAGE_BODY = STORE_MESSAGE.getBytes();
@@ -96,10 +96,20 @@ public class AutoSwitchRoleBase {
         return port;
     }
 
+    protected static ControllerConfig buildControllerConfig(final String id, final String peers) {
+        final ControllerConfig config = new ControllerConfig();
+        config.setControllerDLegerGroup("group1");
+        config.setControllerDLegerPeers(peers);
+        config.setControllerDLegerSelfId(id);
+        config.setMappedFileSize(1024 * 1024);
+        config.setControllerStorePath(STORE_PATH_ROOT_DIR + File.separator + "namesrv" + id + File.separator + "DLedgerController");
+        return config;
+    }
+
     public BrokerController startBroker(String namesrvAddress, String controllerAddress, String brokerName,
-        int brokerId, int haPort,
-        int brokerListenPort,
-        int nettyListenPort, BrokerRole expectedRole, int mappedFileSize) throws Exception {
+                                        int brokerId, int haPort,
+                                        int brokerListenPort,
+                                        int nettyListenPort, BrokerRole expectedRole, int mappedFileSize) throws Exception {
         final MessageStoreConfig storeConfig = buildMessageStoreConfig(brokerName + "#" + brokerId, haPort, mappedFileSize);
         storeConfig.setHaMaxTimeSlaveNotCatchup(3 * 1000);
         final BrokerConfig brokerConfig = new BrokerConfig();
@@ -123,7 +133,7 @@ public class AutoSwitchRoleBase {
     }
 
     protected MessageStoreConfig buildMessageStoreConfig(final String brokerDir, final int haPort,
-        final int mappedFileSize) {
+                                                         final int mappedFileSize) {
         MessageStoreConfig storeConfig = new MessageStoreConfig();
         storeConfig.setHaSendHeartbeatInterval(1000);
         storeConfig.setBrokerRole(BrokerRole.SLAVE);
@@ -142,16 +152,6 @@ public class AutoSwitchRoleBase {
         storeConfig.setFlushDiskType(FlushDiskType.SYNC_FLUSH);
         storeConfig.setFlushIntervalConsumeQueue(1);
         return storeConfig;
-    }
-
-    protected static ControllerConfig buildControllerConfig(final String id, final String peers) {
-        final ControllerConfig config = new ControllerConfig();
-        config.setControllerDLegerGroup("group1");
-        config.setControllerDLegerPeers(peers);
-        config.setControllerDLegerSelfId(id);
-        config.setMappedFileSize(1024 * 1024);
-        config.setControllerStorePath(STORE_PATH_ROOT_DIR + File.separator + "namesrv" + id + File.separator + "DLedgerController");
-        return config;
     }
 
     protected MessageExtBrokerInner buildMessage(String topic) {
@@ -178,13 +178,13 @@ public class AutoSwitchRoleBase {
 
     protected void checkMessage(final MessageStore messageStore, String topic, int totalNums, int startOffset) {
         await().atMost(30, TimeUnit.SECONDS)
-            .until(() -> {
-                GetMessageResult result = messageStore.getMessage("GROUP_A", topic, 0, startOffset, 1024, null);
+                .until(() -> {
+                    GetMessageResult result = messageStore.getMessage("GROUP_A", topic, 0, startOffset, 1024, null);
 //                System.out.printf(result + "%n");
 //                System.out.printf("maxPhyOffset=" + messageStore.getMaxPhyOffset() + "%n");
 //                System.out.printf("confirmOffset=" + messageStore.getConfirmOffset() + "%n");
-                return result != null && result.getStatus() == GetMessageStatus.FOUND && result.getMessageCount() >= totalNums;
-            });
+                    return result != null && result.getStatus() == GetMessageStatus.FOUND && result.getMessageCount() >= totalNums;
+                });
     }
 
 }

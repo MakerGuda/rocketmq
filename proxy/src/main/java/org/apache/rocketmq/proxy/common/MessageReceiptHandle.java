@@ -19,8 +19,9 @@ package org.apache.rocketmq.proxy.common;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MessageReceiptHandle {
     private final String group;
@@ -38,7 +39,7 @@ public class MessageReceiptHandle {
     private volatile String receiptHandleStr;
 
     public MessageReceiptHandle(String group, String topic, int queueId, String receiptHandleStr, String messageId,
-        long queueOffset, int reconsumeTimes) {
+                                long queueOffset, int reconsumeTimes) {
         this.originalReceiptHandle = ReceiptHandle.decode(receiptHandleStr);
         this.group = group;
         this.topic = topic;
@@ -61,32 +62,32 @@ public class MessageReceiptHandle {
         }
         MessageReceiptHandle handle = (MessageReceiptHandle) o;
         return queueId == handle.queueId && queueOffset == handle.queueOffset && consumeTimestamp == handle.consumeTimestamp
-            && reconsumeTimes == handle.reconsumeTimes
-            && Objects.equal(group, handle.group) && Objects.equal(topic, handle.topic)
-            && Objects.equal(messageId, handle.messageId) && Objects.equal(originalReceiptHandleStr, handle.originalReceiptHandleStr)
-            && Objects.equal(receiptHandleStr, handle.receiptHandleStr);
+                && reconsumeTimes == handle.reconsumeTimes
+                && Objects.equal(group, handle.group) && Objects.equal(topic, handle.topic)
+                && Objects.equal(messageId, handle.messageId) && Objects.equal(originalReceiptHandleStr, handle.originalReceiptHandleStr)
+                && Objects.equal(receiptHandleStr, handle.receiptHandleStr);
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(group, topic, queueId, messageId, queueOffset, originalReceiptHandleStr, consumeTimestamp,
-            reconsumeTimes, receiptHandleStr);
+                reconsumeTimes, receiptHandleStr);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("group", group)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("messageId", messageId)
-            .add("queueOffset", queueOffset)
-            .add("originalReceiptHandleStr", originalReceiptHandleStr)
-            .add("reconsumeTimes", reconsumeTimes)
-            .add("renewRetryTimes", renewRetryTimes)
-            .add("firstConsumeTimestamp", consumeTimestamp)
-            .add("receiptHandleStr", receiptHandleStr)
-            .toString();
+                .add("group", group)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("messageId", messageId)
+                .add("queueOffset", queueOffset)
+                .add("originalReceiptHandleStr", originalReceiptHandleStr)
+                .add("reconsumeTimes", reconsumeTimes)
+                .add("renewRetryTimes", renewRetryTimes)
+                .add("firstConsumeTimestamp", consumeTimestamp)
+                .add("receiptHandleStr", receiptHandleStr)
+                .toString();
     }
 
     public String getGroup() {

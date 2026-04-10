@@ -17,20 +17,21 @@
 
 package org.apache.rocketmq.proxy.service.client;
 
-import java.util.Set;
 import org.apache.rocketmq.broker.client.ClientChannelInfo;
 import org.apache.rocketmq.broker.client.ConsumerIdsChangeListener;
 import org.apache.rocketmq.broker.client.ConsumerManager;
+import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.utils.StartAndShutdown;
 import org.apache.rocketmq.proxy.service.admin.AdminService;
-import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.proxy.service.route.TopicRouteService;
 import org.apache.rocketmq.proxy.service.sysmessage.HeartbeatSyncer;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
+import java.util.Set;
 
 public class ClusterConsumerManager extends ConsumerManager implements StartAndShutdown {
 
@@ -44,16 +45,16 @@ public class ClusterConsumerManager extends ConsumerManager implements StartAndS
 
     @Override
     public boolean registerConsumer(String group, ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
-        Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable, boolean updateSubscription) {
+                                    ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
+                                    Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable, boolean updateSubscription) {
         this.heartbeatSyncer.onConsumerRegister(group, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList);
         return super.registerConsumer(group, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList,
-            isNotifyConsumerIdsChangedEnable, updateSubscription);
+                isNotifyConsumerIdsChangedEnable, updateSubscription);
     }
 
     @Override
     public void unregisterConsumer(String group, ClientChannelInfo clientChannelInfo,
-        boolean isNotifyConsumerIdsChangedEnable) {
+                                   boolean isNotifyConsumerIdsChangedEnable) {
         this.heartbeatSyncer.onConsumerUnRegister(group, clientChannelInfo);
         super.unregisterConsumer(group, clientChannelInfo, isNotifyConsumerIdsChangedEnable);
     }

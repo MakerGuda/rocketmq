@@ -17,7 +17,6 @@
 package org.apache.rocketmq.proxy.processor;
 
 import io.netty.channel.Channel;
-import java.util.Set;
 import org.apache.rocketmq.broker.client.ClientChannelInfo;
 import org.apache.rocketmq.broker.client.ConsumerGroupInfo;
 import org.apache.rocketmq.broker.client.ConsumerIdsChangeListener;
@@ -29,33 +28,35 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
+import java.util.Set;
+
 public class ClientProcessor extends AbstractProcessor {
 
     public ClientProcessor(MessagingProcessor messagingProcessor,
-        ServiceManager serviceManager) {
+                           ServiceManager serviceManager) {
         super(messagingProcessor, serviceManager);
     }
 
     public void registerProducer(
-        ProxyContext ctx,
-        String producerGroup,
-        ClientChannelInfo clientChannelInfo
+            ProxyContext ctx,
+            String producerGroup,
+            ClientChannelInfo clientChannelInfo
     ) {
         this.serviceManager.getProducerManager().registerProducer(producerGroup, clientChannelInfo);
     }
 
     public void unRegisterProducer(
-        ProxyContext ctx,
-        String producerGroup,
-        ClientChannelInfo clientChannelInfo
+            ProxyContext ctx,
+            String producerGroup,
+            ClientChannelInfo clientChannelInfo
     ) {
         this.serviceManager.getProducerManager().unregisterProducer(producerGroup, clientChannelInfo);
     }
 
     public Channel findProducerChannel(
-        ProxyContext ctx,
-        String producerGroup,
-        String clientId
+            ProxyContext ctx,
+            String producerGroup,
+            String clientId
     ) {
         return this.serviceManager.getProducerManager().findChannel(clientId);
     }
@@ -65,38 +66,38 @@ public class ClientProcessor extends AbstractProcessor {
     }
 
     public void registerConsumer(
-        ProxyContext ctx,
-        String consumerGroup,
-        ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType,
-        MessageModel messageModel,
-        ConsumeFromWhere consumeFromWhere,
-        Set<SubscriptionData> subList,
-        boolean updateSubscription
+            ProxyContext ctx,
+            String consumerGroup,
+            ClientChannelInfo clientChannelInfo,
+            ConsumeType consumeType,
+            MessageModel messageModel,
+            ConsumeFromWhere consumeFromWhere,
+            Set<SubscriptionData> subList,
+            boolean updateSubscription
     ) {
         this.serviceManager.getConsumerManager().registerConsumer(
-            consumerGroup,
-            clientChannelInfo,
-            consumeType,
-            messageModel,
-            consumeFromWhere,
-            subList,
-            false,
-            updateSubscription);
+                consumerGroup,
+                clientChannelInfo,
+                consumeType,
+                messageModel,
+                consumeFromWhere,
+                subList,
+                false,
+                updateSubscription);
     }
 
     public ClientChannelInfo findConsumerChannel(
-        ProxyContext ctx,
-        String consumerGroup,
-        Channel channel
+            ProxyContext ctx,
+            String consumerGroup,
+            Channel channel
     ) {
         return this.serviceManager.getConsumerManager().findChannel(consumerGroup, channel);
     }
 
     public void unRegisterConsumer(
-        ProxyContext ctx,
-        String consumerGroup,
-        ClientChannelInfo clientChannelInfo
+            ProxyContext ctx,
+            String consumerGroup,
+            ClientChannelInfo clientChannelInfo
     ) {
         this.serviceManager.getConsumerManager().unregisterConsumer(consumerGroup, clientChannelInfo, false);
     }

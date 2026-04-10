@@ -16,101 +16,15 @@
  */
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
-import java.io.File;
-import java.util.AbstractMap;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
+
+import java.io.File;
+import java.util.*;
 
 public class TopicQueueMappingUtils {
 
     public static final int DEFAULT_BLOCK_SEQ_SIZE = 10000;
-
-    public static class MappingAllocator {
-        Map<String, Integer> brokerNumMap = new HashMap<>();
-        Map<Integer, String> idToBroker = new HashMap<>();
-        //used for remapping
-        Map<String, Integer> brokerNumMapBeforeRemapping;
-        int currentIndex = 0;
-        List<String> leastBrokers = new ArrayList<>();
-        private MappingAllocator(Map<Integer, String> idToBroker, Map<String, Integer> brokerNumMap, Map<String, Integer> brokerNumMapBeforeRemapping) {
-            this.idToBroker.putAll(idToBroker);
-            this.brokerNumMap.putAll(brokerNumMap);
-            this.brokerNumMapBeforeRemapping = brokerNumMapBeforeRemapping;
-        }
-
-        private void freshState() {
-            int minNum = Integer.MAX_VALUE;
-            for (Map.Entry<String, Integer> entry : brokerNumMap.entrySet()) {
-                if (entry.getValue() < minNum) {
-                    leastBrokers.clear();
-                    leastBrokers.add(entry.getKey());
-                    minNum = entry.getValue();
-                } else if (entry.getValue() == minNum) {
-                    leastBrokers.add(entry.getKey());
-                }
-            }
-            //reduce the remapping
-            if (brokerNumMapBeforeRemapping != null
-                    && !brokerNumMapBeforeRemapping.isEmpty()) {
-                leastBrokers.sort((o1, o2) -> {
-                    int i1 = 0, i2 = 0;
-                    if (brokerNumMapBeforeRemapping.containsKey(o1)) {
-                        i1 = brokerNumMapBeforeRemapping.get(o1);
-                    }
-                    if (brokerNumMapBeforeRemapping.containsKey(o2)) {
-                        i2 = brokerNumMapBeforeRemapping.get(o2);
-                    }
-                    return i1 - i2;
-                });
-            } else {
-                //reduce the imbalance
-                Collections.shuffle(leastBrokers);
-            }
-            currentIndex = leastBrokers.size() - 1;
-        }
-        private String nextBroker() {
-            if (leastBrokers.isEmpty()) {
-                freshState();
-            }
-            int tmpIndex = currentIndex % leastBrokers.size();
-            return leastBrokers.remove(tmpIndex);
-        }
-
-        public Map<String, Integer> getBrokerNumMap() {
-            return brokerNumMap;
-        }
-
-        public void upToNum(int maxQueueNum) {
-            int currSize = idToBroker.size();
-            if (maxQueueNum <= currSize) {
-                return;
-            }
-            for (int i = currSize; i < maxQueueNum; i++) {
-                String nextBroker = nextBroker();
-                if (brokerNumMap.containsKey(nextBroker)) {
-                    brokerNumMap.put(nextBroker, brokerNumMap.get(nextBroker) + 1);
-                } else {
-                    brokerNumMap.put(nextBroker, 1);
-                }
-                idToBroker.put(i, nextBroker);
-            }
-        }
-
-        public Map<Integer, String> getIdToBroker() {
-            return idToBroker;
-        }
-    }
-
 
     public static MappingAllocator buildMappingAllocator(Map<Integer, String> idToBroker, Map<String, Integer> brokerNumMap, Map<String, Integer> brokerNumMapBeforeRemapping) {
         return new MappingAllocator(idToBroker, brokerNumMap, brokerNumMapBeforeRemapping);
@@ -142,7 +56,7 @@ public class TopicQueueMappingUtils {
 
     public static Map.Entry<Long, Integer> checkNameEpochNumConsistence(String topic, Map<String, TopicConfigAndQueueMapping> brokerConfigMap) {
         if (brokerConfigMap == null
-            || brokerConfigMap.isEmpty()) {
+                || brokerConfigMap.isEmpty()) {
             return null;
         }
         //make sure it is not null
@@ -166,26 +80,26 @@ public class TopicQueueMappingUtils {
                 throw new RuntimeException("The topic name is inconsistent in broker  " + broker);
             }
             if (topic != null
-                && !topic.equals(mappingDetail.getTopic())) {
+                    && !topic.equals(mappingDetail.getTopic())) {
                 throw new RuntimeException("The topic name is not match for broker  " + broker);
             }
 
             if (scope != null
-                && !scope.equals(mappingDetail.getScope())) {
+                    && !scope.equals(mappingDetail.getScope())) {
                 throw new RuntimeException(String.format("scope does not match %s != %s in %s", mappingDetail.getScope(), scope, broker));
             } else {
                 scope = mappingDetail.getScope();
             }
 
             if (maxEpoch != -1
-                && maxEpoch != mappingDetail.getEpoch()) {
+                    && maxEpoch != mappingDetail.getEpoch()) {
                 throw new RuntimeException(String.format("epoch does not match %d != %d in %s", maxEpoch, mappingDetail.getEpoch(), mappingDetail.getBname()));
             } else {
                 maxEpoch = mappingDetail.getEpoch();
             }
 
             if (maxNum != -1
-                && maxNum != mappingDetail.getTotalQueues()) {
+                    && maxNum != mappingDetail.getTotalQueues()) {
                 throw new RuntimeException(String.format("total queue number does not match %d != %d in %s", maxNum, mappingDetail.getTotalQueues(), mappingDetail.getBname()));
             } else {
                 maxNum = mappingDetail.getTotalQueues();
@@ -237,23 +151,22 @@ public class TopicQueueMappingUtils {
             LogicQueueMappingItem oldLeader = oldItems.get(oldItems.size() - 1);
             LogicQueueMappingItem newLeader = newItems.get(newItems.size() - 1);
             if (newLeader.getGen() != oldLeader.getGen()
-                || !newLeader.getBname().equals(oldLeader.getBname())
-                || newLeader.getQueueId() != oldLeader.getQueueId()
-                || newLeader.getStartOffset() != oldLeader.getStartOffset()) {
+                    || !newLeader.getBname().equals(oldLeader.getBname())
+                    || newLeader.getQueueId() != oldLeader.getQueueId()
+                    || newLeader.getStartOffset() != oldLeader.getStartOffset()) {
                 throw new RuntimeException("The new leader is different but epoch equal");
             }
         }
     }
 
-
     public static void checkLogicQueueMappingItemOffset(List<LogicQueueMappingItem> items) {
         if (items == null
-            || items.isEmpty()) {
+                || items.isEmpty()) {
             return;
         }
         int lastGen = -1;
         long lastOffset = -1;
-        for (int i = items.size() - 1; i >= 0 ; i--) {
+        for (int i = items.size() - 1; i >= 0; i--) {
             LogicQueueMappingItem item = items.get(i);
             if (item.getStartOffset() < 0
                     || item.getGen() < 0
@@ -270,7 +183,7 @@ public class TopicQueueMappingUtils {
             }
 
             if (item.getEndOffset() != -1
-                && item.getEndOffset() < item.getStartOffset()) {
+                    && item.getEndOffset() < item.getStartOffset()) {
                 throw new RuntimeException("The endOffset is smaller than the start offset");
             }
 
@@ -287,10 +200,10 @@ public class TopicQueueMappingUtils {
         }
     }
 
-    public static void  checkIfReusePhysicalQueue(Collection<TopicQueueMappingOne> mappingOnes) {
-        Map<String, TopicQueueMappingOne>  physicalQueueIdMap = new HashMap<>();
+    public static void checkIfReusePhysicalQueue(Collection<TopicQueueMappingOne> mappingOnes) {
+        Map<String, TopicQueueMappingOne> physicalQueueIdMap = new HashMap<>();
         for (TopicQueueMappingOne mappingOne : mappingOnes) {
-            for (LogicQueueMappingItem item: mappingOne.items) {
+            for (LogicQueueMappingItem item : mappingOne.items) {
                 String physicalQueueId = item.getBname() + "-" + item.getQueueId();
                 if (physicalQueueIdMap.containsKey(physicalQueueId)) {
                     throw new RuntimeException(String.format("Topic %s global queue id %d and %d shared the same physical queue %s",
@@ -302,7 +215,7 @@ public class TopicQueueMappingUtils {
         }
     }
 
-    public static void  checkLeaderInTargetBrokers(Collection<TopicQueueMappingOne> mappingOnes, Set<String> targetBrokers) {
+    public static void checkLeaderInTargetBrokers(Collection<TopicQueueMappingOne> mappingOnes, Set<String> targetBrokers) {
         for (TopicQueueMappingOne mappingOne : mappingOnes) {
             if (!targetBrokers.contains(mappingOne.bname)) {
                 throw new RuntimeException("The leader broker does not in target broker");
@@ -310,7 +223,7 @@ public class TopicQueueMappingUtils {
         }
     }
 
-    public static void  checkPhysicalQueueConsistence(Map<String, TopicConfigAndQueueMapping> brokerConfigMap) {
+    public static void checkPhysicalQueueConsistence(Map<String, TopicConfigAndQueueMapping> brokerConfigMap) {
         for (Map.Entry<String, TopicConfigAndQueueMapping> entry : brokerConfigMap.entrySet()) {
             TopicConfigAndQueueMapping configMapping = entry.getValue();
             assert configMapping != null;
@@ -318,8 +231,8 @@ public class TopicQueueMappingUtils {
             if (configMapping.getReadQueueNums() < configMapping.getWriteQueueNums()) {
                 throw new RuntimeException("Read queues is smaller than write queues");
             }
-            for (List<LogicQueueMappingItem> items: configMapping.getMappingDetail().getHostedQueues().values()) {
-                for (LogicQueueMappingItem item: items) {
+            for (List<LogicQueueMappingItem> items : configMapping.getMappingDetail().getHostedQueues().values()) {
+                for (LogicQueueMappingItem item : items) {
                     if (item.getStartOffset() != 0) {
                         throw new RuntimeException("The start offset does not begin from 0");
                     }
@@ -335,8 +248,6 @@ public class TopicQueueMappingUtils {
         }
     }
 
-
-
     public static Map<Integer, TopicQueueMappingOne> checkAndBuildMappingItems(List<TopicQueueMappingDetail> mappingDetailList, boolean replace, boolean checkConsistence) {
         mappingDetailList.sort((o1, o2) -> (int) (o2.getEpoch() - o1.getEpoch()));
 
@@ -346,10 +257,10 @@ public class TopicQueueMappingUtils {
             if (mappingDetail.totalQueues > maxNum) {
                 maxNum = mappingDetail.totalQueues;
             }
-            for (Map.Entry<Integer, List<LogicQueueMappingItem>>  entry : mappingDetail.getHostedQueues().entrySet()) {
+            for (Map.Entry<Integer, List<LogicQueueMappingItem>> entry : mappingDetail.getHostedQueues().entrySet()) {
                 Integer globalid = entry.getKey();
                 checkLogicQueueMappingItemOffset(entry.getValue());
-                String leaderBrokerName  = getLeaderBroker(entry.getValue());
+                String leaderBrokerName = getLeaderBroker(entry.getValue());
                 if (!leaderBrokerName.equals(mappingDetail.getBname())) {
                     //not the leader
                     continue;
@@ -380,6 +291,7 @@ public class TopicQueueMappingUtils {
     public static String getLeaderBroker(List<LogicQueueMappingItem> items) {
         return getLeaderItem(items).getBname();
     }
+
     public static LogicQueueMappingItem getLeaderItem(List<LogicQueueMappingItem> items) {
         assert items.size() > 0;
         return items.get(items.size() - 1);
@@ -397,7 +309,7 @@ public class TopicQueueMappingUtils {
             MixAll.string2File(data, fileName);
             return fileName;
         } catch (Exception e) {
-            throw new RuntimeException("write file failed " + fileName,e);
+            throw new RuntimeException("write file failed " + fileName, e);
         }
     }
 
@@ -450,7 +362,7 @@ public class TopicQueueMappingUtils {
 
         //the check is ok, now do the mapping allocation
         Map<String, Integer> brokerNumMap = new HashMap<>();
-        for (String broker: targetBrokers) {
+        for (String broker : targetBrokers) {
             brokerNumMap.put(broker, 0);
         }
         final Map<Integer, String> oldIdToBroker = new HashMap<>();
@@ -507,7 +419,6 @@ public class TopicQueueMappingUtils {
         return new TopicRemappingDetailWrapper(topic, TopicRemappingDetailWrapper.TYPE_CREATE_OR_UPDATE, newEpoch, brokerConfigMap, new HashSet<>(), new HashSet<>());
     }
 
-
     public static TopicRemappingDetailWrapper remappingStaticTopic(String topic, Map<String, TopicConfigAndQueueMapping> brokerConfigMap, Set<String> targetBrokers) {
         Map.Entry<Long, Integer> maxEpochAndNum = TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, brokerConfigMap);
         Map<Integer, TopicQueueMappingOne> globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(getMappingDetailFromConfig(brokerConfigMap.values()), false, true);
@@ -518,11 +429,11 @@ public class TopicQueueMappingUtils {
         int maxNum = maxEpochAndNum.getValue();
 
         Map<String, Integer> brokerNumMap = new HashMap<>();
-        for (String broker: targetBrokers) {
+        for (String broker : targetBrokers) {
             brokerNumMap.put(broker, 0);
         }
         Map<String, Integer> brokerNumMapBeforeRemapping = new HashMap<>();
-        for (TopicQueueMappingOne mappingOne: globalIdMap.values()) {
+        for (TopicQueueMappingOne mappingOne : globalIdMap.values()) {
             if (brokerNumMapBeforeRemapping.containsKey(mappingOne.bname)) {
                 brokerNumMapBeforeRemapping.put(mappingOne.bname, brokerNumMapBeforeRemapping.get(mappingOne.bname) + 1);
             } else {
@@ -555,7 +466,7 @@ public class TopicQueueMappingUtils {
             }
         }
 
-        for (Map.Entry<String, Integer> entry: expectedBrokerNumMap.entrySet()) {
+        for (Map.Entry<String, Integer> entry : expectedBrokerNumMap.entrySet()) {
             String broker = entry.getKey();
             Integer queueNum = entry.getValue();
             for (int i = 0; i < queueNum; i++) {
@@ -626,7 +537,7 @@ public class TopicQueueMappingUtils {
         }
         //Could use bi-search to polish performance
         for (int i = mappingItems.size() - 1; i >= 0; i--) {
-            LogicQueueMappingItem item =  mappingItems.get(i);
+            LogicQueueMappingItem item = mappingItems.get(i);
             if (ignoreNegative && item.getLogicOffset() < 0) {
                 continue;
             }
@@ -636,7 +547,7 @@ public class TopicQueueMappingUtils {
         }
         //if not found, maybe out of range, return the first one
         for (int i = 0; i < mappingItems.size(); i++) {
-            LogicQueueMappingItem item =  mappingItems.get(i);
+            LogicQueueMappingItem item = mappingItems.get(i);
             if (ignoreNegative && item.getLogicOffset() < 0) {
                 continue;
             } else {
@@ -648,7 +559,7 @@ public class TopicQueueMappingUtils {
 
     public static LogicQueueMappingItem findNext(List<LogicQueueMappingItem> items, LogicQueueMappingItem currentItem, boolean ignoreNegative) {
         if (items == null
-            || currentItem == null) {
+                || currentItem == null) {
             return null;
         }
         for (int i = 0; i < items.size(); i++) {
@@ -658,7 +569,7 @@ public class TopicQueueMappingUtils {
             }
             if (item.getGen() == currentItem.getGen()) {
                 if (i < items.size() - 1) {
-                    item = items.get(i  + 1);
+                    item = items.get(i + 1);
                     if (ignoreNegative && item.getLogicOffset() < 0) {
                         return null;
                     } else {
@@ -672,13 +583,90 @@ public class TopicQueueMappingUtils {
         return null;
     }
 
-
     public static boolean checkIfLeader(List<LogicQueueMappingItem> items, TopicQueueMappingDetail mappingDetail) {
         if (items == null
-            || mappingDetail == null
-            || items.isEmpty()) {
+                || mappingDetail == null
+                || items.isEmpty()) {
             return false;
         }
         return items.get(items.size() - 1).getBname().equals(mappingDetail.getBname());
+    }
+
+    public static class MappingAllocator {
+        Map<String, Integer> brokerNumMap = new HashMap<>();
+        Map<Integer, String> idToBroker = new HashMap<>();
+        //used for remapping
+        Map<String, Integer> brokerNumMapBeforeRemapping;
+        int currentIndex = 0;
+        List<String> leastBrokers = new ArrayList<>();
+
+        private MappingAllocator(Map<Integer, String> idToBroker, Map<String, Integer> brokerNumMap, Map<String, Integer> brokerNumMapBeforeRemapping) {
+            this.idToBroker.putAll(idToBroker);
+            this.brokerNumMap.putAll(brokerNumMap);
+            this.brokerNumMapBeforeRemapping = brokerNumMapBeforeRemapping;
+        }
+
+        private void freshState() {
+            int minNum = Integer.MAX_VALUE;
+            for (Map.Entry<String, Integer> entry : brokerNumMap.entrySet()) {
+                if (entry.getValue() < minNum) {
+                    leastBrokers.clear();
+                    leastBrokers.add(entry.getKey());
+                    minNum = entry.getValue();
+                } else if (entry.getValue() == minNum) {
+                    leastBrokers.add(entry.getKey());
+                }
+            }
+            //reduce the remapping
+            if (brokerNumMapBeforeRemapping != null
+                    && !brokerNumMapBeforeRemapping.isEmpty()) {
+                leastBrokers.sort((o1, o2) -> {
+                    int i1 = 0, i2 = 0;
+                    if (brokerNumMapBeforeRemapping.containsKey(o1)) {
+                        i1 = brokerNumMapBeforeRemapping.get(o1);
+                    }
+                    if (brokerNumMapBeforeRemapping.containsKey(o2)) {
+                        i2 = brokerNumMapBeforeRemapping.get(o2);
+                    }
+                    return i1 - i2;
+                });
+            } else {
+                //reduce the imbalance
+                Collections.shuffle(leastBrokers);
+            }
+            currentIndex = leastBrokers.size() - 1;
+        }
+
+        private String nextBroker() {
+            if (leastBrokers.isEmpty()) {
+                freshState();
+            }
+            int tmpIndex = currentIndex % leastBrokers.size();
+            return leastBrokers.remove(tmpIndex);
+        }
+
+        public Map<String, Integer> getBrokerNumMap() {
+            return brokerNumMap;
+        }
+
+        public void upToNum(int maxQueueNum) {
+            int currSize = idToBroker.size();
+            if (maxQueueNum <= currSize) {
+                return;
+            }
+            for (int i = currSize; i < maxQueueNum; i++) {
+                String nextBroker = nextBroker();
+                if (brokerNumMap.containsKey(nextBroker)) {
+                    brokerNumMap.put(nextBroker, brokerNumMap.get(nextBroker) + 1);
+                } else {
+                    brokerNumMap.put(nextBroker, 1);
+                }
+                idToBroker.put(i, nextBroker);
+            }
+        }
+
+        public Map<Integer, String> getIdToBroker() {
+            return idToBroker;
+        }
     }
 }

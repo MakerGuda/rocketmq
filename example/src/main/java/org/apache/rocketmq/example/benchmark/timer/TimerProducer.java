@@ -27,24 +27,15 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.remoting.common.RemotingHelper;
-import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.common.RemotingHelper;
+import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.srvutil.ServerUtil;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TimerProducer {
@@ -90,13 +81,19 @@ public class TimerProducer {
                 threadCount,
                 0L,
                 TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(),
+                new LinkedBlockingQueue<>(),
                 new ThreadFactoryImpl("ProducerSendMessageThread_"));
 
         producer = new DefaultMQProducer("benchmark_producer");
         producer.setInstanceName(Long.toString(System.currentTimeMillis()));
         producer.setNamesrvAddr(namesrvAddr);
         producer.setCompressMsgBodyOverHowmuch(Integer.MAX_VALUE);
+    }
+
+    public static void main(String[] args) throws MQClientException {
+        TimerProducer timerProducer = new TimerProducer(args);
+        timerProducer.startScheduleTask();
+        timerProducer.start();
     }
 
     public void startScheduleTask() {
@@ -262,13 +259,6 @@ public class TimerProducer {
             e.printStackTrace();
         }
     }
-
-    public static void main(String[] args) throws MQClientException {
-        TimerProducer timerProducer = new TimerProducer(args);
-        timerProducer.startScheduleTask();
-        timerProducer.start();
-    }
-
 
     public static class StatsBenchmarkProducer {
         private final AtomicLong sendRequestSuccessCount = new AtomicLong(0L);

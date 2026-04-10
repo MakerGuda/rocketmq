@@ -61,9 +61,9 @@ public class MessageQueueView {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("readSelector", readSelector)
-            .add("writeSelector", writeSelector)
-            .add("topicRouteWrapper", topicRouteWrapper)
-            .toString();
+                .add("readSelector", readSelector)
+                .add("writeSelector", writeSelector)
+                .add("topicRouteWrapper", topicRouteWrapper)
+                .toString();
     }
 }

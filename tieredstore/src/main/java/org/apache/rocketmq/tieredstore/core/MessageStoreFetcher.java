@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.tieredstore.core;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.store.GetMessageResult;
 import org.apache.rocketmq.store.MessageFilter;
 import org.apache.rocketmq.store.QueryMessageResult;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface MessageStoreFetcher {
 
@@ -64,7 +65,7 @@ public interface MessageStoreFetcher {
      * @return Matched messages.
      */
     CompletableFuture<GetMessageResult> getMessageAsync(
-        String group, String topic, int queueId, long offset, int maxCount, MessageFilter messageFilter);
+            String group, String topic, int queueId, long offset, int maxCount, MessageFilter messageFilter);
 
     /**
      * Asynchronous query messages by given key.
@@ -76,5 +77,5 @@ public interface MessageStoreFetcher {
      * @param end      End timestamp.
      */
     CompletableFuture<QueryMessageResult> queryMessageAsync(
-        String topic, String key, int maxCount, long begin, long end);
+            String topic, String key, int maxCount, long begin, long end);
 }

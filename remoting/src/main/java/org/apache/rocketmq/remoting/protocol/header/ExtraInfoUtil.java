@@ -16,13 +16,14 @@
  */
 package org.apache.rocketmq.remoting.protocol.header;
 
+import org.apache.rocketmq.common.KeyBuilder;
+import org.apache.rocketmq.common.MixAll;
+import org.apache.rocketmq.common.message.MessageConst;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.rocketmq.common.KeyBuilder;
-import org.apache.rocketmq.common.MixAll;
-import org.apache.rocketmq.common.message.MessageConst;
 
 public class ExtraInfoUtil {
     private static final String NORMAL_TOPIC = "0";
@@ -121,17 +122,17 @@ public class ExtraInfoUtil {
     public static String buildExtraInfo(long ckQueueOffset, long popTime, long invisibleTime, int reviveQid, String topic, String brokerName, int queueId) {
         String t = getRetry(topic);
         return ckQueueOffset + MessageConst.KEY_SEPARATOR + popTime + MessageConst.KEY_SEPARATOR + invisibleTime + MessageConst.KEY_SEPARATOR + reviveQid + MessageConst.KEY_SEPARATOR + t
-            + MessageConst.KEY_SEPARATOR + brokerName + MessageConst.KEY_SEPARATOR + queueId;
+                + MessageConst.KEY_SEPARATOR + brokerName + MessageConst.KEY_SEPARATOR + queueId;
     }
 
     public static String buildExtraInfo(long ckQueueOffset, long popTime, long invisibleTime, int reviveQid, String topic, String brokerName, int queueId,
                                         long msgQueueOffset) {
         String t = getRetry(topic);
         return ckQueueOffset
-            + MessageConst.KEY_SEPARATOR + popTime + MessageConst.KEY_SEPARATOR + invisibleTime
-            + MessageConst.KEY_SEPARATOR + reviveQid + MessageConst.KEY_SEPARATOR + t
-            + MessageConst.KEY_SEPARATOR + brokerName + MessageConst.KEY_SEPARATOR + queueId
-            + MessageConst.KEY_SEPARATOR + msgQueueOffset;
+                + MessageConst.KEY_SEPARATOR + popTime + MessageConst.KEY_SEPARATOR + invisibleTime
+                + MessageConst.KEY_SEPARATOR + reviveQid + MessageConst.KEY_SEPARATOR + t
+                + MessageConst.KEY_SEPARATOR + brokerName + MessageConst.KEY_SEPARATOR + queueId
+                + MessageConst.KEY_SEPARATOR + msgQueueOffset;
     }
 
     public static void buildStartOffsetInfo(StringBuilder stringBuilder, String topic, int queueId, long startOffset) {
@@ -144,8 +145,8 @@ public class ExtraInfoUtil {
         }
 
         stringBuilder.append(getRetry(topic))
-            .append(MessageConst.KEY_SEPARATOR).append(queueId)
-            .append(MessageConst.KEY_SEPARATOR).append(startOffset);
+                .append(MessageConst.KEY_SEPARATOR).append(queueId)
+                .append(MessageConst.KEY_SEPARATOR).append(startOffset);
     }
 
     public static void buildQueueIdOrderCountInfo(StringBuilder stringBuilder, String topic, int queueId, int orderCount) {
@@ -172,8 +173,8 @@ public class ExtraInfoUtil {
         }
 
         stringBuilder.append(getRetry(topic))
-            .append(MessageConst.KEY_SEPARATOR).append(getQueueOffsetKeyValueKey(queueId, queueOffset))
-            .append(MessageConst.KEY_SEPARATOR).append(orderCount);
+                .append(MessageConst.KEY_SEPARATOR).append(getQueueOffsetKeyValueKey(queueId, queueOffset))
+                .append(MessageConst.KEY_SEPARATOR).append(orderCount);
     }
 
     public static void buildMsgOffsetInfo(StringBuilder stringBuilder, String topic, int queueId, List<Long> msgOffsets) {
@@ -186,8 +187,8 @@ public class ExtraInfoUtil {
         }
 
         stringBuilder.append(getRetry(topic))
-            .append(MessageConst.KEY_SEPARATOR).append(queueId)
-            .append(MessageConst.KEY_SEPARATOR);
+                .append(MessageConst.KEY_SEPARATOR).append(queueId)
+                .append(MessageConst.KEY_SEPARATOR);
 
         for (int i = 0; i < msgOffsets.size(); i++) {
             stringBuilder.append(msgOffsets.get(i));

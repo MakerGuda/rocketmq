@@ -18,7 +18,6 @@ package org.apache.rocketmq.broker.processor;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.concurrent.ConcurrentSkipListSet;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.longpolling.PopRequest;
 import org.apache.rocketmq.common.KeyBuilder;
@@ -37,9 +36,11 @@ import org.apache.rocketmq.remoting.protocol.header.PollingInfoRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.PollingInfoResponseHeader;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.concurrent.ConcurrentSkipListSet;
+
 /**
  * Netty 请求处理器：处理与「Polling Info」相关的 Remoting 请求。
- * 
+ * <p>
  * 实现 NettyRequestProcessor，由 Broker 将特定 RequestCode 映射到本类。
  */
 public class PollingInfoProcessor implements NettyRequestProcessor {
@@ -52,7 +53,7 @@ public class PollingInfoProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(final ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                          RemotingCommand request) throws RemotingCommandException {
         return this.processRequest(ctx.channel(), request);
     }
 
@@ -62,11 +63,11 @@ public class PollingInfoProcessor implements NettyRequestProcessor {
     }
 
     private RemotingCommand processRequest(final Channel channel, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         RemotingCommand response = RemotingCommand.createResponseCommand(PollingInfoResponseHeader.class);
         final PollingInfoResponseHeader responseHeader = (PollingInfoResponseHeader) response.readCustomHeader();
         final PollingInfoRequestHeader requestHeader =
-            (PollingInfoRequestHeader) request.decodeCommandCustomHeader(PollingInfoRequestHeader.class);
+                (PollingInfoRequestHeader) request.decodeCommandCustomHeader(PollingInfoRequestHeader.class);
 
         response.setOpaque(request.getOpaque());
 
@@ -92,7 +93,7 @@ public class PollingInfoProcessor implements NettyRequestProcessor {
 
         if (requestHeader.getQueueId() >= topicConfig.getReadQueueNums()) {
             String errorInfo = String.format("queueId[%d] is illegal, topic:[%s] topicConfig.readQueueNums:[%d] consumer:[%s]",
-                requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
+                    requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
             POP_LOGGER.warn(errorInfo);
             response.setCode(ResponseCode.INVALID_PARAMETER);
             response.setRemark(errorInfo);

@@ -16,13 +16,6 @@
  */
 package org.apache.rocketmq.container;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -45,7 +38,16 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.srvutil.ServerUtil;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class BrokerContainerStartup {
+    public static final SystemConfigFileHelper CONFIG_FILE_HELPER = new SystemConfigFileHelper();
     private static final String BROKER_CONTAINER_CONFIG_OPTION = "c";
     private static final String BROKER_CONFIG_OPTION = "b";
     private static final String PRINT_PROPERTIES_OPTION = "p";
@@ -54,7 +56,6 @@ public class BrokerContainerStartup {
     public static CommandLine commandLine = null;
     public static String configFile = null;
     public static Logger log;
-    public static final SystemConfigFileHelper CONFIG_FILE_HELPER = new SystemConfigFileHelper();
     public static String rocketmqHome = null;
 
     public static void main(String[] args) {
@@ -127,7 +128,7 @@ public class BrokerContainerStartup {
     }
 
     public static InnerBrokerController createAndInitializeBroker(BrokerContainer brokerContainer,
-        String filePath, Properties brokerProperties) {
+                                                                  String filePath, Properties brokerProperties) {
 
         final BrokerConfig brokerConfig = new BrokerConfig();
         final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
@@ -163,8 +164,8 @@ public class BrokerContainerStartup {
         }
 
         if (messageStoreConfig.getTotalReplicas() < messageStoreConfig.getInSyncReplicas()
-            || messageStoreConfig.getTotalReplicas() < messageStoreConfig.getMinInSyncReplicas()
-            || messageStoreConfig.getInSyncReplicas() < messageStoreConfig.getMinInSyncReplicas()) {
+                || messageStoreConfig.getTotalReplicas() < messageStoreConfig.getMinInSyncReplicas()
+                || messageStoreConfig.getInSyncReplicas() < messageStoreConfig.getMinInSyncReplicas()) {
             System.out.printf("invalid replicas number%n");
             System.exit(-3);
         }
@@ -176,11 +177,11 @@ public class BrokerContainerStartup {
         MixAll.printObjectProperties(log, messageStoreConfig);
 
         ConfigContext configContext = new ConfigContext.Builder()
-            .brokerConfig(brokerConfig)
-            .messageStoreConfig(messageStoreConfig)
-            .authConfig(authConfig)
-            .properties(brokerProperties)
-            .build();
+                .brokerConfig(brokerConfig)
+                .messageStoreConfig(messageStoreConfig)
+                .authConfig(authConfig)
+                .properties(brokerProperties)
+                .build();
 
         try {
             InnerBrokerController innerBrokerController = brokerContainer.addBroker(configContext);
@@ -220,7 +221,7 @@ public class BrokerContainerStartup {
     }
 
     public static void startBrokerController(BrokerContainer brokerContainer,
-        InnerBrokerController innerBrokerController, Properties brokerProperties) {
+                                             InnerBrokerController innerBrokerController, Properties brokerProperties) {
         try {
             for (BrokerBootHook hook : brokerContainer.getBrokerBootHookList()) {
                 hook.executeBeforeStart(innerBrokerController, brokerProperties);
@@ -233,9 +234,9 @@ public class BrokerContainerStartup {
             }
 
             String tip = String.format("Broker [%s-%s] boot success. serializeType=%s",
-                innerBrokerController.getBrokerConfig().getBrokerName(),
-                innerBrokerController.getBrokerConfig().getBrokerId(),
-                RemotingCommand.getSerializeTypeConfigInThisServer());
+                    innerBrokerController.getBrokerConfig().getBrokerName(),
+                    innerBrokerController.getBrokerConfig().getBrokerId(),
+                    RemotingCommand.getSerializeTypeConfigInThisServer());
 
             log.info(tip);
             System.out.printf("%s%n", tip);
@@ -252,9 +253,9 @@ public class BrokerContainerStartup {
     }
 
     public static Properties parseCmdLineToConfig(String[] args,
-        BrokerContainerConfig containerConfig,
-        NettyServerConfig nettyServerConfig,
-        NettyClientConfig nettyClientConfig) {
+                                                  BrokerContainerConfig containerConfig,
+                                                  NettyServerConfig nettyServerConfig,
+                                                  NettyClientConfig nettyClientConfig) {
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
 
         if (null == System.getProperty(NettySystemConfig.COM_ROCKETMQ_REMOTING_SOCKET_SNDBUF_SIZE)) {
@@ -269,7 +270,7 @@ public class BrokerContainerStartup {
             //PackageConflictDetect.detectFastjson();
             Options options = ServerUtil.buildCommandlineOptions(new Options());
             commandLine = ServerUtil.parseCmdLine("mqbroker", args, buildCommandlineOptions(options),
-                new DefaultParser());
+                    new DefaultParser());
             if (null == commandLine) {
                 System.exit(-1);
             }
@@ -310,8 +311,8 @@ public class BrokerContainerStartup {
                     }
                 } catch (Exception e) {
                     System.out.printf(
-                        "The Name Server Address[%s] illegal, please set it as follows, \"127.0.0.1:9876;192.168.0.1:9876\"%n",
-                        namesrvAddr);
+                            "The Name Server Address[%s] illegal, please set it as follows, \"127.0.0.1:9876;192.168.0.1:9876\"%n",
+                            namesrvAddr);
                     System.exit(-3);
                 }
             }
@@ -338,8 +339,8 @@ public class BrokerContainerStartup {
     }
 
     public static BrokerContainer createBrokerContainer(BrokerContainerConfig containerConfig,
-        NettyServerConfig nettyServerConfig,
-        NettyClientConfig nettyClientConfig) {
+                                                        NettyServerConfig nettyServerConfig,
+                                                        NettyClientConfig nettyClientConfig) {
 
         log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
         MixAll.printObjectProperties(log, containerConfig);
@@ -347,9 +348,9 @@ public class BrokerContainerStartup {
         MixAll.printObjectProperties(log, nettyClientConfig);
 
         final BrokerContainer brokerContainer = new BrokerContainer(
-            containerConfig,
-            nettyServerConfig,
-            nettyClientConfig);
+                containerConfig,
+                nettyServerConfig,
+                nettyClientConfig);
         // remember all configs to prevent discard
         brokerContainer.getConfiguration().registerConfig(properties);
 
@@ -437,12 +438,12 @@ public class BrokerContainerStartup {
             LOGGER.error("[SystemConfigFileHelper] update no thing.");
         }
 
-        public void setFile(String file) {
-            this.file = file;
-        }
-
         public String getFile() {
             return file;
+        }
+
+        public void setFile(String file) {
+            this.file = file;
         }
     }
 

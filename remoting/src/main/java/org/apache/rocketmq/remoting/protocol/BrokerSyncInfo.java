@@ -60,9 +60,9 @@ public class BrokerSyncInfo extends RemotingSerializable {
     @Override
     public String toString() {
         return "BrokerSyncInfo{" +
-            "masterHaAddress='" + masterHaAddress + '\'' +
-            ", masterFlushOffset=" + masterFlushOffset +
-            ", masterAddress=" + masterAddress +
-            '}';
+                "masterHaAddress='" + masterHaAddress + '\'' +
+                ", masterFlushOffset=" + masterFlushOffset +
+                ", masterAddress=" + masterAddress +
+                '}';
     }
 }

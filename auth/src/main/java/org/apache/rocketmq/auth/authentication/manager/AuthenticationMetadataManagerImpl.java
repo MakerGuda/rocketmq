@@ -17,8 +17,6 @@
 package org.apache.rocketmq.auth.authentication.manager;
 
 import com.alibaba.fastjson2.JSON;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.acl.common.SessionCredentials;
 import org.apache.rocketmq.auth.authentication.enums.UserStatus;
@@ -31,6 +29,9 @@ import org.apache.rocketmq.auth.authorization.factory.AuthorizationFactory;
 import org.apache.rocketmq.auth.authorization.provider.AuthorizationMetadataProvider;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.utils.ExceptionUtils;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class AuthenticationMetadataManagerImpl implements AuthenticationMetadataManager {
 

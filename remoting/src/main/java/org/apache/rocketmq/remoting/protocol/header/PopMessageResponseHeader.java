@@ -56,16 +56,16 @@ public class PopMessageResponseHeader implements CommandCustomHeader {
         return invisibleTime;
     }
 
+    public void setInvisibleTime(long invisibleTime) {
+        this.invisibleTime = invisibleTime;
+    }
+
     public long getRestNum() {
         return restNum;
     }
 
     public void setRestNum(long restNum) {
         this.restNum = restNum;
-    }
-
-    public void setInvisibleTime(long invisibleTime) {
-        this.invisibleTime = invisibleTime;
     }
 
     public int getReviveQid() {

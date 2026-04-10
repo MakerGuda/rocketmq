@@ -16,10 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.cluster;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -31,6 +27,11 @@ import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class ClusterListSubCommand implements SubCommand {
 
@@ -63,7 +64,7 @@ public class ClusterListSubCommand implements SubCommand {
 
     @Override
     public void execute(final CommandLine commandLine, final Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
 
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
@@ -115,15 +116,15 @@ public class ClusterListSubCommand implements SubCommand {
     }
 
     private void printClusterMoreStats(final Set<String> clusterNames,
-        final DefaultMQAdminExt defaultMQAdminExt,
-        final ClusterInfo clusterInfo) {
+                                       final DefaultMQAdminExt defaultMQAdminExt,
+                                       final ClusterInfo clusterInfo) {
         System.out.printf("%-16s  %-32s %14s %14s %14s %14s%n",
-            "#Cluster Name",
-            "#Broker Name",
-            "#InTotalYest",
-            "#OutTotalYest",
-            "#InTotalToday",
-            "#OutTotalToday"
+                "#Cluster Name",
+                "#Broker Name",
+                "#InTotalYest",
+                "#OutTotalYest",
+                "#InTotalToday",
+                "#OutTotalToday"
         );
 
         for (String clusterName : clusterNames) {
@@ -163,12 +164,12 @@ public class ClusterListSubCommand implements SubCommand {
                         }
 
                         System.out.printf("%-16s  %-32s %14d %14d %14d %14d%n",
-                            clusterName,
-                            brokerName,
-                            inTotalYest,
-                            outTotalYest,
-                            inTotalToday,
-                            outTotalToday
+                                clusterName,
+                                brokerName,
+                                inTotalYest,
+                                outTotalYest,
+                                inTotalToday,
+                                outTotalToday
                         );
                     }
                 }
@@ -177,21 +178,21 @@ public class ClusterListSubCommand implements SubCommand {
     }
 
     private void printClusterBaseInfo(final Set<String> clusterNames,
-        final DefaultMQAdminExt defaultMQAdminExt,
-        final ClusterInfo clusterInfo) {
+                                      final DefaultMQAdminExt defaultMQAdminExt,
+                                      final ClusterInfo clusterInfo) {
         System.out.printf("%-22s  %-22s  %-4s  %-22s %-16s  %16s  %30s  %-22s  %-11s  %-12s  %-8s  %-10s%n",
-            "#Cluster Name",
-            "#Broker Name",
-            "#BID",
-            "#Addr",
-            "#Version",
-            "#InTPS(LOAD)",
-            "#OutTPS(LOAD)",
-            "#Timer(Progress)",
-            "#PCWait(ms)",
-            "#Hour",
-            "#SPACE",
-            "#ACTIVATED"
+                "#Cluster Name",
+                "#Broker Name",
+                "#BID",
+                "#Addr",
+                "#Version",
+                "#InTPS(LOAD)",
+                "#OutTPS(LOAD)",
+                "#Timer(Progress)",
+                "#PCWait(ms)",
+                "#Hour",
+                "#SPACE",
+                "#ACTIVATED"
         );
 
         for (String clusterName : clusterNames) {
@@ -283,18 +284,18 @@ public class ClusterListSubCommand implements SubCommand {
                         }
 
                         System.out.printf("%-22s  %-22s  %-4s  %-22s %-16s  %16s  %30s  %-22s  %11s  %-12s  %-8s  %10s%n",
-                            clusterName,
-                            brokerName,
-                            next1.getKey(),
-                            next1.getValue(),
-                            version,
-                            String.format("%9.2f(%s,%sms)", in, sendThreadPoolQueueSize, sendThreadPoolQueueHeadWaitTimeMills),
-                            String.format("%9.2f(%s,%sms|%s,%sms)", out, pullThreadPoolQueueSize, pullThreadPoolQueueHeadWaitTimeMills, ackThreadPoolQueueSize, ackThreadPoolQueueHeadWaitTimeMills),
-                            String.format("%d-%d(%.1fw, %.1f, %.1f)", timerReadBehind, timerOffsetBehind, timerCongestNum / 10000.0f, timerEnqueueTps, timerDequeueTps),
-                            pageCacheLockTimeMills,
-                            String.format("%2.2f", hour),
-                            String.format("%.4f", space),
-                            isBrokerActive
+                                clusterName,
+                                brokerName,
+                                next1.getKey(),
+                                next1.getValue(),
+                                version,
+                                String.format("%9.2f(%s,%sms)", in, sendThreadPoolQueueSize, sendThreadPoolQueueHeadWaitTimeMills),
+                                String.format("%9.2f(%s,%sms|%s,%sms)", out, pullThreadPoolQueueSize, pullThreadPoolQueueHeadWaitTimeMills, ackThreadPoolQueueSize, ackThreadPoolQueueHeadWaitTimeMills),
+                                String.format("%d-%d(%.1fw, %.1f, %.1f)", timerReadBehind, timerOffsetBehind, timerCongestNum / 10000.0f, timerEnqueueTps, timerDequeueTps),
+                                pageCacheLockTimeMills,
+                                String.format("%2.2f", hour),
+                                String.format("%.4f", space),
+                                isBrokerActive
                         );
                     }
                 }

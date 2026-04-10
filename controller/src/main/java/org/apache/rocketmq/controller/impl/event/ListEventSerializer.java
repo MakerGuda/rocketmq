@@ -26,10 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListEventSerializer {
+    private static final Serializer SERIALIZER = new FastJsonSerializer();
+
     private ListEventSerializer() {
     }
-
-    private static final Serializer SERIALIZER = new FastJsonSerializer();
 
     private static void putShort(byte[] memory, int index, int value) {
         memory[index] = (byte) (value >>> 8);

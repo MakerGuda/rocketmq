@@ -17,54 +17,12 @@
 
 package org.apache.rocketmq.test.grpc.v2;
 
-import apache.rocketmq.v2.AckMessageEntry;
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.AckMessageResponse;
-import apache.rocketmq.v2.AckMessageResultEntry;
-import apache.rocketmq.v2.Address;
-import apache.rocketmq.v2.AddressScheme;
-import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
-import apache.rocketmq.v2.ChangeInvisibleDurationResponse;
-import apache.rocketmq.v2.ClientType;
-import apache.rocketmq.v2.Code;
-import apache.rocketmq.v2.Encoding;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.EndTransactionResponse;
-import apache.rocketmq.v2.Endpoints;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.Message;
-import apache.rocketmq.v2.MessageQueue;
-import apache.rocketmq.v2.MessageType;
-import apache.rocketmq.v2.MessagingServiceGrpc;
-import apache.rocketmq.v2.Publishing;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryAssignmentResponse;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.QueryRouteResponse;
-import apache.rocketmq.v2.RecallMessageRequest;
-import apache.rocketmq.v2.RecallMessageResponse;
-import apache.rocketmq.v2.ReceiveMessageRequest;
-import apache.rocketmq.v2.ReceiveMessageResponse;
-import apache.rocketmq.v2.RecoverOrphanedTransactionCommand;
-import apache.rocketmq.v2.Resource;
-import apache.rocketmq.v2.RetryPolicy;
-import apache.rocketmq.v2.SendMessageRequest;
-import apache.rocketmq.v2.SendMessageResponse;
-import apache.rocketmq.v2.Settings;
-import apache.rocketmq.v2.Subscription;
-import apache.rocketmq.v2.SystemProperties;
-import apache.rocketmq.v2.TelemetryCommand;
-import apache.rocketmq.v2.TransactionResolution;
-import apache.rocketmq.v2.TransactionSource;
+import apache.rocketmq.v2.*;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
-import io.grpc.Channel;
-import io.grpc.Metadata;
-import io.grpc.Server;
-import io.grpc.ServerInterceptors;
-import io.grpc.ServerServiceDefinition;
+import io.grpc.*;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.ApplicationProtocolConfig;
@@ -76,39 +34,36 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import java.io.IOException;
-import java.net.URL;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import javax.net.ssl.SSLException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.client.consumer.PullResult;
 import org.apache.rocketmq.client.consumer.PullStatus;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
+import org.apache.rocketmq.common.constant.GrpcConstants;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.utils.NetworkUtil;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.grpc.interceptor.ContextInterceptor;
 import org.apache.rocketmq.proxy.grpc.interceptor.HeaderInterceptor;
-import org.apache.rocketmq.common.constant.GrpcConstants;
 import org.apache.rocketmq.proxy.grpc.v2.common.ResponseBuilder;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 import org.apache.rocketmq.test.base.BaseConf;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtils;
 import org.junit.Rule;
+
+import javax.net.ssl.SSLException;
+import java.io.IOException;
+import java.net.URL;
+import java.security.cert.CertificateException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.apache.rocketmq.common.message.MessageClientIDSetter.createUniqID;
 import static org.apache.rocketmq.proxy.config.ConfigurationManager.RMQ_PROXY_HOME;
@@ -117,22 +72,19 @@ import static org.awaitility.Awaitility.await;
 
 public class GrpcBaseIT extends BaseConf {
 
-    /**
-     * Let OS pick up an available port.
-     */
-    private int port = 0;
-
+    protected static final int DEFAULT_QUEUE_NUMS = 8;
     /**
      * This rule manages automatic graceful shutdown for the registered servers and channels at the end of test.
      */
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
-
+    protected final Metadata header = new Metadata();
     protected MessagingServiceGrpc.MessagingServiceBlockingStub blockingStub;
     protected MessagingServiceGrpc.MessagingServiceStub stub;
-    protected final Metadata header = new Metadata();
-
-    protected static final int DEFAULT_QUEUE_NUMS = 8;
+    /**
+     * Let OS pick up an available port.
+     */
+    private int port = 0;
 
     public void setUp() throws Exception {
         brokerController1.getBrokerConfig().setTransactionCheckInterval(1 * 1000);
@@ -174,7 +126,7 @@ public class GrpcBaseIT extends BaseConf {
     }
 
     protected CompletableFuture<Settings> sendClientSettings(MessagingServiceGrpc.MessagingServiceStub stub,
-        Settings clientSettings) {
+                                                             Settings clientSettings) {
         CompletableFuture<Settings> future = new CompletableFuture<>();
         StreamObserver<TelemetryCommand> requestStreamObserver = stub.telemetry(new DefaultTelemetryCommandStreamObserver() {
             @Override
@@ -186,25 +138,25 @@ public class GrpcBaseIT extends BaseConf {
             }
         });
         requestStreamObserver.onNext(TelemetryCommand.newBuilder()
-            .setSettings(clientSettings)
-            .build());
+                .setSettings(clientSettings)
+                .build());
         future.whenComplete((settings, throwable) -> requestStreamObserver.onCompleted());
         return future;
     }
 
     protected void setUpServer(MessagingServiceGrpc.MessagingServiceImplBase serverImpl,
-        int port, boolean enableInterceptor) throws IOException, CertificateException {
+                               int port, boolean enableInterceptor) throws IOException, CertificateException {
         SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
         ServerServiceDefinition serviceDefinition = ServerInterceptors.intercept(serverImpl);
         if (enableInterceptor) {
             serviceDefinition = ServerInterceptors.intercept(serverImpl, new ContextInterceptor(), new HeaderInterceptor());
         }
         Server server = NettyServerBuilder.forPort(port)
-            .directExecutor()
-            .addService(serviceDefinition)
-            .useTransportSecurity(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
-            .build()
-            .start();
+                .directExecutor()
+                .addService(serviceDefinition)
+                .useTransportSecurity(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey())
+                .build()
+                .start();
         this.port = server.getPort();
         // Create a server, add service, start, and register for automatic graceful shutdown.
         grpcCleanup.register(server);
@@ -216,19 +168,19 @@ public class GrpcBaseIT extends BaseConf {
 
     protected Channel createChannel(int port) throws SSLException {
         return grpcCleanup.register(NettyChannelBuilder.forAddress("127.0.0.1", port)
-            .directExecutor()
-            .sslContext(SslContextBuilder
-                .forClient()
-                .sslProvider(SslProvider.OPENSSL)
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .applicationProtocolConfig(new ApplicationProtocolConfig(
-                    ApplicationProtocolConfig.Protocol.ALPN,
-                    ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-                    ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                    ApplicationProtocolNames.HTTP_2))
-                .build()
-            )
-            .build());
+                .directExecutor()
+                .sslContext(SslContextBuilder
+                        .forClient()
+                        .sslProvider(SslProvider.OPENSSL)
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .applicationProtocolConfig(new ApplicationProtocolConfig(
+                                ApplicationProtocolConfig.Protocol.ALPN,
+                                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                                ApplicationProtocolNames.HTTP_2))
+                        .build()
+                )
+                .build());
     }
 
     public void testQueryAssignment() throws Exception {
@@ -268,8 +220,8 @@ public class GrpcBaseIT extends BaseConf {
 
         try {
             requestStreamObserver.onNext(TelemetryCommand.newBuilder()
-                .setSettings(buildPushConsumerClientSettings(group))
-                .build());
+                    .setSettings(buildPushConsumerClientSettings(group))
+                    .build());
             await().atMost(java.time.Duration.ofSeconds(3)).until(() -> {
                 if (telemetryCommandRef.get() == null) {
                     return false;
@@ -284,8 +236,8 @@ public class GrpcBaseIT extends BaseConf {
             receiveMessage(blockingStub, topic, group, 1);
 
             requestStreamObserver.onNext(TelemetryCommand.newBuilder()
-                .setSettings(buildProducerClientSettings(topic))
-                .build());
+                    .setSettings(buildProducerClientSettings(topic))
+                    .build());
             blockingStub.heartbeat(buildHeartbeatRequest(group));
             await().atMost(java.time.Duration.ofSeconds(3)).until(() -> {
                 if (telemetryCommandRef.get() == null) {
@@ -319,12 +271,12 @@ public class GrpcBaseIT extends BaseConf {
             assertRecoverOrphanedTransactionCommand(recoverOrphanedTransactionCommand, messageId);
 
             EndTransactionResponse endTransactionResponse = blockingStub.endTransaction(
-                buildEndTransactionRequest(topic, messageId, recoverOrphanedTransactionCommand.getTransactionId(), TransactionResolution.COMMIT));
+                    buildEndTransactionRequest(topic, messageId, recoverOrphanedTransactionCommand.getTransactionId(), TransactionResolution.COMMIT));
             assertEndTransactionResponse(endTransactionResponse);
 
             requestStreamObserver.onNext(TelemetryCommand.newBuilder()
-                .setSettings(buildPushConsumerClientSettings(group))
-                .build());
+                    .setSettings(buildPushConsumerClientSettings(group))
+                    .build());
 
             await().atMost(java.time.Duration.ofSeconds(30)).until(() -> {
                 List<Message> retryMessageList = getMessageFromReceiveMessageResponse(receiveMessage(blockingStub, topic, group));
@@ -332,7 +284,7 @@ public class GrpcBaseIT extends BaseConf {
                     return false;
                 }
                 return retryMessageList.get(0).getSystemProperties()
-                    .getMessageId().equals(messageId);
+                        .getMessageId().equals(messageId);
             });
         } finally {
             requestStreamObserver.onCompleted();
@@ -341,10 +293,10 @@ public class GrpcBaseIT extends BaseConf {
 
     public HeartbeatRequest buildHeartbeatRequest(String group) {
         return HeartbeatRequest.newBuilder()
-            .setGroup(Resource.newBuilder()
-                .setName(group)
-                .build())
-            .build();
+                .setGroup(Resource.newBuilder()
+                        .setName(group)
+                        .build())
+                .build();
     }
 
     public void testSimpleConsumerSendAndRecvDelayMessage() throws Exception {
@@ -359,22 +311,22 @@ public class GrpcBaseIT extends BaseConf {
         this.sendClientSettings(stub, buildProducerClientSettings(topic)).get();
         String messageId = createUniqID();
         SendMessageResponse sendResponse = blockingStub.sendMessage(SendMessageRequest.newBuilder()
-            .addMessages(Message.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setSystemProperties(SystemProperties.newBuilder()
-                    .setMessageId(messageId)
-                    .setQueueId(0)
-                    .setMessageType(MessageType.NORMAL)
-                    .setBodyEncoding(Encoding.GZIP)
-                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                    .setDeliveryTimestamp(Timestamps.fromMillis(System.currentTimeMillis() + delayTime))
-                    .build())
-                .setBody(ByteString.copyFromUtf8("hello"))
-                .build())
-            .build());
+                .addMessages(Message.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setSystemProperties(SystemProperties.newBuilder()
+                                .setMessageId(messageId)
+                                .setQueueId(0)
+                                .setMessageType(MessageType.NORMAL)
+                                .setBodyEncoding(Encoding.GZIP)
+                                .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                .setDeliveryTimestamp(Timestamps.fromMillis(System.currentTimeMillis() + delayTime))
+                                .build())
+                        .setBody(ByteString.copyFromUtf8("hello"))
+                        .build())
+                .build());
         long sendTime = System.currentTimeMillis();
         assertSendMessage(sendResponse, messageId);
 
@@ -407,35 +359,35 @@ public class GrpcBaseIT extends BaseConf {
         this.sendClientSettings(stub, buildProducerClientSettings(topic)).get();
         String messageId = createUniqID();
         SendMessageResponse sendResponse = blockingStub.sendMessage(SendMessageRequest.newBuilder()
-            .addMessages(Message.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setSystemProperties(SystemProperties.newBuilder()
-                    .setMessageId(messageId)
-                    .setQueueId(0)
-                    .setMessageType(MessageType.DELAY)
-                    .setBodyEncoding(Encoding.GZIP)
-                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                    .setDeliveryTimestamp(Timestamps.fromMillis(System.currentTimeMillis() + delayTime))
-                    .build())
-                .setBody(ByteString.copyFromUtf8("hello"))
-                .build())
-            .build());
+                .addMessages(Message.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setSystemProperties(SystemProperties.newBuilder()
+                                .setMessageId(messageId)
+                                .setQueueId(0)
+                                .setMessageType(MessageType.DELAY)
+                                .setBodyEncoding(Encoding.GZIP)
+                                .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                .setDeliveryTimestamp(Timestamps.fromMillis(System.currentTimeMillis() + delayTime))
+                                .build())
+                        .setBody(ByteString.copyFromUtf8("hello"))
+                        .build())
+                .build());
         long sendTime = System.currentTimeMillis();
         assertSendMessage(sendResponse, messageId);
         String recallHandle = sendResponse.getEntries(0).getRecallHandle();
         assertThat(recallHandle).isNotEmpty();
 
         RecallMessageRequest recallRequest = RecallMessageRequest.newBuilder()
-            .setRecallHandle(recallHandle)
-            .setTopic(Resource.newBuilder().setResourceNamespace("").setName(topic).build())
-            .build();
+                .setRecallHandle(recallHandle)
+                .setTopic(Resource.newBuilder().setResourceNamespace("").setName(topic).build())
+                .build();
         RecallMessageResponse recallResponse =
-            blockingStub.withDeadlineAfter(2, TimeUnit.SECONDS).recallMessage(recallRequest);
+                blockingStub.withDeadlineAfter(2, TimeUnit.SECONDS).recallMessage(recallRequest);
         assertThat(recallResponse.getStatus()).isEqualTo(
-            ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()));
+                ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()));
         assertThat(recallResponse.getMessageId()).isEqualTo(messageId);
 
         this.sendClientSettings(stub, buildSimpleConsumerClientSettings(group)).get();
@@ -511,7 +463,7 @@ public class GrpcBaseIT extends BaseConf {
                 return false;
             }
             if (retryMessageList.get(0).getSystemProperties()
-                .getMessageId().equals(messageId)) {
+                    .getMessageId().equals(messageId)) {
                 ackHandles.add(retryMessageList.get(0).getSystemProperties().getReceiptHandle());
                 return true;
             }
@@ -520,8 +472,8 @@ public class GrpcBaseIT extends BaseConf {
 
         assertThat(ackHandles.size()).isEqualTo(2);
         AckMessageResponse ackMessageResponse = blockingStub.ackMessage(buildAckMessageRequest(topic, group,
-            AckMessageEntry.newBuilder().setMessageId(messageId).setReceiptHandle(ackHandles.get(0)).build(),
-            AckMessageEntry.newBuilder().setMessageId(messageId).setReceiptHandle(ackHandles.get(1)).build()));
+                AckMessageEntry.newBuilder().setMessageId(messageId).setReceiptHandle(ackHandles.get(0)).build(),
+                AckMessageEntry.newBuilder().setMessageId(messageId).setReceiptHandle(ackHandles.get(1)).build()));
         assertThat(ackMessageResponse.getStatus().getCode()).isEqualTo(Code.MULTIPLE_RESULTS);
         int okNum = 0;
         int expireNum = 0;
@@ -619,7 +571,7 @@ public class GrpcBaseIT extends BaseConf {
                 String messageId = message.getSystemProperties().getMessageId();
                 messageRecvList.add(messageId);
                 blockingStub.ackMessage(buildAckMessageRequest(topic, group,
-                    AckMessageEntry.newBuilder().setMessageId(messageId).setReceiptHandle(message.getSystemProperties().getReceiptHandle()).build()));
+                        AckMessageEntry.newBuilder().setMessageId(messageId).setReceiptHandle(message.getSystemProperties().getReceiptHandle()).build()));
             }
             return messageRecvList.size() == messageIdList.size();
         });
@@ -641,22 +593,22 @@ public class GrpcBaseIT extends BaseConf {
         for (int i = 0; i < BaseConf.QUEUE_NUMBERS; i++) {
             String messageId = createUniqID();
             SendMessageResponse sendResponse = blockingStub.sendMessage(SendMessageRequest.newBuilder()
-                .addMessages(Message.newBuilder()
-                    .setTopic(Resource.newBuilder()
-                        .setName(topic)
-                        .build())
-                    .setSystemProperties(SystemProperties.newBuilder()
-                        .setMessageId(messageId)
-                        .setQueueId(0)
-                        .setMessageType(MessageType.PRIORITY)
-                        .setBodyEncoding(Encoding.GZIP)
-                        .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                        .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                        .setPriority(i)
-                        .build())
-                    .setBody(ByteString.copyFromUtf8("hello"))
-                    .build())
-                .build());
+                    .addMessages(Message.newBuilder()
+                            .setTopic(Resource.newBuilder()
+                                    .setName(topic)
+                                    .build())
+                            .setSystemProperties(SystemProperties.newBuilder()
+                                    .setMessageId(messageId)
+                                    .setQueueId(0)
+                                    .setMessageType(MessageType.PRIORITY)
+                                    .setBodyEncoding(Encoding.GZIP)
+                                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                    .setPriority(i)
+                                    .build())
+                            .setBody(ByteString.copyFromUtf8("hello"))
+                            .build())
+                    .build());
             assertSendMessage(sendResponse, messageId);
         }
 
@@ -680,15 +632,15 @@ public class GrpcBaseIT extends BaseConf {
     }
 
     public List<ReceiveMessageResponse> receiveMessage(MessagingServiceGrpc.MessagingServiceBlockingStub stub,
-        String topic, String group) {
+                                                       String topic, String group) {
         return receiveMessage(stub, topic, group, 15);
     }
 
     public List<ReceiveMessageResponse> receiveMessage(MessagingServiceGrpc.MessagingServiceBlockingStub stub,
-        String topic, String group, int timeSeconds) {
+                                                       String topic, String group, int timeSeconds) {
         List<ReceiveMessageResponse> responseList = new ArrayList<>();
         Iterator<ReceiveMessageResponse> responseIterator = stub.withDeadlineAfter(timeSeconds, TimeUnit.SECONDS)
-            .receiveMessage(buildReceiveMessageRequest(topic, group));
+                .receiveMessage(buildReceiveMessageRequest(topic, group));
         while (responseIterator.hasNext()) {
             responseList.add(responseIterator.next());
         }
@@ -707,148 +659,148 @@ public class GrpcBaseIT extends BaseConf {
 
     public QueryRouteRequest buildQueryRouteRequest(String topic) {
         return QueryRouteRequest.newBuilder()
-            .setEndpoints(buildEndpoints(port))
-            .setTopic(Resource.newBuilder()
-                .setName(topic)
-                .build())
-            .build();
+                .setEndpoints(buildEndpoints(port))
+                .setTopic(Resource.newBuilder()
+                        .setName(topic)
+                        .build())
+                .build();
     }
 
     public QueryAssignmentRequest buildQueryAssignmentRequest(String topic, String group) {
         return QueryAssignmentRequest.newBuilder()
-            .setEndpoints(buildEndpoints(port))
-            .setTopic(Resource.newBuilder().setName(topic).build())
-            .setGroup(Resource.newBuilder().setName(group).build())
-            .build();
+                .setEndpoints(buildEndpoints(port))
+                .setTopic(Resource.newBuilder().setName(topic).build())
+                .setGroup(Resource.newBuilder().setName(group).build())
+                .build();
     }
 
     public SendMessageRequest buildSendMessageRequest(String topic, String messageId) {
         return SendMessageRequest.newBuilder()
-            .addMessages(Message.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setSystemProperties(SystemProperties.newBuilder()
-                    .setMessageId(messageId)
-                    .setQueueId(0)
-                    .setMessageType(MessageType.NORMAL)
-                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                    .build())
-                .setBody(ByteString.copyFromUtf8("123"))
-                .build())
-            .build();
+                .addMessages(Message.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setSystemProperties(SystemProperties.newBuilder()
+                                .setMessageId(messageId)
+                                .setQueueId(0)
+                                .setMessageType(MessageType.NORMAL)
+                                .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                .build())
+                        .setBody(ByteString.copyFromUtf8("123"))
+                        .build())
+                .build();
     }
 
     public SendMessageRequest buildSendOrderMessageRequest(String topic, String messageId, String messageGroup) {
         return SendMessageRequest.newBuilder()
-            .addMessages(Message.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setSystemProperties(SystemProperties.newBuilder()
-                    .setMessageId(messageId)
-                    .setQueueId(0)
-                    .setMessageType(MessageType.FIFO)
-                    .setMessageGroup(messageGroup)
-                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                    .build())
-                .setBody(ByteString.copyFromUtf8("123"))
-                .build())
-            .build();
+                .addMessages(Message.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setSystemProperties(SystemProperties.newBuilder()
+                                .setMessageId(messageId)
+                                .setQueueId(0)
+                                .setMessageType(MessageType.FIFO)
+                                .setMessageGroup(messageGroup)
+                                .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                .build())
+                        .setBody(ByteString.copyFromUtf8("123"))
+                        .build())
+                .build();
     }
 
     public SendMessageRequest buildSendBigMessageRequest(String topic, String messageId, int messageSize) {
         return SendMessageRequest.newBuilder()
-            .addMessages(Message.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setSystemProperties(SystemProperties.newBuilder()
-                    .setMessageId(messageId)
-                    .setQueueId(0)
-                    .setMessageType(MessageType.NORMAL)
-                    .setBodyEncoding(Encoding.GZIP)
-                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                    .build())
-                .setBody(ByteString.copyFromUtf8(RandomUtils.getStringWithCharacter(messageSize)))
-                .build())
-            .build();
+                .addMessages(Message.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setSystemProperties(SystemProperties.newBuilder()
+                                .setMessageId(messageId)
+                                .setQueueId(0)
+                                .setMessageType(MessageType.NORMAL)
+                                .setBodyEncoding(Encoding.GZIP)
+                                .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                .build())
+                        .setBody(ByteString.copyFromUtf8(RandomUtils.getStringWithCharacter(messageSize)))
+                        .build())
+                .build();
     }
 
     public SendMessageRequest buildTransactionSendMessageRequest(String topic, String messageId) {
         return SendMessageRequest.newBuilder()
-            .addMessages(Message.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setSystemProperties(SystemProperties.newBuilder()
-                    .setMessageId(messageId)
-                    .setQueueId(0)
-                    .setMessageType(MessageType.TRANSACTION)
-                    .setOrphanedTransactionRecoveryDuration(Duration.newBuilder().setSeconds(10))
-                    .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
-                    .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
-                    .build())
-                .setBody(ByteString.copyFromUtf8("123"))
-                .build())
-            .build();
+                .addMessages(Message.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setSystemProperties(SystemProperties.newBuilder()
+                                .setMessageId(messageId)
+                                .setQueueId(0)
+                                .setMessageType(MessageType.TRANSACTION)
+                                .setOrphanedTransactionRecoveryDuration(Duration.newBuilder().setSeconds(10))
+                                .setBornTimestamp(Timestamps.fromMillis(System.currentTimeMillis()))
+                                .setBornHost(StringUtils.defaultString(NetworkUtil.getLocalAddress(), "127.0.0.1:1234"))
+                                .build())
+                        .setBody(ByteString.copyFromUtf8("123"))
+                        .build())
+                .build();
     }
 
     public ReceiveMessageRequest buildReceiveMessageRequest(String topic, String group) {
         return ReceiveMessageRequest.newBuilder()
-            .setGroup(Resource.newBuilder()
-                .setName(group)
-                .build())
-            .setMessageQueue(MessageQueue.newBuilder()
-                .setTopic(Resource.newBuilder()
-                    .setName(topic)
-                    .build())
-                .setId(-1)
-                .build())
-            .setBatchSize(1)
-            .setAutoRenew(false)
-            .setInvisibleDuration(Duration.newBuilder()
-                .setSeconds(3)
-                .build())
-            .build();
+                .setGroup(Resource.newBuilder()
+                        .setName(group)
+                        .build())
+                .setMessageQueue(MessageQueue.newBuilder()
+                        .setTopic(Resource.newBuilder()
+                                .setName(topic)
+                                .build())
+                        .setId(-1)
+                        .build())
+                .setBatchSize(1)
+                .setAutoRenew(false)
+                .setInvisibleDuration(Duration.newBuilder()
+                        .setSeconds(3)
+                        .build())
+                .build();
     }
 
     public AckMessageRequest buildAckMessageRequest(String topic, String group, AckMessageEntry... entry) {
         return AckMessageRequest.newBuilder()
-            .setGroup(Resource.newBuilder()
-                .setName(group)
-                .build())
-            .setTopic(Resource.newBuilder()
-                .setName(topic)
-                .build())
-            .addAllEntries(Arrays.stream(entry).collect(Collectors.toList()))
-            .build();
+                .setGroup(Resource.newBuilder()
+                        .setName(group)
+                        .build())
+                .setTopic(Resource.newBuilder()
+                        .setName(topic)
+                        .build())
+                .addAllEntries(Arrays.stream(entry).collect(Collectors.toList()))
+                .build();
     }
 
     public EndTransactionRequest buildEndTransactionRequest(String topic, String messageId, String transactionId,
-        TransactionResolution resolution) {
+                                                            TransactionResolution resolution) {
         return EndTransactionRequest.newBuilder()
-            .setMessageId(messageId)
-            .setTopic(Resource.newBuilder()
-                .setName(topic)
-                .build())
-            .setTransactionId(transactionId)
-            .setResolution(resolution)
-            .setSource(TransactionSource.SOURCE_SERVER_CHECK)
-            .build();
+                .setMessageId(messageId)
+                .setTopic(Resource.newBuilder()
+                        .setName(topic)
+                        .build())
+                .setTransactionId(transactionId)
+                .setResolution(resolution)
+                .setSource(TransactionSource.SOURCE_SERVER_CHECK)
+                .build();
     }
 
     public ChangeInvisibleDurationRequest buildChangeInvisibleDurationRequest(String topic, String group,
-        String receiptHandle, int second) {
+                                                                              String receiptHandle, int second) {
         return ChangeInvisibleDurationRequest.newBuilder()
-            .setTopic(Resource.newBuilder().setName(topic).build())
-            .setGroup(Resource.newBuilder().setName(group).build())
-            .setInvisibleDuration(Durations.fromSeconds(second))
-            .setReceiptHandle(receiptHandle)
-            .build();
+                .setTopic(Resource.newBuilder().setName(topic).build())
+                .setGroup(Resource.newBuilder().setName(group).build())
+                .setInvisibleDuration(Durations.fromSeconds(second))
+                .setReceiptHandle(receiptHandle)
+                .build();
     }
 
     public void assertQueryRoute(QueryRouteResponse response, int messageQueueSize) {
@@ -871,10 +823,10 @@ public class GrpcBaseIT extends BaseConf {
     public Message assertAndGetReceiveMessage(List<ReceiveMessageResponse> response, String messageId) {
         assertThat(response.get(0).hasStatus()).isTrue();
         assertThat(response.get(0).getStatus()
-            .getCode()).isEqualTo(Code.OK);
+                .getCode()).isEqualTo(Code.OK);
         assertThat(response.get(1).getMessage()
-            .getSystemProperties()
-            .getMessageId()).isEqualTo(messageId);
+                .getSystemProperties()
+                .getMessageId()).isEqualTo(messageId);
         return response.get(1).getMessage();
     }
 
@@ -893,22 +845,22 @@ public class GrpcBaseIT extends BaseConf {
 
     public Endpoints buildEndpoints(int port) {
         return Endpoints.newBuilder()
-            .setScheme(AddressScheme.IPv4)
-            .addAddresses(Address.newBuilder()
-                .setHost("127.0.0.1")
-                .setPort(port)
-                .build())
-            .build();
+                .setScheme(AddressScheme.IPv4)
+                .addAddresses(Address.newBuilder()
+                        .setHost("127.0.0.1")
+                        .setPort(port)
+                        .build())
+                .build();
     }
 
     public Settings buildSimpleConsumerClientSettings(String group) {
         return Settings.newBuilder()
-            .setClientType(ClientType.SIMPLE_CONSUMER)
-            .setRequestTimeout(Durations.fromSeconds(3))
-            .setSubscription(Subscription.newBuilder()
-                .setGroup(Resource.newBuilder().setName(group).build())
-                .build())
-            .build();
+                .setClientType(ClientType.SIMPLE_CONSUMER)
+                .setRequestTimeout(Durations.fromSeconds(3))
+                .setSubscription(Subscription.newBuilder()
+                        .setGroup(Resource.newBuilder().setName(group).build())
+                        .build())
+                .build();
     }
 
     public Settings buildPushConsumerClientSettings(String group) {
@@ -917,26 +869,26 @@ public class GrpcBaseIT extends BaseConf {
 
     public Settings buildPushConsumerClientSettings(int maxDeliveryAttempts, String group) {
         return Settings.newBuilder()
-            .setClientType(ClientType.PUSH_CONSUMER)
-            .setRequestTimeout(Durations.fromSeconds(3))
-            .setBackoffPolicy(RetryPolicy.newBuilder()
-                .setMaxAttempts(maxDeliveryAttempts)
-                .build())
-            .setSubscription(Subscription.newBuilder()
-                .setGroup(Resource.newBuilder().setName(group).build())
-                .build())
-            .build();
+                .setClientType(ClientType.PUSH_CONSUMER)
+                .setRequestTimeout(Durations.fromSeconds(3))
+                .setBackoffPolicy(RetryPolicy.newBuilder()
+                        .setMaxAttempts(maxDeliveryAttempts)
+                        .build())
+                .setSubscription(Subscription.newBuilder()
+                        .setGroup(Resource.newBuilder().setName(group).build())
+                        .build())
+                .build();
     }
 
     public Settings buildProducerClientSettings(String... topics) {
         List<Resource> topicResources = Arrays.stream(topics).map(topic -> Resource.newBuilder().setName(topic).build())
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
         return Settings.newBuilder()
-            .setClientType(ClientType.PRODUCER)
-            .setPublishing(Publishing.newBuilder()
-                .addAllTopics(topicResources)
-                .build())
-            .build();
+                .setClientType(ClientType.PRODUCER)
+                .setPublishing(Publishing.newBuilder()
+                        .addAllTopics(topicResources)
+                        .build())
+                .build();
     }
 
     protected static class DefaultTelemetryCommandStreamObserver implements StreamObserver<TelemetryCommand> {

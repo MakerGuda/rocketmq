@@ -17,6 +17,14 @@
 
 package org.apache.rocketmq.store.ha;
 
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.NetworkUtil;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.common.RemotingHelper;
+import org.apache.rocketmq.store.DefaultMessageStore;
+
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -25,13 +33,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.utils.NetworkUtil;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.remoting.common.RemotingHelper;
-import org.apache.rocketmq.store.DefaultMessageStore;
 
 public class DefaultHAClient extends ServiceThread implements HAClient {
 
@@ -119,7 +120,7 @@ public class DefaultHAClient extends ServiceThread implements HAClient {
                 this.socketChannel.write(this.reportOffset);
             } catch (IOException e) {
                 log.error(this.getServiceName()
-                    + "reportSlaveMaxOffset this.socketChannel.write exception", e);
+                        + "reportSlaveMaxOffset this.socketChannel.write exception", e);
                 return false;
             }
         }
@@ -195,7 +196,7 @@ public class DefaultHAClient extends ServiceThread implements HAClient {
                 if (slavePhyOffset != 0) {
                     if (slavePhyOffset != masterPhyOffset) {
                         log.error("master pushed offset not equal the max phy offset in slave, SLAVE: "
-                            + slavePhyOffset + " MASTER: " + masterPhyOffset);
+                                + slavePhyOffset + " MASTER: " + masterPhyOffset);
                         return false;
                     }
                 }
@@ -205,7 +206,7 @@ public class DefaultHAClient extends ServiceThread implements HAClient {
                     int dataStart = this.dispatchPosition + DefaultHAConnection.TRANSFER_HEADER_SIZE;
 
                     this.defaultMessageStore.appendToCommitLog(
-                        masterPhyOffset, bodyData, dataStart, bodySize);
+                            masterPhyOffset, bodyData, dataStart, bodySize);
 
                     this.byteBufferRead.position(readSocketPos);
                     this.dispatchPosition += DefaultHAConnection.TRANSFER_HEADER_SIZE + bodySize;
@@ -330,7 +331,7 @@ public class DefaultHAClient extends ServiceThread implements HAClient {
                 long interval = this.defaultMessageStore.now() - this.lastReadTimestamp;
                 if (interval > this.defaultMessageStore.getMessageStoreConfig().getHaHousekeepingInterval()) {
                     log.warn("AutoRecoverHAClient, housekeeping, found this connection[" + this.masterHaAddress
-                        + "] expired, " + interval);
+                            + "] expired, " + interval);
                     this.closeMaster();
                     log.warn("AutoRecoverHAClient, master not response some time, so close connection");
                 }

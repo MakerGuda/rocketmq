@@ -25,17 +25,13 @@ import org.apache.rocketmq.test.client.rmq.RMQBroadCastConsumer;
 import org.apache.rocketmq.test.client.rmq.RMQNormalProducer;
 import org.apache.rocketmq.test.listener.rmq.concurrent.RMQNormalListener;
 import org.apache.rocketmq.test.util.VerifyUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import static com.google.common.truth.Truth.assertThat;
 
 public class BroadcastNormalMsgRecvFailIT extends BaseBroadcast {
     private static Logger logger = LoggerFactory
-        .getLogger(NormalMsgTwoSameGroupConsumerIT.class);
+            .getLogger(NormalMsgTwoSameGroupConsumerIT.class);
     private RMQNormalProducer producer = null;
     private String topic = null;
 
@@ -58,10 +54,10 @@ public class BroadcastNormalMsgRecvFailIT extends BaseBroadcast {
         int msgSize = 16;
 
         RMQBroadCastConsumer consumer1 = getBroadCastConsumer(NAMESRV_ADDR, topic, "*",
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQBroadCastConsumer consumer2 = getBroadCastConsumer(NAMESRV_ADDR,
-            consumer1.getConsumerGroup(), topic, "*",
-            new RMQNormalListener(ConsumeConcurrentlyStatus.RECONSUME_LATER));
+                consumer1.getConsumerGroup(), topic, "*",
+                new RMQNormalListener(ConsumeConcurrentlyStatus.RECONSUME_LATER));
 
         producer.send(msgSize);
         Assert.assertEquals("Not all sent succeeded", msgSize, producer.getAllUndupMsgBody().size());
@@ -69,7 +65,7 @@ public class BroadcastNormalMsgRecvFailIT extends BaseBroadcast {
         consumer1.getListener().waitForMessageConsume(producer.getAllMsgBody(), CONSUME_TIME);
 
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumer1.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(producer.getAllMsgBody());
+                consumer1.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(producer.getAllMsgBody());
     }
 }

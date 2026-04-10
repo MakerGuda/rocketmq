@@ -18,6 +18,15 @@
 package org.apache.rocketmq.proxy.remoting.channel;
 
 import io.netty.channel.Channel;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.StartAndShutdown;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.proxy.common.ProxyContext;
+import org.apache.rocketmq.proxy.remoting.RemotingProxyOutClient;
+import org.apache.rocketmq.proxy.service.relay.ProxyRelayService;
+import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,20 +34,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.common.utils.StartAndShutdown;
-import org.apache.rocketmq.proxy.common.ProxyContext;
-import org.apache.rocketmq.proxy.remoting.RemotingProxyOutClient;
-import org.apache.rocketmq.proxy.service.relay.ProxyRelayService;
-import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
 public class RemotingChannelManager implements StartAndShutdown {
     protected final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
-    private final ProxyRelayService proxyRelayService;
     protected final ConcurrentMap<String /* group */, Map<Channel /* raw channel */, RemotingChannel>> groupChannelMap = new ConcurrentHashMap<>();
-
+    private final ProxyRelayService proxyRelayService;
     private final RemotingProxyOutClient remotingProxyOutClient;
 
     public RemotingChannelManager(RemotingProxyOutClient remotingProxyOutClient, ProxyRelayService proxyRelayService) {
@@ -120,6 +120,7 @@ public class RemotingChannelManager implements StartAndShutdown {
 
     /**
      * to get the org channel pass by nettyRemotingServer
+     *
      * @param channel
      * @return
      */

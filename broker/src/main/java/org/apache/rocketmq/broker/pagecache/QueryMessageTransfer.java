@@ -18,15 +18,16 @@ package org.apache.rocketmq.broker.pagecache;
 
 import io.netty.channel.FileRegion;
 import io.netty.util.AbstractReferenceCounted;
+import org.apache.rocketmq.store.QueryMessageResult;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
-import org.apache.rocketmq.store.QueryMessageResult;
 
 /**
  * 传输对象 <b>QueryMessageTransfer</b>，实现 Netty FileRegion 等接口以零拷贝或高效方式写出消息体。
- * 
+ * <p>
  * 继承关系：<code>AbstractReferenceCounted</code>。
  */
 public class QueryMessageTransfer extends AbstractReferenceCounted implements FileRegion {

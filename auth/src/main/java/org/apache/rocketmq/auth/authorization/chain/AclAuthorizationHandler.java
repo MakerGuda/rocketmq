@@ -16,28 +16,25 @@
  */
 package org.apache.rocketmq.auth.authorization.chain;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.auth.authorization.context.DefaultAuthorizationContext;
 import org.apache.rocketmq.auth.authorization.enums.Decision;
 import org.apache.rocketmq.auth.authorization.enums.PolicyType;
 import org.apache.rocketmq.auth.authorization.exception.AuthorizationException;
 import org.apache.rocketmq.auth.authorization.factory.AuthorizationFactory;
-import org.apache.rocketmq.auth.authorization.model.Acl;
-import org.apache.rocketmq.auth.authorization.model.Environment;
-import org.apache.rocketmq.auth.authorization.model.Policy;
-import org.apache.rocketmq.auth.authorization.model.PolicyEntry;
-import org.apache.rocketmq.auth.authorization.model.Resource;
+import org.apache.rocketmq.auth.authorization.model.*;
 import org.apache.rocketmq.auth.authorization.provider.AuthorizationMetadataProvider;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.chain.Handler;
 import org.apache.rocketmq.common.chain.HandlerChain;
 import org.apache.rocketmq.common.resource.ResourcePattern;
 import org.apache.rocketmq.common.resource.ResourceType;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class AclAuthorizationHandler implements Handler<DefaultAuthorizationContext, CompletableFuture<Void>> {
 
@@ -51,9 +48,14 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
         this.authorizationMetadataProvider = AuthorizationFactory.getMetadataProvider(config, metadataService);
     }
 
+    private static void throwException(DefaultAuthorizationContext context, String detail) {
+        throw new AuthorizationException("{} has no permission to access {} from {}, " + detail,
+                context.getSubject().getSubjectKey(), context.getResource().getResourceKey(), context.getSourceIp());
+    }
+
     @Override
     public CompletableFuture<Void> handle(DefaultAuthorizationContext context,
-        HandlerChain<DefaultAuthorizationContext, CompletableFuture<Void>> chain) {
+                                          HandlerChain<DefaultAuthorizationContext, CompletableFuture<Void>> chain) {
         if (this.authorizationMetadataProvider == null) {
             throw new AuthorizationException("The authorizationMetadataProvider is not configured");
         }
@@ -112,10 +114,10 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
             return null;
         }
         return entries.stream()
-            .filter(entry -> entry.isMatchResource(context.getResource()))
-            .filter(entry -> entry.isMatchAction(context.getActions()))
-            .filter(entry -> entry.isMatchEnvironment(Environment.of(context.getSourceIp())))
-            .collect(Collectors.toList());
+                .filter(entry -> entry.isMatchResource(context.getResource()))
+                .filter(entry -> entry.isMatchAction(context.getActions()))
+                .filter(entry -> entry.isMatchEnvironment(Environment.of(context.getSourceIp())))
+                .collect(Collectors.toList());
     }
 
     private int comparePolicyEntries(PolicyEntry o1, PolicyEntry o2) {
@@ -159,10 +161,5 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
             return d1 == Decision.DENY ? -1 : 1;
         }
         return 0;
-    }
-
-    private static void throwException(DefaultAuthorizationContext context, String detail) {
-        throw new AuthorizationException("{} has no permission to access {} from {}, " + detail,
-            context.getSubject().getSubjectKey(), context.getResource().getResourceKey(), context.getSourceIp());
     }
 }

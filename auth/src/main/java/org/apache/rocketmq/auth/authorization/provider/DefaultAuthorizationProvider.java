@@ -19,10 +19,6 @@ package org.apache.rocketmq.auth.authorization.provider;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.apache.rocketmq.auth.authorization.builder.AuthorizationContextBuilder;
 import org.apache.rocketmq.auth.authorization.builder.DefaultAuthorizationContextBuilder;
 import org.apache.rocketmq.auth.authorization.chain.AclAuthorizationHandler;
@@ -36,6 +32,11 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class DefaultAuthorizationProvider implements AuthorizationProvider<DefaultAuthorizationContext> {
 
@@ -59,7 +60,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
     @Override
     public CompletableFuture<Void> authorize(DefaultAuthorizationContext context) {
         return this.newHandlerChain().handle(context)
-            .whenComplete((nil, ex) -> doAuditLog(context, ex));
+                .whenComplete((nil, ex) -> doAuditLog(context, ex));
     }
 
     @Override
@@ -74,8 +75,8 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
 
     protected HandlerChain<DefaultAuthorizationContext, CompletableFuture<Void>> newHandlerChain() {
         return HandlerChain.<DefaultAuthorizationContext, CompletableFuture<Void>>create()
-            .addNext(new UserAuthorizationHandler(authConfig, metadataService))
-            .addNext(new AclAuthorizationHandler(authConfig, metadataService));
+                .addNext(new UserAuthorizationHandler(authConfig, metadataService))
+                .addNext(new AclAuthorizationHandler(authConfig, metadataService));
     }
 
     protected void doAuditLog(DefaultAuthorizationContext context, Throwable ex) {
@@ -88,7 +89,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
         }
         String subject = context.getSubject().getSubjectKey();
         String actions = context.getActions().stream().map(Action::getName)
-            .collect(Collectors.joining(","));
+                .collect(Collectors.joining(","));
         String sourceIp = context.getSourceIp();
         String resource = context.getResource().getResourceKey();
         String request = context.getRpcCode();

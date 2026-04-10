@@ -36,11 +36,23 @@ public class PopInflightMessageCounter {
 
     private static final String TOPIC_GROUP_SEPARATOR = "@";
     private final Map<String /* topic@group */, Map<Integer /* queueId */, AtomicLong>> topicInFlightMessageNum =
-        new ConcurrentHashMap<>(512);
+            new ConcurrentHashMap<>(512);
     private final BrokerController brokerController;
 
     public PopInflightMessageCounter(BrokerController brokerController) {
         this.brokerController = brokerController;
+    }
+
+    private static Pair<String /* topic */, String /* group */> splitKey(String key) {
+        String[] strings = key.split(TOPIC_GROUP_SEPARATOR);
+        if (strings.length != 2) {
+            return null;
+        }
+        return new Pair<>(strings[0], strings[1]);
+    }
+
+    private static String buildKey(String topic, String group) {
+        return topic + TOPIC_GROUP_SEPARATOR + group;
     }
 
     public void incrementInFlightMessageNum(String topic, String group, int queueId, int num) {
@@ -101,7 +113,7 @@ public class PopInflightMessageCounter {
                 if (topicAndGroup != null && topicAndGroup.getObject2().equals(group)) {
                     this.topicInFlightMessageNum.remove(key);
                     log.info("PopInflightMessageCounter#clearInFlightMessageNumByGroupName: clean by group, topic={}, group={}",
-                        topicAndGroup.getObject1(), topicAndGroup.getObject2());
+                            topicAndGroup.getObject1(), topicAndGroup.getObject2());
                 }
             }
         }
@@ -115,7 +127,7 @@ public class PopInflightMessageCounter {
                 if (topicAndGroup != null && topicAndGroup.getObject1().equals(topic)) {
                     this.topicInFlightMessageNum.remove(key);
                     log.info("PopInflightMessageCounter#clearInFlightMessageNumByTopicName: clean by topic, topic={}, group={}",
-                        topicAndGroup.getObject1(), topicAndGroup.getObject2());
+                            topicAndGroup.getObject1(), topicAndGroup.getObject2());
                 }
             }
         }
@@ -141,17 +153,5 @@ public class PopInflightMessageCounter {
             return 0;
         }
         return Math.max(0, counter.get());
-    }
-
-    private static Pair<String /* topic */, String /* group */> splitKey(String key) {
-        String[] strings = key.split(TOPIC_GROUP_SEPARATOR);
-        if (strings.length != 2) {
-            return null;
-        }
-        return new Pair<>(strings[0], strings[1]);
-    }
-
-    private static String buildKey(String topic, String group) {
-        return topic + TOPIC_GROUP_SEPARATOR + group;
     }
 }

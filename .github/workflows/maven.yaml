@@ -1,9 +1,9 @@
 name: Build and Run Tests by Maven
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [ opened, reopened, synchronize ]
   push:
-    branches: [master, develop, bazel]
+    branches: [ master, develop, bazel ]
 
 jobs:
   java_build:
@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         # see https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        jdk: [8]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        jdk: [ 8 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

@@ -24,8 +24,8 @@ import org.apache.rocketmq.common.resource.ResourceType;
 import org.apache.rocketmq.common.resource.RocketMQResource;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.RpcRequestHeader;
 
 @RocketMQAction(value = RequestCode.GET_CONSUMER_LIST_BY_GROUP, action = Action.SUB)
 public class GetConsumerListByGroupRequestHeader extends RpcRequestHeader {
@@ -48,7 +48,7 @@ public class GetConsumerListByGroupRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .toString();
     }
 }

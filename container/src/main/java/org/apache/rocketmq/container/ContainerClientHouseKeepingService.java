@@ -18,9 +18,10 @@
 package org.apache.rocketmq.container;
 
 import io.netty.channel.Channel;
-import java.util.Collection;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.remoting.ChannelEventListener;
+
+import java.util.Collection;
 
 public class ContainerClientHouseKeepingService implements ChannelEventListener {
     private final IBrokerContainer brokerContainer;
@@ -68,7 +69,7 @@ public class ContainerClientHouseKeepingService implements ChannelEventListener 
     }
 
     private void brokerOperation(BrokerController brokerController, CallbackCode callbackCode, String remoteAddr,
-        Channel channel) {
+                                 Channel channel) {
         if (callbackCode == CallbackCode.CONNECT) {
             brokerController.getBrokerStatsManager().incChannelConnectNum();
             return;

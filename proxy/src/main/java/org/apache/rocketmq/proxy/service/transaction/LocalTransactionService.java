@@ -16,9 +16,10 @@
  */
 package org.apache.rocketmq.proxy.service.transaction;
 
-import java.util.List;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.proxy.common.ProxyContext;
+
+import java.util.List;
 
 /**
  * no need to implements, because the channel of producer will put into the broker's producerManager

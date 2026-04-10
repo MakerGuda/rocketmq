@@ -65,6 +65,12 @@ public class TimerConsumer {
         consumer.setNamesrvAddr(namesrvAddr);
     }
 
+    public static void main(String[] args) throws MQClientException {
+        TimerConsumer timerConsumer = new TimerConsumer(args);
+        timerConsumer.startScheduleTask();
+        timerConsumer.start();
+    }
+
     public void startScheduleTask() {
         scheduledExecutor.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -153,13 +159,6 @@ public class TimerConsumer {
 
         return options;
     }
-
-    public static void main(String[] args) throws MQClientException {
-        TimerConsumer timerConsumer = new TimerConsumer(args);
-        timerConsumer.startScheduleTask();
-        timerConsumer.start();
-    }
-
 
     public static class StatsBenchmarkConsumer {
         private final AtomicLong receiveMessageTotalCount = new AtomicLong(0L);

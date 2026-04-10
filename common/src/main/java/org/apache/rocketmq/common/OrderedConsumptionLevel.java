@@ -26,14 +26,14 @@ public enum OrderedConsumptionLevel {
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
-
     public static OrderedConsumptionLevel valueOf(int value) {
         if (value == 1) {
             return SHARDING_KEY;
         }
         return QUEUE;
+    }
+
+    public int getValue() {
+        return value;
     }
 }

@@ -60,28 +60,6 @@ public class StatisticsItemScheduledPrinter extends FutureHolder {
         removeAllFuture(statisticsItem);
     }
 
-    public interface InitialDelay {
-        /**
-         * Get initial delay value
-         * @return
-         */
-        long get();
-    }
-
-    public interface Valve {
-        /**
-         * whether enabled
-         * @return
-         */
-        boolean enabled();
-
-        /**
-         * whether print zero lines
-         * @return
-         */
-        boolean printZeroLine();
-    }
-
     protected long getInitialDelay() {
         return initialDelay != null ? initialDelay.get() : 0;
     }
@@ -92,6 +70,31 @@ public class StatisticsItemScheduledPrinter extends FutureHolder {
 
     protected boolean printZeroLine() {
         return valve != null ? valve.printZeroLine() : false;
+    }
+
+    public interface InitialDelay {
+        /**
+         * Get initial delay value
+         *
+         * @return
+         */
+        long get();
+    }
+
+    public interface Valve {
+        /**
+         * whether enabled
+         *
+         * @return
+         */
+        boolean enabled();
+
+        /**
+         * whether print zero lines
+         *
+         * @return
+         */
+        boolean printZeroLine();
     }
 
 }

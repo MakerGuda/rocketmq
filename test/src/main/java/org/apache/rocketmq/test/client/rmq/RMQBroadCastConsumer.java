@@ -17,16 +17,16 @@
 
 package org.apache.rocketmq.test.client.rmq;
 
-import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.test.listener.AbstractListener;
 
 public class RMQBroadCastConsumer extends RMQNormalConsumer {
     private static Logger logger = LoggerFactory.getLogger(RMQBroadCastConsumer.class);
 
     public RMQBroadCastConsumer(String nsAddr, String topic, String subExpression,
-        String consumerGroup, AbstractListener listener) {
+                                String consumerGroup, AbstractListener listener) {
         super(nsAddr, topic, subExpression, consumerGroup, listener);
     }
 

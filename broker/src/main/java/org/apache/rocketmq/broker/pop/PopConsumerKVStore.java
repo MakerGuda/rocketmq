@@ -35,30 +35,34 @@ public interface PopConsumerKVStore {
 
     /**
      * Gets the file path of the storage.
+     *
      * @return The file path of the storage.
      */
     String getFilePath();
 
     /**
      * Writes a list of consumer records to the storage.
+     *
      * @param consumerRecordList The list of consumer records to be written.
      */
     void writeRecords(List<PopConsumerRecord> consumerRecordList);
 
     /**
      * Deletes a list of consumer records from the storage.
+     *
      * @param consumerRecordList The list of consumer records to be deleted.
      */
     void deleteRecords(List<PopConsumerRecord> consumerRecordList);
 
     /**
      * Scans and returns a list of expired consumer records within the specified time range.
+     *
      * @param lowerTime The start time (inclusive) of the time range to search, in milliseconds.
      * @param upperTime The end time (exclusive) of the time range to search, in milliseconds.
-     * @param maxCount The maximum number of records to return.
-     *                 Even if more records match the criteria, only this many will be returned.
+     * @param maxCount  The maximum number of records to return.
+     *                  Even if more records match the criteria, only this many will be returned.
      * @return A list of expired consumer records within the specified time range.
-     *         If no matching records are found, an empty list is returned.
+     * If no matching records are found, an empty list is returned.
      */
     List<PopConsumerRecord> scanExpiredRecords(long lowerTime, long upperTime, int maxCount);
 }

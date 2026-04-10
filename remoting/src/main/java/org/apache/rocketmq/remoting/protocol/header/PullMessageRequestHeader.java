@@ -22,7 +22,6 @@ package org.apache.rocketmq.remoting.protocol.header;
 
 import com.google.common.base.MoreObjects;
 import io.netty.buffer.ByteBuf;
-import java.util.HashMap;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.common.action.RocketMQAction;
 import org.apache.rocketmq.common.resource.ResourceType;
@@ -33,6 +32,8 @@ import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.protocol.FastCodesHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
+
+import java.util.HashMap;
 
 @RocketMQAction(value = RequestCode.PULL_MESSAGE, action = Action.SUB)
 public class PullMessageRequestHeader extends TopicQueueRequestHeader implements FastCodesHeader {
@@ -318,20 +319,20 @@ public class PullMessageRequestHeader extends TopicQueueRequestHeader implements
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("queueOffset", queueOffset)
-            .add("maxMsgBytes", maxMsgBytes)
-            .add("maxMsgNums", maxMsgNums)
-            .add("sysFlag", sysFlag)
-            .add("commitOffset", commitOffset)
-            .add("suspendTimeoutMillis", suspendTimeoutMillis)
-            .add("subscription", subscription)
-            .add("subVersion", subVersion)
-            .add("expressionType", expressionType)
-            .add("requestSource", requestSource)
-            .add("proxyFrowardClientId", proxyFrowardClientId)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("queueOffset", queueOffset)
+                .add("maxMsgBytes", maxMsgBytes)
+                .add("maxMsgNums", maxMsgNums)
+                .add("sysFlag", sysFlag)
+                .add("commitOffset", commitOffset)
+                .add("suspendTimeoutMillis", suspendTimeoutMillis)
+                .add("subscription", subscription)
+                .add("subVersion", subVersion)
+                .add("expressionType", expressionType)
+                .add("requestSource", requestSource)
+                .add("proxyFrowardClientId", proxyFrowardClientId)
+                .toString();
     }
 }

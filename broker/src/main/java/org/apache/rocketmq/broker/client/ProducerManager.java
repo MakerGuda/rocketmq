@@ -17,16 +17,6 @@
 package org.apache.rocketmq.broker.client;
 
 import io.netty.channel.Channel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.rocketmq.broker.util.PositiveAtomicCounter;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -37,6 +27,12 @@ import org.apache.rocketmq.remoting.protocol.body.ProducerInfo;
 import org.apache.rocketmq.remoting.protocol.body.ProducerTableInfo;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * <b>ProducerManager</b>：Broker 侧资源或状态管理器，维护并发安全的数据结构与生命周期。
  */
@@ -44,10 +40,10 @@ public class ProducerManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private static final long CHANNEL_EXPIRED_TIMEOUT = 1000 * 120;
     private static final int GET_AVAILABLE_CHANNEL_RETRY_COUNT = 3;
-    private final ConcurrentMap<String /* group name */, ConcurrentMap<Channel, ClientChannelInfo>> groupChannelTable =
-        new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Channel> clientChannelTable = new ConcurrentHashMap<>();
     protected final BrokerStatsManager brokerStatsManager;
+    private final ConcurrentMap<String /* group name */, ConcurrentMap<Channel, ClientChannelInfo>> groupChannelTable =
+            new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Channel> clientChannelTable = new ConcurrentHashMap<>();
     private final BrokerConfig brokerConfig;
     private final PositiveAtomicCounter positiveAtomicCounter = new PositiveAtomicCounter();
     private final List<ProducerChangeListener> producerChangeListenerList = new CopyOnWriteArrayList<>();
@@ -87,19 +83,19 @@ public class ProducerManager {
                 ClientChannelInfo clientChannelInfo = entry.getValue();
                 if (map.containsKey(group)) {
                     map.get(group).add(new ProducerInfo(
-                        clientChannelInfo.getClientId(),
-                        clientChannelInfo.getChannel().remoteAddress().toString(),
-                        clientChannelInfo.getLanguage(),
-                        clientChannelInfo.getVersion(),
-                        clientChannelInfo.getLastUpdateTimestamp()
+                            clientChannelInfo.getClientId(),
+                            clientChannelInfo.getChannel().remoteAddress().toString(),
+                            clientChannelInfo.getLanguage(),
+                            clientChannelInfo.getVersion(),
+                            clientChannelInfo.getLastUpdateTimestamp()
                     ));
                 } else {
                     map.put(group, new ArrayList<>(Collections.singleton(new ProducerInfo(
-                        clientChannelInfo.getClientId(),
-                        clientChannelInfo.getChannel().remoteAddress().toString(),
-                        clientChannelInfo.getLanguage(),
-                        clientChannelInfo.getVersion(),
-                        clientChannelInfo.getLastUpdateTimestamp()
+                            clientChannelInfo.getClientId(),
+                            clientChannelInfo.getChannel().remoteAddress().toString(),
+                            clientChannelInfo.getLanguage(),
+                            clientChannelInfo.getVersion(),
+                            clientChannelInfo.getLastUpdateTimestamp()
                     ))));
                 }
             }
@@ -130,8 +126,8 @@ public class ProducerManager {
                         clientChannelTable.remove(info.getClientId());
                     }
                     log.warn(
-                        "ProducerManager#scanNotActiveChannel: remove expired channel[{}] from ProducerManager groupChannelTable, producer group name: {}",
-                        RemotingHelper.parseChannelRemoteAddr(info.getChannel()), group);
+                            "ProducerManager#scanNotActiveChannel: remove expired channel[{}] from ProducerManager groupChannelTable, producer group name: {}",
+                            RemotingHelper.parseChannelRemoteAddr(info.getChannel()), group);
                     callProducerChangeListener(ProducerGroupEvent.CLIENT_UNREGISTER, group, info);
                     RemotingHelper.closeChannel(info.getChannel());
                 }
@@ -189,8 +185,8 @@ public class ProducerManager {
                     clientChannelTable.remove(clientChannelInfo.getClientId());
                     removed = true;
                     log.info(
-                        "NETTY EVENT: remove channel[{}][{}] from ProducerManager groupChannelTable, producer group: {}",
-                        clientChannelInfo.toString(), remoteAddr, group);
+                            "NETTY EVENT: remove channel[{}][{}] from ProducerManager groupChannelTable, producer group: {}",
+                            clientChannelInfo.toString(), remoteAddr, group);
                     callProducerChangeListener(ProducerGroupEvent.CLIENT_UNREGISTER, group, clientChannelInfo);
                     if (clientChannelInfoTable.isEmpty()) {
                         ConcurrentMap<Channel, ClientChannelInfo> oldGroupTable = this.groupChannelTable.remove(group);
@@ -324,7 +320,7 @@ public class ProducerManager {
     }
 
     private void callProducerChangeListener(ProducerGroupEvent event, String group,
-        ClientChannelInfo clientChannelInfo) {
+                                            ClientChannelInfo clientChannelInfo) {
         for (ProducerChangeListener listener : producerChangeListenerList) {
             try {
                 listener.handle(event, group, clientChannelInfo);

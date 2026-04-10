@@ -17,6 +17,7 @@
 package org.apache.rocketmq.common.attribute;
 
 import com.google.common.base.Strings;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

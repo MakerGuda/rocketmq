@@ -16,8 +16,9 @@
  */
 package org.apache.rocketmq.client.impl.consumer;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.remoting.protocol.body.PopProcessQueueInfo;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Queue consumption snapshot
@@ -79,6 +80,6 @@ public class PopProcessQueue {
     public String toString() {
         return "PopProcessQueue[waitAckCounter:" + this.waitAckCounter.get()
                 + ", lastPopTimestamp:" + getLastPopTimestamp()
-                + ", drop:" + dropped +  "]";
+                + ", drop:" + dropped + "]";
     }
 }

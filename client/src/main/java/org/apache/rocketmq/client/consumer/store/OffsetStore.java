@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.client.consumer.store;
 
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Offset store interface
@@ -40,7 +41,7 @@ public interface OffsetStore {
     /**
      * Update and freeze the message queue to prevent concurrent update action
      *
-     * @param mq target message queue
+     * @param mq     target message queue
      * @param offset expect update offset
      */
     void updateAndFreezeOffset(final MessageQueue mq, final long offset);
@@ -78,5 +79,5 @@ public interface OffsetStore {
      * @param isOneway
      */
     void updateConsumeOffsetToBroker(MessageQueue mq, long offset, boolean isOneway) throws RemotingException,
-        MQBrokerException, InterruptedException, MQClientException;
+            MQBrokerException, InterruptedException, MQClientException;
 }

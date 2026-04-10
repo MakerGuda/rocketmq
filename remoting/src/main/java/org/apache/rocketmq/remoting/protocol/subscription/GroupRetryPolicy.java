@@ -70,9 +70,9 @@ public class GroupRetryPolicy {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("type", type)
-            .add("exponentialRetryPolicy", exponentialRetryPolicy)
-            .add("customizedRetryPolicy", customizedRetryPolicy)
-            .toString();
+                .add("type", type)
+                .add("exponentialRetryPolicy", exponentialRetryPolicy)
+                .add("customizedRetryPolicy", customizedRetryPolicy)
+                .toString();
     }
 }

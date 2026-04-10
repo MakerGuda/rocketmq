@@ -95,18 +95,18 @@ public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, M
         String targetTopic = this.getBroadcastTopicName();
         try {
             Message message = new Message(
-                targetTopic,
-                JSON.toJSONString(data).getBytes(StandardCharsets.UTF_8)
+                    targetTopic,
+                    JSON.toJSONString(data).getBytes(StandardCharsets.UTF_8)
             );
 
             AddressableMessageQueue messageQueue = this.topicRouteService.getAllMessageQueueView(ProxyContext.createForInner(this.getClass()), targetTopic)
-                .getWriteSelector().selectOne(true);
+                    .getWriteSelector().selectOne(true);
             this.mqClientAPIFactory.getClient().sendMessageAsync(
-                messageQueue.getBrokerAddr(),
-                messageQueue.getBrokerName(),
-                message,
-                buildSendMessageRequestHeader(message, this.getSystemMessageProducerId(), messageQueue.getQueueId()),
-                Duration.ofSeconds(3).toMillis()
+                    messageQueue.getBrokerAddr(),
+                    messageQueue.getBrokerName(),
+                    message,
+                    buildSendMessageRequestHeader(message, this.getSystemMessageProducerId(), messageQueue.getQueueId()),
+                    Duration.ofSeconds(3).toMillis()
             ).whenCompleteAsync((result, throwable) -> {
                 if (throwable != null) {
                     log.error("send system message failed. data: {}, topic: {}", data, getBroadcastTopicName(), throwable);
@@ -122,7 +122,7 @@ public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, M
     }
 
     protected SendMessageRequestHeader buildSendMessageRequestHeader(Message message,
-        String producerGroup, int queueId) {
+                                                                     String producerGroup, int queueId) {
         SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
 
         requestHeader.setProducerGroup(producerGroup);
@@ -163,12 +163,12 @@ public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, M
         }
 
         boolean createSuccess = this.adminService.createTopicOnTopicBrokerIfNotExist(
-            this.getBroadcastTopicName(),
-            clusterName,
-            this.getBroadcastTopicQueueNum(),
-            this.getBroadcastTopicQueueNum(),
-            true,
-            3
+                this.getBroadcastTopicName(),
+                clusterName,
+                this.getBroadcastTopicQueueNum(),
+                this.getBroadcastTopicQueueNum(),
+                true,
+                3
         );
         if (!createSuccess) {
             throw new ProxyException(ProxyExceptionCode.INTERNAL_SERVER_ERROR, "create system broadcast topic " + this.getBroadcastTopicName() + " failed on cluster " + clusterName);

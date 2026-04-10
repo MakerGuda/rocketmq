@@ -18,21 +18,22 @@
 package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.time.Duration;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+import java.time.Duration;
+
 public class ChangeInvisibleTimeActivity extends AbstractRemotingActivity {
     public ChangeInvisibleTimeActivity(RequestPipeline requestPipeline,
-        MessagingProcessor messagingProcessor) {
+                                       MessagingProcessor messagingProcessor) {
         super(requestPipeline, messagingProcessor);
     }
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         return request(ctx, request, context, Duration.ofSeconds(3).toMillis());
     }
 }

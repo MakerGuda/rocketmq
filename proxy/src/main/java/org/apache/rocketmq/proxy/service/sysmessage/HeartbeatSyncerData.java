@@ -18,12 +18,13 @@
 package org.apache.rocketmq.proxy.service.sysmessage;
 
 import com.google.common.base.MoreObjects;
-import java.util.Set;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
+import org.apache.rocketmq.remoting.protocol.LanguageCode;
 import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
-import org.apache.rocketmq.remoting.protocol.LanguageCode;
+
+import java.util.Set;
 
 public class HeartbeatSyncerData {
     private HeartbeatType heartbeatType;
@@ -43,10 +44,10 @@ public class HeartbeatSyncerData {
     }
 
     public HeartbeatSyncerData(HeartbeatType heartbeatType, String clientId,
-        LanguageCode language, int version, String group,
-        ConsumeType consumeType, MessageModel messageModel,
-        ConsumeFromWhere consumeFromWhere, String localProxyId,
-        String channelData) {
+                               LanguageCode language, int version, String group,
+                               ConsumeType consumeType, MessageModel messageModel,
+                               ConsumeFromWhere consumeFromWhere, String localProxyId,
+                               String channelData) {
         this.heartbeatType = heartbeatType;
         this.clientId = clientId;
         this.language = language;
@@ -104,7 +105,7 @@ public class HeartbeatSyncerData {
     }
 
     public void setSubscriptionDataSet(
-        Set<SubscriptionData> subscriptionDataSet) {
+            Set<SubscriptionData> subscriptionDataSet) {
         this.subscriptionDataSet = subscriptionDataSet;
     }
 
@@ -159,18 +160,18 @@ public class HeartbeatSyncerData {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("heartbeatType", heartbeatType)
-            .add("clientId", clientId)
-            .add("language", language)
-            .add("version", version)
-            .add("lastUpdateTimestamp", lastUpdateTimestamp)
-            .add("subscriptionDataSet", subscriptionDataSet)
-            .add("group", group)
-            .add("consumeType", consumeType)
-            .add("messageModel", messageModel)
-            .add("consumeFromWhere", consumeFromWhere)
-            .add("connectProxyIp", localProxyId)
-            .add("channelData", channelData)
-            .toString();
+                .add("heartbeatType", heartbeatType)
+                .add("clientId", clientId)
+                .add("language", language)
+                .add("version", version)
+                .add("lastUpdateTimestamp", lastUpdateTimestamp)
+                .add("subscriptionDataSet", subscriptionDataSet)
+                .add("group", group)
+                .add("consumeType", consumeType)
+                .add("messageModel", messageModel)
+                .add("consumeFromWhere", consumeFromWhere)
+                .add("connectProxyIp", localProxyId)
+                .add("channelData", channelData)
+                .toString();
     }
 }

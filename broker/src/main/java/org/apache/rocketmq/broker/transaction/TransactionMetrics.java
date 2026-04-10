@@ -27,11 +27,7 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -46,18 +42,15 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 指标/统计组件 <b>TransactionMetrics</b>，为可观测性采集或计算 Broker 运行数据。
- * 
+ * <p>
  * 继承关系：<code>ConfigManager</code>。
  */
 public class TransactionMetrics extends ConfigManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
+    private final String configPath;
     private ConcurrentMap<String, Metric> transactionCounts =
             new ConcurrentHashMap<>(1024);
-
     private DataVersion dataVersion = new DataVersion();
-
-    private final String configPath;
 
     public TransactionMetrics(String configPath) {
         this.configPath = configPath;
@@ -82,6 +75,7 @@ public class TransactionMetrics extends ConfigManager {
         }
         return pair;
     }
+
     public long getTransactionCount(String topic) {
         Metric pair = transactionCounts.get(topic);
         if (null == pair) {
@@ -94,6 +88,7 @@ public class TransactionMetrics extends ConfigManager {
     public Map<String, Metric> getTransactionCounts() {
         return transactionCounts;
     }
+
     public void setTransactionCounts(ConcurrentMap<String, Metric> transactionCounts) {
         this.transactionCounts = transactionCounts;
     }
@@ -162,29 +157,6 @@ public class TransactionMetrics extends ConfigManager {
         }
     }
 
-    public static class TransactionMetricsSerializeWrapper extends RemotingSerializable {
-        private ConcurrentMap<String, Metric> transactionCount =
-                new ConcurrentHashMap<>(1024);
-        private DataVersion dataVersion = new DataVersion();
-
-        public ConcurrentMap<String, Metric> getTransactionCount() {
-            return transactionCount;
-        }
-
-        public void setTransactionCount(
-                ConcurrentMap<String, Metric> transactionCount) {
-            this.transactionCount = transactionCount;
-        }
-
-        public DataVersion getDataVersion() {
-            return dataVersion;
-        }
-
-        public void setDataVersion(DataVersion dataVersion) {
-            this.dataVersion = dataVersion;
-        }
-    }
-
     @Override
     public synchronized void persist() {
         try {
@@ -218,6 +190,29 @@ public class TransactionMetrics extends ConfigManager {
             }
         } catch (Throwable t) {
             log.error("Failed to persist", t);
+        }
+    }
+
+    public static class TransactionMetricsSerializeWrapper extends RemotingSerializable {
+        private ConcurrentMap<String, Metric> transactionCount =
+                new ConcurrentHashMap<>(1024);
+        private DataVersion dataVersion = new DataVersion();
+
+        public ConcurrentMap<String, Metric> getTransactionCount() {
+            return transactionCount;
+        }
+
+        public void setTransactionCount(
+                ConcurrentMap<String, Metric> transactionCount) {
+            this.transactionCount = transactionCount;
+        }
+
+        public DataVersion getDataVersion() {
+            return dataVersion;
+        }
+
+        public void setDataVersion(DataVersion dataVersion) {
+            this.dataVersion = dataVersion;
         }
     }
 

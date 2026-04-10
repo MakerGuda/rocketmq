@@ -17,23 +17,17 @@
 
 package org.apache.rocketmq.test.autoswitchrole;
 
-import java.io.File;
-import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.controller.ReplicasManager;
-import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.ControllerConfig;
+import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.namesrv.NamesrvConfig;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
-import org.apache.rocketmq.remoting.protocol.body.SyncStateSet;
 import org.apache.rocketmq.controller.ControllerManager;
 import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
+import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+import org.apache.rocketmq.remoting.protocol.body.SyncStateSet;
 import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoResponseHeader;
 import org.apache.rocketmq.store.MappedFileQueue;
@@ -48,9 +42,13 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.io.File;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.*;
 
 @Ignore
 public class AutoSwitchRoleIntegrationTest extends AutoSwitchRoleBase {
@@ -93,6 +91,18 @@ public class AutoSwitchRoleIntegrationTest extends AutoSwitchRoleBase {
         controllerManager = new ControllerManager(controllerConfig, new NettyServerConfig(), new NettyClientConfig());
         assertTrue(controllerManager.initialize());
         controllerManager.start();
+    }
+
+    @AfterClass
+    public static void destroy() {
+        if (namesrvController != null) {
+            namesrvController.shutdown();
+        }
+        if (controllerManager != null) {
+            controllerManager.shutdown();
+        }
+        File file = new File(STORE_PATH_ROOT_PARENT_DIR);
+        UtilAll.deleteFile(file);
     }
 
     public void initBroker(int mappedFileSize, String brokerName) throws Exception {
@@ -183,7 +193,6 @@ public class AutoSwitchRoleIntegrationTest extends AutoSwitchRoleBase {
         checkMessage(brokerController1.getMessageStore(), topic, 20, 0);
         shutdownAndClearBroker();
     }
-
 
     @Test
     public void testRestartWithChangedAddress() throws Exception {
@@ -310,18 +319,6 @@ public class AutoSwitchRoleIntegrationTest extends AutoSwitchRoleBase {
             UtilAll.deleteFile(new File(controller.getMessageStoreConfig().getStorePathRootDir()));
         }
         brokerList.clear();
-    }
-
-    @AfterClass
-    public static void destroy() {
-        if (namesrvController != null) {
-            namesrvController.shutdown();
-        }
-        if (controllerManager != null) {
-            controllerManager.shutdown();
-        }
-        File file = new File(STORE_PATH_ROOT_PARENT_DIR);
-        UtilAll.deleteFile(file);
     }
 
 }

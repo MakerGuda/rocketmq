@@ -57,19 +57,13 @@ import static org.awaitility.Awaitility.await;
 public class PopSlaveActingMasterIT extends ContainerIntegrationTestBase {
     private static final String CONSUME_GROUP = PopSlaveActingMasterIT.class.getSimpleName() + "_Consumer";
     private final static int MESSAGE_COUNT = 16;
-    private final Random random = new Random();
-    private static DefaultMQProducer producer;
     private final static String MESSAGE_STRING = RandomStringUtils.random(1024);
     private static final byte[] MESSAGE_BODY = MESSAGE_STRING.getBytes(StandardCharsets.UTF_8);
+    private static DefaultMQProducer producer;
+    private final Random random = new Random();
     private final BrokerConfig brokerConfig = new BrokerConfig();
 
     public PopSlaveActingMasterIT() {
-    }
-
-    void createTopic(String topic) {
-        createTopicTo(master1With3Replicas, topic, 1, 1);
-        createTopicTo(master2With3Replicas, topic, 1, 1);
-        createTopicTo(master3With3Replicas, topic, 1, 1);
     }
 
     @BeforeClass
@@ -84,6 +78,11 @@ public class PopSlaveActingMasterIT extends ContainerIntegrationTestBase {
         producer.shutdown();
     }
 
+    void createTopic(String topic) {
+        createTopicTo(master1With3Replicas, topic, 1, 1);
+        createTopicTo(master2With3Replicas, topic, 1, 1);
+        createTopicTo(master3With3Replicas, topic, 1, 1);
+    }
 
     @Test
     public void testLocalActing_ackSlave() throws Exception {

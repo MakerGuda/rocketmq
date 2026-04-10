@@ -29,20 +29,12 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,21 +49,19 @@ public class TimerMetrics extends ConfigManager {
     private final ConcurrentMap<String, Metric> timingCount = new ConcurrentHashMap<>(1024);
 
     private final ConcurrentMap<Integer, Metric> timingDistribution = new ConcurrentHashMap<>(1024);
-
+    private final DataVersion dataVersion = new DataVersion();
+    private final String configPath;
     @SuppressWarnings("DoubleBraceInitialization")
     public List<Integer> timerDist = new ArrayList<Integer>() {{
-            add(5);
-            add(60);
-            add(300); // 5s, 1min, 5min
-            add(900);
-            add(3600);
-            add(14400); // 15min, 1h, 4h
-            add(28800);
-            add(86400); // 8h, 24h
-        }};
-    private final DataVersion dataVersion = new DataVersion();
-
-    private final String configPath;
+        add(5);
+        add(60);
+        add(300); // 5s, 1min, 5min
+        add(900);
+        add(3600);
+        add(14400); // 15min, 1h, 4h
+        add(28800);
+        add(86400); // 8h, 24h
+    }};
 
     public TimerMetrics(String configPath) {
         this.configPath = configPath;
@@ -144,15 +134,18 @@ public class TimerMetrics extends ConfigManager {
         writer.write(JSON.toJSONString(wrapper, JSONWriter.Feature.BrowserCompatible));
     }
 
-    @Override public String encode() {
+    @Override
+    public String encode() {
         return encode(false);
     }
 
-    @Override public String configFilePath() {
+    @Override
+    public String configFilePath() {
         return configPath;
     }
 
-    @Override public void decode(String jsonString) {
+    @Override
+    public void decode(String jsonString) {
         if (jsonString != null) {
             TimerMetricsSerializeWrapper timerMetricsSerializeWrapper = TimerMetricsSerializeWrapper.fromJson(jsonString, TimerMetricsSerializeWrapper.class);
             if (timerMetricsSerializeWrapper != null) {
@@ -162,7 +155,8 @@ public class TimerMetrics extends ConfigManager {
         }
     }
 
-    @Override public String encode(boolean prettyFormat) {
+    @Override
+    public String encode(boolean prettyFormat) {
         TimerMetricsSerializeWrapper metricsSerializeWrapper = new TimerMetricsSerializeWrapper();
         metricsSerializeWrapper.setDataVersion(this.dataVersion);
         metricsSerializeWrapper.setTimingCount(this.timingCount);
@@ -203,28 +197,8 @@ public class TimerMetrics extends ConfigManager {
         return true;
     }
 
-    public static class TimerMetricsSerializeWrapper extends RemotingSerializable {
-        private ConcurrentMap<String, Metric> timingCount = new ConcurrentHashMap<>(1024);
-        private DataVersion dataVersion = new DataVersion();
-
-        public ConcurrentMap<String, Metric> getTimingCount() {
-            return timingCount;
-        }
-
-        public void setTimingCount(ConcurrentMap<String, Metric> timingCount) {
-            this.timingCount = timingCount;
-        }
-
-        public DataVersion getDataVersion() {
-            return dataVersion;
-        }
-
-        public void setDataVersion(DataVersion dataVersion) {
-            this.dataVersion = dataVersion;
-        }
-    }
-
-    @Override public synchronized void persist() {
+    @Override
+    public synchronized void persist() {
         try {
             // bak metrics file
             String config = configFilePath();
@@ -259,6 +233,27 @@ public class TimerMetrics extends ConfigManager {
         }
     }
 
+    public static class TimerMetricsSerializeWrapper extends RemotingSerializable {
+        private ConcurrentMap<String, Metric> timingCount = new ConcurrentHashMap<>(1024);
+        private DataVersion dataVersion = new DataVersion();
+
+        public ConcurrentMap<String, Metric> getTimingCount() {
+            return timingCount;
+        }
+
+        public void setTimingCount(ConcurrentMap<String, Metric> timingCount) {
+            this.timingCount = timingCount;
+        }
+
+        public DataVersion getDataVersion() {
+            return dataVersion;
+        }
+
+        public void setDataVersion(DataVersion dataVersion) {
+            this.dataVersion = dataVersion;
+        }
+    }
+
     public static class Metric {
         private AtomicLong count;
         private long timeStamp;
@@ -284,7 +279,8 @@ public class TimerMetrics extends ConfigManager {
             this.timeStamp = timeStamp;
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return String.format("[%d,%d]", count.get(), timeStamp);
         }
     }

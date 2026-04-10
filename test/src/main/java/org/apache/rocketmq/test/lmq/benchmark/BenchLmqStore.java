@@ -18,18 +18,6 @@ package org.apache.rocketmq.test.lmq.benchmark;
 
 import com.google.common.math.IntMath;
 import com.google.common.math.LongMath;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.client.consumer.PullCallback;
@@ -44,15 +32,23 @@ import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.remoting.protocol.header.QueryConsumerOffsetRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.UpdateConsumerOffsetRequestHeader;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.util.StatUtil;
 
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+
 public class BenchLmqStore {
+    private static final boolean RETRY_NO_MATCHED_MSG = Boolean.parseBoolean(System.getProperty("retry_no_matched_msg", "false"));
+    private static final String LMQ_PREFIX = "%LMQ%";
+    public static DefaultMQProducer defaultMQProducer;
     private static Logger logger = LoggerFactory.getLogger(BenchLmqStore.class);
     private static String namesrv = System.getProperty("namesrv", "127.0.0.1:9876");
     private static String lmqTopic = System.getProperty("lmqTopic", "lmqTestTopic");
@@ -65,20 +61,17 @@ public class BenchLmqStore {
     private static String brokerName = System.getProperty("brokerName", "broker-a");
     private static int size = Integer.parseInt(System.getProperty("size", "128"));
     private static int suspendTime = Integer.parseInt(System.getProperty("suspendTime", "2000"));
-    private static final boolean RETRY_NO_MATCHED_MSG = Boolean.parseBoolean(System.getProperty("retry_no_matched_msg", "false"));
     private static boolean benchOffset = Boolean.parseBoolean(System.getProperty("benchOffset", "false"));
     private static int benchOffsetNum = Integer.parseInt(System.getProperty("benchOffsetNum", "1"));
     private static Map<MessageQueue, Long> offsetMap = new ConcurrentHashMap<>(256);
     private static Map<MessageQueue, Boolean> pullStatus = new ConcurrentHashMap<>(256);
     private static Map<Integer, Map<MessageQueue, Long>> pullEvent = new ConcurrentHashMap<>(256);
-    public static DefaultMQProducer defaultMQProducer;
     private static int pullConsumerNum = Integer.parseInt(System.getProperty("pullConsumerNum", "8"));
     public static DefaultMQPullConsumer[] defaultMQPullConsumers = new DefaultMQPullConsumer[pullConsumerNum];
     private static AtomicLong rid = new AtomicLong();
-    private static final String LMQ_PREFIX = "%LMQ%";
 
     public static void main(String[] args) throws InterruptedException, MQClientException, MQBrokerException,
-        RemotingException {
+            RemotingException {
         defaultMQProducer = new DefaultMQProducer();
         defaultMQProducer.setProducerGroup("PID_LMQ_TEST");
         defaultMQProducer.setVipChannelEnabled(false);
@@ -176,7 +169,7 @@ public class BenchLmqStore {
                         }
                         if (enableSub && null != sendResult.getMessageQueue()) {
                             MessageQueue mq = new MessageQueue(queue, sendResult.getMessageQueue().getBrokerName(),
-                                lmqNum > 0 ? 0 : sendResult.getMessageQueue().getQueueId());
+                                    lmqNum > 0 ? 0 : sendResult.getMessageQueue().getQueueId());
                             int queueHash = IntMath.mod(queue.hashCode(), consumerThreadNum);
                             pullEvent.putIfAbsent(queueHash, new ConcurrentHashMap<>());
                             pullEvent.get(queueHash).put(mq, idx);
@@ -191,7 +184,7 @@ public class BenchLmqStore {
     }
 
     public static void doPull(Map<MessageQueue, Long> eventMap, MessageQueue mq,
-        Long eventId) throws RemotingException, InterruptedException, MQClientException {
+                              Long eventId) throws RemotingException, InterruptedException, MQClientException {
         if (!enableSub) {
             eventMap.remove(mq, eventId);
             pullStatus.remove(mq);
@@ -210,40 +203,40 @@ public class BenchLmqStore {
             return;
         }
         defaultMQPullConsumer.pullBlockIfNotFound(
-            mq, "*", offset, 32,
-            new PullCallback() {
-                @Override
-                public void onSuccess(PullResult pullResult) {
-                    StatUtil.addInvoke(pullResult.getPullStatus().name(), System.currentTimeMillis() - start);
-                    eventMap.remove(mq, eventId);
-                    pullStatus.remove(mq);
-                    offsetMap.put(mq, pullResult.getNextBeginOffset());
-                    StatUtil.addInvoke("doPull", System.currentTimeMillis() - start);
-                    if (PullStatus.NO_MATCHED_MSG.equals(pullResult.getPullStatus()) && RETRY_NO_MATCHED_MSG) {
-                        long idx = rid.incrementAndGet();
-                        eventMap.put(mq, idx);
-                    }
-                    List<MessageExt> list = pullResult.getMsgFoundList();
-                    if (list == null || list.isEmpty()) {
-                        StatUtil.addInvoke("NoMsg", System.currentTimeMillis() - start);
-                        return;
-                    }
-                    for (MessageExt messageExt : list) {
-                        StatUtil.addInvoke("sub", System.currentTimeMillis() - messageExt.getBornTimestamp());
-                        if (StatUtil.nowTps("sub") < 10) {
-                            logger.warn("sub: {}", messageExt.getMsgId());
+                mq, "*", offset, 32,
+                new PullCallback() {
+                    @Override
+                    public void onSuccess(PullResult pullResult) {
+                        StatUtil.addInvoke(pullResult.getPullStatus().name(), System.currentTimeMillis() - start);
+                        eventMap.remove(mq, eventId);
+                        pullStatus.remove(mq);
+                        offsetMap.put(mq, pullResult.getNextBeginOffset());
+                        StatUtil.addInvoke("doPull", System.currentTimeMillis() - start);
+                        if (PullStatus.NO_MATCHED_MSG.equals(pullResult.getPullStatus()) && RETRY_NO_MATCHED_MSG) {
+                            long idx = rid.incrementAndGet();
+                            eventMap.put(mq, idx);
+                        }
+                        List<MessageExt> list = pullResult.getMsgFoundList();
+                        if (list == null || list.isEmpty()) {
+                            StatUtil.addInvoke("NoMsg", System.currentTimeMillis() - start);
+                            return;
+                        }
+                        for (MessageExt messageExt : list) {
+                            StatUtil.addInvoke("sub", System.currentTimeMillis() - messageExt.getBornTimestamp());
+                            if (StatUtil.nowTps("sub") < 10) {
+                                logger.warn("sub: {}", messageExt.getMsgId());
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onException(Throwable e) {
-                    eventMap.remove(mq, eventId);
-                    pullStatus.remove(mq);
-                    logger.error("", e);
-                    StatUtil.addInvoke("doPull", System.currentTimeMillis() - start, false);
-                }
-            });
+                    @Override
+                    public void onException(Throwable e) {
+                        eventMap.remove(mq, eventId);
+                        pullStatus.remove(mq);
+                        logger.error("", e);
+                        StatUtil.addInvoke("doPull", System.currentTimeMillis() - start, false);
+                    }
+                });
     }
 
     public static void doBenchOffset() throws RemotingException, InterruptedException, MQClientException {
@@ -251,8 +244,8 @@ public class BenchLmqStore {
         Map<String, Long> offsetMap = new ConcurrentHashMap<>();
         String statKey = "benchOffset";
         TopicRouteData topicRouteData = defaultMQPullConsumers[0].getDefaultMQPullConsumerImpl().
-            getRebalanceImpl().getmQClientFactory().getMQClientAPIImpl().
-            getTopicRouteInfoFromNameServer(lmqTopic, 3000);
+                getRebalanceImpl().getmQClientFactory().getMQClientAPIImpl().
+                getTopicRouteInfoFromNameServer(lmqTopic, 3000);
         HashMap<Long, String> brokerMap = topicRouteData.getBrokerDatas().get(0).getBrokerAddrs();
         if (brokerMap == null || brokerMap.isEmpty()) {
             return;
@@ -282,20 +275,20 @@ public class BenchLmqStore {
                             updateHeader.setQueueId(0);
                             updateHeader.setCommitOffset(newOffset1);
                             defaultMQPullConsumer
-                                .getDefaultMQPullConsumerImpl()
-                                .getRebalanceImpl()
-                                .getmQClientFactory()
-                                .getMQClientAPIImpl().updateConsumerOffset(brokerAddress, updateHeader, 1000);
+                                    .getDefaultMQPullConsumerImpl()
+                                    .getRebalanceImpl()
+                                    .getmQClientFactory()
+                                    .getMQClientAPIImpl().updateConsumerOffset(brokerAddress, updateHeader, 1000);
                             QueryConsumerOffsetRequestHeader queryHeader = new QueryConsumerOffsetRequestHeader();
                             queryHeader.setTopic(lmq);
                             queryHeader.setConsumerGroup(lmqCid);
                             queryHeader.setQueueId(0);
                             long newOffset2 = defaultMQPullConsumer
-                                .getDefaultMQPullConsumerImpl()
-                                .getRebalanceImpl()
-                                .getmQClientFactory()
-                                .getMQClientAPIImpl()
-                                .queryConsumerOffset(brokerAddress, queryHeader, 1000);
+                                    .getDefaultMQPullConsumerImpl()
+                                    .getRebalanceImpl()
+                                    .getmQClientFactory()
+                                    .getMQClientAPIImpl()
+                                    .queryConsumerOffset(brokerAddress, queryHeader, 1000);
                             offsetMap.put(lmq, newOffset2);
                             if (newOffset1 != newOffset2) {
                                 StatUtil.addInvoke("ErrorOffset", 1);

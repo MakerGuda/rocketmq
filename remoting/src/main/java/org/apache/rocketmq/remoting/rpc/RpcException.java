@@ -20,6 +20,7 @@ import org.apache.rocketmq.remoting.exception.RemotingException;
 
 public class RpcException extends RemotingException {
     private int errorCode;
+
     public RpcException(int errorCode, String message) {
         super(message);
         this.errorCode = errorCode;

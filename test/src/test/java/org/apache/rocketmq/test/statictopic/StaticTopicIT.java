@@ -19,13 +19,6 @@ package org.apache.rocketmq.test.statictopic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.impl.factory.MQClientInstance;
@@ -33,6 +26,8 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.admin.ConsumeStats;
 import org.apache.rocketmq.remoting.protocol.admin.OffsetWrapper;
 import org.apache.rocketmq.remoting.protocol.admin.TopicStatsTable;
@@ -41,8 +36,6 @@ import org.apache.rocketmq.remoting.protocol.statictopic.TopicConfigAndQueueMapp
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingOne;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils;
 import org.apache.rocketmq.remoting.rpc.ClientMetadata;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.base.BaseConf;
 import org.apache.rocketmq.test.client.rmq.RMQNormalConsumer;
 import org.apache.rocketmq.test.client.rmq.RMQNormalProducer;
@@ -53,11 +46,9 @@ import org.apache.rocketmq.test.util.TestUtils;
 import org.apache.rocketmq.test.util.VerifyUtils;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.admin.MQAdminUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
+
+import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils.getMappingDetailFromConfig;
@@ -134,7 +125,7 @@ public class StaticTopicIT extends BaseConf {
             Map<String, TopicConfigAndQueueMapping> remoteBrokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             Assert.assertEquals(BROKER_NUM, remoteBrokerConfigMap.size());
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, remoteBrokerConfigMap);
-            Map<Integer, TopicQueueMappingOne>  globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
+            Map<Integer, TopicQueueMappingOne> globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
             Assert.assertEquals(queueNum, globalIdMap.size());
             TopicConfigAndQueueMapping configMapping = remoteBrokerConfigMap.get(BROKER2_NAME);
             Assert.assertEquals(0, configMapping.getWriteQueueNums());
@@ -149,7 +140,7 @@ public class StaticTopicIT extends BaseConf {
             Map<String, TopicConfigAndQueueMapping> remoteBrokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             Assert.assertEquals(BROKER_NUM, remoteBrokerConfigMap.size());
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, remoteBrokerConfigMap);
-            Map<Integer, TopicQueueMappingOne>  globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
+            Map<Integer, TopicQueueMappingOne> globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
             Assert.assertEquals(queueNum, globalIdMap.size());
         }
 
@@ -167,7 +158,7 @@ public class StaticTopicIT extends BaseConf {
             String destBrokerName = clientMetadata.getBrokerNameFromMessageQueue(messageQueue);
             Assert.assertTrue(targetBrokers.contains(destBrokerName));
         }
-        for (MessageQueue messageQueue: messageQueueList) {
+        for (MessageQueue messageQueue : messageQueueList) {
             producer.send(msgEachQueue, messageQueue);
         }
         Assert.assertEquals(0, producer.getSendErrorMsg().size());
@@ -239,7 +230,7 @@ public class StaticTopicIT extends BaseConf {
         {
             Map<String, TopicConfigAndQueueMapping> remoteBrokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             Assert.assertEquals(BROKER_NUM, remoteBrokerConfigMap.size());
-            for (Map.Entry<String, TopicConfigAndQueueMapping> entry: remoteBrokerConfigMap.entrySet())  {
+            for (Map.Entry<String, TopicConfigAndQueueMapping> entry : remoteBrokerConfigMap.entrySet()) {
                 String broker = entry.getKey();
                 TopicConfigAndQueueMapping configMapping = entry.getValue();
                 TopicConfigAndQueueMapping localConfigMapping = localBrokerConfigMap.get(broker);
@@ -247,7 +238,7 @@ public class StaticTopicIT extends BaseConf {
                 Assert.assertEquals(configMapping, localConfigMapping);
             }
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, remoteBrokerConfigMap);
-            Map<Integer, TopicQueueMappingOne>  globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
+            Map<Integer, TopicQueueMappingOne> globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
             Assert.assertEquals(queueNum, globalIdMap.size());
         }
         //send and check
@@ -278,9 +269,9 @@ public class StaticTopicIT extends BaseConf {
             MQAdminTestUtils.remappingStaticTopic(topic, targetBrokers, defaultMQAdminExt);
             Map<String, TopicConfigAndQueueMapping> remoteBrokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, remoteBrokerConfigMap);
-            Map<Integer, TopicQueueMappingOne>  globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
+            Map<Integer, TopicQueueMappingOne> globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
             Assert.assertEquals(queueNum, globalIdMap.size());
-            for (TopicQueueMappingOne mappingOne: globalIdMap.values()) {
+            for (TopicQueueMappingOne mappingOne : globalIdMap.values()) {
                 Assert.assertEquals(BROKER2_NAME, mappingOne.getBname());
                 Assert.assertEquals(TopicQueueMappingUtils.DEFAULT_BLOCK_SEQ_SIZE, mappingOne.getItems().get(mappingOne.getItems().size() - 1).getLogicOffset());
             }
@@ -350,7 +341,7 @@ public class StaticTopicIT extends BaseConf {
 
         ConsumeStats consumeStats = defaultMQAdminExt.examineConsumeStats(group);
         List<MessageQueue> messageQueues = producer.getMessageQueue();
-        for (MessageQueue queue: messageQueues) {
+        for (MessageQueue queue : messageQueues) {
             OffsetWrapper wrapper = consumeStats.getOffsetTable().get(queue);
             Assert.assertNotNull(wrapper);
             Assert.assertEquals(msgEachQueue, wrapper.getBrokerOffset());
@@ -371,7 +362,7 @@ public class StaticTopicIT extends BaseConf {
         consumeStats = defaultMQAdminExt.examineConsumeStats(group);
 
         messageQueues = producer.getMessageQueue();
-        for (MessageQueue queue: messageQueues) {
+        for (MessageQueue queue : messageQueues) {
             OffsetWrapper wrapper = consumeStats.getOffsetTable().get(queue);
             Assert.assertNotNull(wrapper);
             Assert.assertEquals(msgEachQueue + brokers.size() * TopicQueueMappingUtils.DEFAULT_BLOCK_SEQ_SIZE, wrapper.getBrokerOffset());
@@ -381,8 +372,6 @@ public class StaticTopicIT extends BaseConf {
         consumer = getConsumer(NAMESRV_ADDR, group, topic, "*", new RMQNormalListener());
         consumeMessagesAndCheck(producer, consumer, topic, queueNum, msgEachQueue, 1, brokers.size());
     }
-
-
 
 
     @Test
@@ -422,7 +411,7 @@ public class StaticTopicIT extends BaseConf {
 
         {
             for (int i = 0; i < 10; i++) {
-                for (BrokerController brokerController: brokerControllerList) {
+                for (BrokerController brokerController : brokerControllerList) {
                     brokerController.getTopicQueueMappingCleanService().wakeup();
                 }
                 Thread.sleep(100);
@@ -439,12 +428,12 @@ public class StaticTopicIT extends BaseConf {
 
         }
         {
-            Set<String> topics =  new HashSet<>(brokerController1.getTopicConfigManager().getTopicConfigTable().keySet());
+            Set<String> topics = new HashSet<>(brokerController1.getTopicConfigManager().getTopicConfigTable().keySet());
             topics.remove(topic);
             brokerController1.getMessageStore().cleanUnusedTopic(topics);
             brokerController2.getMessageStore().cleanUnusedTopic(topics);
             for (int i = 0; i < 10; i++) {
-                for (BrokerController brokerController: brokerControllerList) {
+                for (BrokerController brokerController : brokerControllerList) {
                     brokerController.getTopicQueueMappingCleanService().wakeup();
                 }
                 Thread.sleep(100);
@@ -489,9 +478,9 @@ public class StaticTopicIT extends BaseConf {
             MQAdminTestUtils.remappingStaticTopicWithNegativeLogicOffset(topic, targetBrokers, defaultMQAdminExt);
             Map<String, TopicConfigAndQueueMapping> remoteBrokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, remoteBrokerConfigMap);
-            Map<Integer, TopicQueueMappingOne>  globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
+            Map<Integer, TopicQueueMappingOne> globalIdMap = TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(getMappingDetailFromConfig(remoteBrokerConfigMap.values())), false, true);
             Assert.assertEquals(queueNum, globalIdMap.size());
-            for (TopicQueueMappingOne mappingOne: globalIdMap.values()) {
+            for (TopicQueueMappingOne mappingOne : globalIdMap.values()) {
                 Assert.assertEquals(BROKER2_NAME, mappingOne.getBname());
                 Assert.assertEquals(-1, mappingOne.getItems().get(mappingOne.getItems().size() - 1).getLogicOffset());
             }

@@ -22,12 +22,12 @@ import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 public class GetSyncStateDataRequest implements CommandCustomHeader {
     private final Long invokeTime = System.currentTimeMillis();
 
-    @Override
-    public void checkFields() throws RemotingCommandException {
+    public GetSyncStateDataRequest() {
 
     }
 
-    public GetSyncStateDataRequest() {
+    @Override
+    public void checkFields() throws RemotingCommandException {
 
     }
 
@@ -38,7 +38,7 @@ public class GetSyncStateDataRequest implements CommandCustomHeader {
     @Override
     public String toString() {
         return "GetSyncStateDataRequest{" +
-            "invokeTime=" + invokeTime +
-            '}';
+                "invokeTime=" + invokeTime +
+                '}';
     }
 }

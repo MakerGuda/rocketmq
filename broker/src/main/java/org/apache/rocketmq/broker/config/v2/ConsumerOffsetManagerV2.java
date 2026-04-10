@@ -19,10 +19,6 @@ package org.apache.rocketmq.broker.config.v2;
 import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.internal.PlatformDependent;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.offset.ConsumerOffsetManager;
 import org.apache.rocketmq.common.MixAll;
@@ -31,6 +27,11 @@ import org.apache.rocketmq.store.MessageStore;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * <p>
@@ -42,7 +43,7 @@ import org.rocksdb.WriteBatch;
  * <p>
  * Layout of consumer offset value: [offset, 8 bytes]
  * </p>
- *
+ * <p>
  * Broker 子系统组件 <b>ConsumerOffsetManagerV2</b>（Consumer Offset Manager V2）。
  * 继承关系：<code>ConsumerOffsetManager</code>。
  */
@@ -71,8 +72,8 @@ public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
         byte[] groupBytes = topicGroup[1].getBytes(StandardCharsets.UTF_8);
 
         int keyLen = 1 /* table-prefix */ + Short.BYTES /* table-id */ + 1 /* record-prefix */
-            + Short.BYTES /* group-len */ + groupBytes.length + 1 /* CTRL_1 */
-            + Short.BYTES + topicBytes.length + 1;
+                + Short.BYTES /* group-len */ + groupBytes.length + 1 /* CTRL_1 */
+                + Short.BYTES + topicBytes.length + 1;
         // [table-prefix, 1 byte][table-id, 2 bytes][record-prefix, 1 byte][group-len, 2 bytes][group-bytes][CTRL_1, 1 byte]
         // [topic-len, 2 bytes][topic-bytes][CTRL_1]
         ByteBuf beginKey = AbstractRocksDBStorage.POOLED_ALLOCATOR.buffer(keyLen);
@@ -119,7 +120,7 @@ public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
 
         byte[] groupBytes = group.getBytes(StandardCharsets.UTF_8);
         int keyLen = 1 /* table-prefix */ + Short.BYTES /* table-id */ + 1 /* record-prefix */
-            + Short.BYTES /* group-len */ + groupBytes.length + 1 /* CTRL_1 */;
+                + Short.BYTES /* group-len */ + groupBytes.length + 1 /* CTRL_1 */;
 
         // [table-prefix, 1 byte][table-id, 2 bytes][record-prefix, 1 byte][group-len, 2 bytes][group bytes][CTRL_1, 1 byte]
         ByteBuf consumerOffsetBeginKey = AbstractRocksDBStorage.POOLED_ALLOCATOR.buffer(keyLen);
@@ -233,9 +234,9 @@ public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
         byte[] groupBytes = group.getBytes(StandardCharsets.UTF_8);
         byte[] topicBytes = topic.getBytes(StandardCharsets.UTF_8);
         int keyLen = 1 /*table prefix*/ + Short.BYTES /*table-id*/ + 1 /*record-prefix*/
-            + Short.BYTES /*group-len*/ + groupBytes.length + 1 /*CTRL_1*/
-            + 2 /*topic-len*/ + topicBytes.length + 1 /* CTRL_1*/
-            + Integer.BYTES /*queue-id*/;
+                + Short.BYTES /*group-len*/ + groupBytes.length + 1 /*CTRL_1*/
+                + 2 /*topic-len*/ + topicBytes.length + 1 /* CTRL_1*/
+                + Integer.BYTES /*queue-id*/;
         ByteBuf keyBuf = ConfigStorage.POOLED_ALLOCATOR.buffer(keyLen);
         keyBuf.writeByte(TablePrefix.TABLE.getValue());
         keyBuf.writeShort(TableId.CONSUMER_OFFSET.getValue());
@@ -254,9 +255,9 @@ public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
         byte[] groupBytes = group.getBytes(StandardCharsets.UTF_8);
         byte[] topicBytes = topic.getBytes(StandardCharsets.UTF_8);
         int keyLen = 1 /*table prefix*/ + Short.BYTES /*table-id*/ + 1 /*record-prefix*/
-            + Short.BYTES /*group-len*/ + groupBytes.length + 1 /*CTRL_1*/
-            + 2 /*topic-len*/ + topicBytes.length + 1 /* CTRL_1*/
-            + Integer.BYTES /*queue-id*/;
+                + Short.BYTES /*group-len*/ + groupBytes.length + 1 /*CTRL_1*/
+                + 2 /*topic-len*/ + topicBytes.length + 1 /* CTRL_1*/
+                + Integer.BYTES /*queue-id*/;
         ByteBuf keyBuf = ConfigStorage.POOLED_ALLOCATOR.buffer(keyLen);
         keyBuf.writeByte(TablePrefix.TABLE.getValue());
         keyBuf.writeShort(TableId.PULL_OFFSET.getValue());
@@ -299,7 +300,7 @@ public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
     public boolean loadDataVersion() {
         try {
             ConfigHelper.loadDataVersion(configStorage, TableId.CONSUMER_OFFSET)
-                .ifPresent(buf -> ConfigHelper.onDataVersionLoad(buf, dataVersion));
+                    .ifPresent(buf -> ConfigHelper.onDataVersionLoad(buf, dataVersion));
         } catch (RocksDBException e) {
             LOG.error("Failed to load RocksDB config", e);
             return false;
@@ -423,7 +424,7 @@ public class ConsumerOffsetManagerV2 extends ConsumerOffsetManager {
             configStorage.write(writeBatch);
         } catch (RocksDBException e) {
             LOG.error("Failed to commit pull offset. group={}, topic={}, queueId={}, offset={}",
-                group, topic, queueId, offset);
+                    group, topic, queueId, offset);
         } finally {
             keyBuf.release();
             valueBuf.release();

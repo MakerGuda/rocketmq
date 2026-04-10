@@ -18,8 +18,9 @@
 package org.apache.rocketmq.proxy.remoting;
 
 import io.netty.channel.Channel;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface RemotingProxyOutClient {
 

@@ -17,11 +17,6 @@
 
 package org.apache.rocketmq.test.client.rmq;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.MessageQueueSelector;
@@ -36,9 +31,15 @@ import org.apache.rocketmq.test.sendresult.ResultWrapper;
 import org.apache.rocketmq.test.util.RandomUtil;
 import org.apache.rocketmq.test.util.TestUtil;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class RMQAsyncSendProducer extends AbstractMQProducer {
     private static Logger logger = LoggerFactory
-        .getLogger(RMQAsyncSendProducer.class);
+            .getLogger(RMQAsyncSendProducer.class);
     private String nsAddr = null;
     private DefaultMQProducer producer = null;
     private SendCallback sendCallback = null;
@@ -54,6 +55,7 @@ public class RMQAsyncSendProducer extends AbstractMQProducer {
             public void onSuccess(SendResult sendResult) {
                 successSendResult.add(sendResult);
             }
+
             @Override
             public void onException(Throwable throwable) {
                 exceptionMsgCount.getAndIncrement();

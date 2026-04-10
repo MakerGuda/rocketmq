@@ -64,12 +64,12 @@ public class PopMessageRequestHeader extends TopicQueueRequestHeader {
     public void checkFields() throws RemotingCommandException {
     }
 
-    public void setInitMode(int initMode) {
-        this.initMode = initMode;
-    }
-
     public int getInitMode() {
         return initMode;
+    }
+
+    public void setInitMode(int initMode) {
+        this.initMode = initMode;
     }
 
     public long getInvisibleTime() {
@@ -156,12 +156,12 @@ public class PopMessageRequestHeader extends TopicQueueRequestHeader {
         return order;
     }
 
-    public void setOrder(Boolean order) {
-        this.order = order;
-    }
-
     public boolean isOrder() {
         return this.order != null && this.order.booleanValue();
+    }
+
+    public void setOrder(Boolean order) {
+        this.order = order;
     }
 
     public String getAttemptId() {
@@ -175,18 +175,18 @@ public class PopMessageRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("maxMsgNums", maxMsgNums)
-            .add("invisibleTime", invisibleTime)
-            .add("pollTime", pollTime)
-            .add("bornTime", bornTime)
-            .add("initMode", initMode)
-            .add("expType", expType)
-            .add("exp", exp)
-            .add("order", order)
-            .add("attemptId", attemptId)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("maxMsgNums", maxMsgNums)
+                .add("invisibleTime", invisibleTime)
+                .add("pollTime", pollTime)
+                .add("bornTime", bornTime)
+                .add("initMode", initMode)
+                .add("expType", expType)
+                .add("exp", exp)
+                .add("order", order)
+                .add("attemptId", attemptId)
+                .toString();
     }
 }

@@ -17,10 +17,6 @@
 package org.apache.rocketmq.broker.transaction;
 
 import io.netty.channel.Channel;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -31,6 +27,11 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequestHeader;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
+import java.util.concurrent.TimeUnit;
+
 /**
  * 事务消息回查监听器的抽象基类：在 Broker 需要向生产者确认事务最终状态时，
  * 构造并派发 {@link org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequestHeader} 相关请求。
@@ -39,13 +40,10 @@ import org.apache.rocketmq.remoting.protocol.header.CheckTransactionStateRequest
  * 本类负责线程池、队列等基础设施的托管。
  */
 public abstract class AbstractTransactionalMessageCheckListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
-
-    private BrokerController brokerController;
-
     //queue nums of topic TRANS_CHECK_MAX_TIME_TOPIC
     protected final static int TCMT_QUEUE_NUMS = 1;
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
+    private BrokerController brokerController;
     private volatile ExecutorService executorService;
 
     public AbstractTransactionalMessageCheckListener() {
@@ -97,6 +95,16 @@ public abstract class AbstractTransactionalMessageCheckListener {
         return brokerController;
     }
 
+    /**
+     * Inject brokerController for this listener
+     *
+     * @param brokerController
+     */
+    public void setBrokerController(BrokerController brokerController) {
+        this.brokerController = brokerController;
+        initExecutorService();
+    }
+
     public void shutdown() {
         if (executorService != null) {
             executorService.shutdown();
@@ -106,18 +114,8 @@ public abstract class AbstractTransactionalMessageCheckListener {
     public synchronized void initExecutorService() {
         if (executorService == null) {
             executorService = ThreadUtils.newThreadPoolExecutor(2, 5, 100, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2000),
-                new ThreadFactoryImpl("Transaction-msg-check-thread", brokerController.getBrokerIdentity()), new CallerRunsPolicy());
+                    new ThreadFactoryImpl("Transaction-msg-check-thread", brokerController.getBrokerIdentity()), new CallerRunsPolicy());
         }
-    }
-
-    /**
-     * Inject brokerController for this listener
-     *
-     * @param brokerController
-     */
-    public void setBrokerController(BrokerController brokerController) {
-        this.brokerController = brokerController;
-        initExecutorService();
     }
 
     /**

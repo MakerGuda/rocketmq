@@ -16,12 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.consumer;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -30,6 +24,8 @@ import org.apache.rocketmq.common.MQVersion;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.protocol.admin.ConsumeStats;
 import org.apache.rocketmq.remoting.protocol.admin.OffsetWrapper;
@@ -39,11 +35,11 @@ import org.apache.rocketmq.remoting.protocol.body.ConsumerRunningInfo;
 import org.apache.rocketmq.remoting.protocol.body.TopicList;
 import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.*;
 
 public class ConsumerProgressSubCommand implements SubCommand {
     private static final Logger log = LoggerFactory.getLogger(ConsumerProgressSubCommand.class);
@@ -80,14 +76,14 @@ public class ConsumerProgressSubCommand implements SubCommand {
     }
 
     private Map<MessageQueue, String> getMessageQueueAllocationResult(DefaultMQAdminExt defaultMQAdminExt,
-        String groupName) {
+                                                                      String groupName) {
         Map<MessageQueue, String> results = new HashMap<>();
         try {
             ConsumerConnection consumerConnection = defaultMQAdminExt.examineConsumerConnectionInfo(groupName);
             for (Connection connection : consumerConnection.getConnectionSet()) {
                 String clientId = connection.getClientId();
                 ConsumerRunningInfo consumerRunningInfo = defaultMQAdminExt.getConsumerRunningInfo(groupName, clientId,
-                    false, false);
+                        false, false);
                 for (MessageQueue messageQueue : consumerRunningInfo.getMqTable().keySet()) {
                     results.put(messageQueue, clientId.split("@")[0]);
                 }
@@ -111,7 +107,7 @@ public class ConsumerProgressSubCommand implements SubCommand {
             defaultMQAdminExt.start();
 
             boolean showClientIP = commandLine.hasOption('s')
-                && "true".equalsIgnoreCase(commandLine.getOptionValue('s'));
+                    && "true".equalsIgnoreCase(commandLine.getOptionValue('s'));
 
             String clusterName = commandLine.hasOption('c') ? commandLine.getOptionValue('c').trim() : null;
 
@@ -208,13 +204,13 @@ public class ConsumerProgressSubCommand implements SubCommand {
                 System.out.printf("Consume Inflight Total: %d%n", inflightTotal);
             } else {
                 System.out.printf("%-64s  %-6s  %-24s %-5s  %-14s  %-7s  %s%n",
-                    "#Group",
-                    "#Count",
-                    "#Version",
-                    "#Type",
-                    "#Model",
-                    "#TPS",
-                    "#Diff Total"
+                        "#Group",
+                        "#Count",
+                        "#Version",
+                        "#Type",
+                        "#Model",
+                        "#TPS",
+                        "#Diff Total"
                 );
                 TopicList topicList = defaultMQAdminExt.fetchAllTopicList();
                 for (String topic : topicList.getTopicList()) {
@@ -251,13 +247,13 @@ public class ConsumerProgressSubCommand implements SubCommand {
                             }
 
                             System.out.printf("%-64s  %-6d  %-24s %-5s  %-14s  %-7d  %d%n",
-                                UtilAll.frontStringAtLeast(groupConsumeInfo.getGroup(), 64),
-                                groupConsumeInfo.getCount(),
-                                groupConsumeInfo.getCount() > 0 ? groupConsumeInfo.versionDesc() : "OFFLINE",
-                                groupConsumeInfo.consumeTypeDesc(),
-                                groupConsumeInfo.messageModelDesc(),
-                                groupConsumeInfo.getConsumeTps(),
-                                groupConsumeInfo.getDiffTotal()
+                                    UtilAll.frontStringAtLeast(groupConsumeInfo.getGroup(), 64),
+                                    groupConsumeInfo.getCount(),
+                                    groupConsumeInfo.getCount() > 0 ? groupConsumeInfo.versionDesc() : "OFFLINE",
+                                    groupConsumeInfo.consumeTypeDesc(),
+                                    groupConsumeInfo.messageModelDesc(),
+                                    groupConsumeInfo.getConsumeTps(),
+                                    groupConsumeInfo.getDiffTotal()
                             );
                         } catch (Exception e) {
                             log.warn("examineConsumeStats or examineConsumerConnectionInfo exception, " + consumerGroup, e);

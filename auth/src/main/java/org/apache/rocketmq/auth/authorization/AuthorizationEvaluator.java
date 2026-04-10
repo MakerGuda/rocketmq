@@ -16,13 +16,14 @@
  */
 package org.apache.rocketmq.auth.authorization;
 
-import java.util.List;
-import java.util.function.Supplier;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.auth.authorization.context.AuthorizationContext;
 import org.apache.rocketmq.auth.authorization.factory.AuthorizationFactory;
 import org.apache.rocketmq.auth.authorization.strategy.AuthorizationStrategy;
 import org.apache.rocketmq.auth.config.AuthConfig;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 public class AuthorizationEvaluator {
 

@@ -16,39 +16,6 @@
  */
 package org.apache.rocketmq.common;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.NotDirectoryException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
-
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.annotation.ImportantField;
@@ -58,6 +25,20 @@ import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.IOTinyUtils;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.*;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 
 public class MixAll {
     public static final String ROCKETMQ_HOME_ENV = "ROCKETMQ_HOME";
@@ -121,31 +102,28 @@ public class MixAll {
     public static final String ZONE_MODE = "__ZONE_MODE";
     public final static String RPC_REQUEST_HEADER_NAMESPACED_FIELD = "nsd";
     public final static String RPC_REQUEST_HEADER_NAMESPACE_FIELD = "ns";
-
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
     public static final String LOGICAL_QUEUE_MOCK_BROKER_PREFIX = "__syslo__";
     public static final String METADATA_SCOPE_GLOBAL = "__global__";
     public static final String LOGICAL_QUEUE_MOCK_BROKER_NAME_NOT_EXIST = "__syslo__none__";
     public static final String MULTI_PATH_SPLITTER = System.getProperty("rocketmq.broker.multiPathSplitter", ",");
-
-    private static final String OS = System.getProperty("os.name").toLowerCase();
     public static final long MILLS_FOR_HOUR = TimeUnit.HOURS.toMillis(1);
-
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
+    private static final String OS = System.getProperty("os.name").toLowerCase();
     private static final Set<String> PREDEFINE_GROUP_SET = ImmutableSet.of(
-        DEFAULT_CONSUMER_GROUP,
-        DEFAULT_PRODUCER_GROUP,
-        TOOLS_CONSUMER_GROUP,
-        SCHEDULE_CONSUMER_GROUP,
-        FILTERSRV_CONSUMER_GROUP,
-        MONITOR_CONSUMER_GROUP,
-        CLIENT_INNER_PRODUCER_GROUP,
-        SELF_TEST_PRODUCER_GROUP,
-        SELF_TEST_CONSUMER_GROUP,
-        ONS_HTTP_PROXY_GROUP,
-        CID_ONSAPI_PERMISSION_GROUP,
-        CID_ONSAPI_OWNER_GROUP,
-        CID_ONSAPI_PULL_GROUP,
-        CID_SYS_RMQ_TRANS
+            DEFAULT_CONSUMER_GROUP,
+            DEFAULT_PRODUCER_GROUP,
+            TOOLS_CONSUMER_GROUP,
+            SCHEDULE_CONSUMER_GROUP,
+            FILTERSRV_CONSUMER_GROUP,
+            MONITOR_CONSUMER_GROUP,
+            CLIENT_INNER_PRODUCER_GROUP,
+            SELF_TEST_PRODUCER_GROUP,
+            SELF_TEST_CONSUMER_GROUP,
+            ONS_HTTP_PROXY_GROUP,
+            CID_ONSAPI_PERMISSION_GROUP,
+            CID_ONSAPI_OWNER_GROUP,
+            CID_ONSAPI_PULL_GROUP,
+            CID_SYS_RMQ_TRANS
     );
 
     public static boolean isWindows() {
@@ -158,8 +136,8 @@ public class MixAll {
 
     public static boolean isUnix() {
         return OS.contains("nix")
-            || OS.contains("nux")
-            || OS.contains("aix");
+                || OS.contains("nux")
+                || OS.contains("aix");
     }
 
     public static boolean isSolaris() {
@@ -305,7 +283,7 @@ public class MixAll {
     }
 
     public static void printObjectProperties(final Logger logger, final Object object,
-        final boolean onlyImportantField) {
+                                             final boolean onlyImportantField) {
         Field[] fields = object.getClass().getDeclaredFields();
         for (Field field : fields) {
             if (!Modifier.isStatic(field.getModifiers())) {
@@ -556,17 +534,17 @@ public class MixAll {
 
     public static boolean isSysConsumerGroupPullMessage(String consumerGroup) {
         if (DEFAULT_CONSUMER_GROUP.equals(consumerGroup)
-            || TOOLS_CONSUMER_GROUP.equals(consumerGroup)
-            || SCHEDULE_CONSUMER_GROUP.equals(consumerGroup)
-            || FILTERSRV_CONSUMER_GROUP.equals(consumerGroup)
-            || MONITOR_CONSUMER_GROUP.equals(consumerGroup)
-            || SELF_TEST_CONSUMER_GROUP.equals(consumerGroup)
-            || ONS_HTTP_PROXY_GROUP.equals(consumerGroup)
-            || CID_ONSAPI_PERMISSION_GROUP.equals(consumerGroup)
-            || CID_ONSAPI_OWNER_GROUP.equals(consumerGroup)
-            || CID_ONSAPI_PULL_GROUP.equals(consumerGroup)
-            || CID_SYS_RMQ_TRANS.equals(consumerGroup)
-            || consumerGroup.startsWith(CID_RMQ_SYS_PREFIX)) {
+                || TOOLS_CONSUMER_GROUP.equals(consumerGroup)
+                || SCHEDULE_CONSUMER_GROUP.equals(consumerGroup)
+                || FILTERSRV_CONSUMER_GROUP.equals(consumerGroup)
+                || MONITOR_CONSUMER_GROUP.equals(consumerGroup)
+                || SELF_TEST_CONSUMER_GROUP.equals(consumerGroup)
+                || ONS_HTTP_PROXY_GROUP.equals(consumerGroup)
+                || CID_ONSAPI_PERMISSION_GROUP.equals(consumerGroup)
+                || CID_ONSAPI_OWNER_GROUP.equals(consumerGroup)
+                || CID_ONSAPI_PULL_GROUP.equals(consumerGroup)
+                || CID_SYS_RMQ_TRANS.equals(consumerGroup)
+                || consumerGroup.startsWith(CID_RMQ_SYS_PREFIX)) {
             return true;
         }
         return false;
@@ -574,8 +552,8 @@ public class MixAll {
 
     public static boolean topicAllowsLMQ(String topic) {
         return !topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)
-            && !topic.startsWith(TopicValidator.SYSTEM_TOPIC_PREFIX)
-            && !topic.equals(TopicValidator.RMQ_SYS_SCHEDULE_TOPIC);
+                && !topic.startsWith(TopicValidator.SYSTEM_TOPIC_PREFIX)
+                && !topic.equals(TopicValidator.RMQ_SYS_SCHEDULE_TOPIC);
     }
 
     public static String adjustConfigForPlatform(String config) {
@@ -631,7 +609,7 @@ public class MixAll {
             return false;
         }
         if (offset1 < 0 || offset1 + length1 > array1.length ||
-            offset2 < 0 || offset2 + length2 > array2.length) {
+                offset2 < 0 || offset2 + length2 > array2.length) {
             throw new ArrayIndexOutOfBoundsException("Invalid array index");
         }
         for (int i = 0; i < length1; i++) {

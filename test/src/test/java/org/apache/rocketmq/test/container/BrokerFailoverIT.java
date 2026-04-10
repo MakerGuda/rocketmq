@@ -17,13 +17,14 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.time.Duration;
 import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -47,9 +48,9 @@ public class BrokerFailoverIT extends ContainerIntegrationTestBase {
 
     private void testBrokerFailover(boolean compatibleMode) {
         await().atMost(Duration.ofSeconds(10)).until(() ->
-            master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
-                && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
-                && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
+                master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
+                        && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
+                        && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
 
         InnerSalveBrokerController targetSlave = getSlaveFromContainerByName(brokerContainer2, master1With3Replicas.getBrokerConfig().getBrokerName());
 
@@ -65,22 +66,22 @@ public class BrokerFailoverIT extends ContainerIntegrationTestBase {
 
             @Override
             public void doAfterResponse(String remoteAddr, RemotingCommand request,
-                RemotingCommand response) {
+                                        RemotingCommand response) {
 
             }
         });
 
         InnerSalveBrokerController finalTargetSlave = targetSlave;
         await().atMost(Duration.ofSeconds(60)).until(() ->
-            finalTargetSlave.getMessageStore().getAliveReplicaNumInGroup() == 2
-                && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 2
-                && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 2);
+                finalTargetSlave.getMessageStore().getAliveReplicaNumInGroup() == 2
+                        && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 2
+                        && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 2);
 
         brokerContainer1.clearClientRPCHook();
 
         await().atMost(Duration.ofSeconds(60)).until(() ->
-            master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
-                && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
-                && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
+                master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
+                        && master2With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3
+                        && master3With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
     }
 }

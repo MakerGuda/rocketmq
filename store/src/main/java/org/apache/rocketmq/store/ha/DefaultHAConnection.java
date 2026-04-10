@@ -17,11 +17,6 @@
 
 package org.apache.rocketmq.store.ha;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.NetworkUtil;
@@ -29,6 +24,12 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.netty.NettySystemConfig;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 
 public class DefaultHAConnection implements HAConnection {
 
@@ -288,9 +289,9 @@ public class DefaultHAConnection implements HAConnection {
                         if (0 == DefaultHAConnection.this.slaveRequestOffset) {
                             long masterOffset = DefaultHAConnection.this.haService.getDefaultMessageStore().getCommitLog().getMaxOffset();
                             masterOffset =
-                                masterOffset
-                                    - (masterOffset % DefaultHAConnection.this.haService.getDefaultMessageStore().getMessageStoreConfig()
-                                    .getMappedFileSizeCommitLog());
+                                    masterOffset
+                                            - (masterOffset % DefaultHAConnection.this.haService.getDefaultMessageStore().getMessageStoreConfig()
+                                            .getMappedFileSizeCommitLog());
 
                             if (masterOffset < 0) {
                                 masterOffset = 0;
@@ -302,16 +303,16 @@ public class DefaultHAConnection implements HAConnection {
                         }
 
                         log.info("master transfer data from " + this.nextTransferFromWhere + " to slave[" + DefaultHAConnection.this.clientAddress
-                            + "], and slave request " + DefaultHAConnection.this.slaveRequestOffset);
+                                + "], and slave request " + DefaultHAConnection.this.slaveRequestOffset);
                     }
 
                     if (this.lastWriteOver) {
 
                         long interval =
-                            DefaultHAConnection.this.haService.getDefaultMessageStore().getSystemClock().now() - this.lastWriteTimestamp;
+                                DefaultHAConnection.this.haService.getDefaultMessageStore().getSystemClock().now() - this.lastWriteTimestamp;
 
                         if (interval > DefaultHAConnection.this.haService.getDefaultMessageStore().getMessageStoreConfig()
-                            .getHaSendHeartbeatInterval()) {
+                                .getHaSendHeartbeatInterval()) {
 
                             // Build Header
                             this.byteBufferHeader.position(0);
@@ -331,7 +332,7 @@ public class DefaultHAConnection implements HAConnection {
                     }
 
                     SelectMappedBufferResult selectResult =
-                        DefaultHAConnection.this.haService.getDefaultMessageStore().getCommitLogData(this.nextTransferFromWhere);
+                            DefaultHAConnection.this.haService.getDefaultMessageStore().getCommitLogData(this.nextTransferFromWhere);
                     if (selectResult != null) {
                         int size = selectResult.getSize();
                         if (size > DefaultHAConnection.this.haService.getDefaultMessageStore().getMessageStoreConfig().getHaTransferBatchSize()) {
@@ -342,8 +343,8 @@ public class DefaultHAConnection implements HAConnection {
                         if (size > canTransferMaxBytes) {
                             if (System.currentTimeMillis() - lastPrintTimestamp > 1000) {
                                 log.warn("Trigger HA flow control, max transfer speed {}KB/s, current speed: {}KB/s",
-                                    String.format("%.2f", flowMonitor.maxTransferByteInSecond() / 1024.0),
-                                    String.format("%.2f", flowMonitor.getTransferredByteInSecond() / 1024.0));
+                                        String.format("%.2f", flowMonitor.maxTransferByteInSecond() / 1024.0),
+                                        String.format("%.2f", flowMonitor.getTransferredByteInSecond() / 1024.0));
                                 lastPrintTimestamp = System.currentTimeMillis();
                             }
                             size = canTransferMaxBytes;

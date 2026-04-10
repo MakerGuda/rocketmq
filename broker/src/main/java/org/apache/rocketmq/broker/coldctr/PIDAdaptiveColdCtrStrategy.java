@@ -51,23 +51,23 @@ public class PIDAdaptiveColdCtrStrategy implements ColdCtrStrategy {
         Long et2 = historyEtValList.get(historyEtValList.size() - 2);
         Long differential = et1 - et2;
         Double integration = 0.0;
-        for (Long item: historyEtValList) {
+        for (Long item : historyEtValList) {
             integration += item;
         }
-        return  KP * et + KI * integration + KD * differential;
+        return KP * et + KI * integration + KD * differential;
     }
 
     @Override
     public void promote(String consumerGroup, Long currentThreshold) {
         if (decisionFactor() > 0) {
-            coldDataCgCtrService.addOrUpdateGroupConfig(consumerGroup, (long)(currentThreshold * 1.5));
+            coldDataCgCtrService.addOrUpdateGroupConfig(consumerGroup, (long) (currentThreshold * 1.5));
         }
     }
 
     @Override
     public void decelerate(String consumerGroup, Long currentThreshold) {
         if (decisionFactor() < 0) {
-            long changedThresholdVal = (long)(currentThreshold * 0.8);
+            long changedThresholdVal = (long) (currentThreshold * 0.8);
             if (changedThresholdVal < coldDataCgCtrService.getBrokerConfig().getCgColdReadThreshold()) {
                 changedThresholdVal = coldDataCgCtrService.getBrokerConfig().getCgColdReadThreshold();
             }

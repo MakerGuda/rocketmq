@@ -17,8 +17,6 @@
 package org.apache.rocketmq.proxy.service.route;
 
 import com.google.common.collect.Lists;
-import java.util.HashMap;
-import java.util.List;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -31,6 +29,9 @@ import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.remoting.protocol.route.QueueData;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+
+import java.util.HashMap;
+import java.util.List;
 
 public class LocalTopicRouteService extends TopicRouteService {
 
@@ -45,7 +46,7 @@ public class LocalTopicRouteService extends TopicRouteService {
         HashMap<Long, String> brokerAddrs = new HashMap<>();
         brokerAddrs.put(MixAll.MASTER_ID, this.brokerController.getBrokerAddr());
         this.brokerDataList = Lists.newArrayList(
-            new BrokerData(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName(), brokerAddrs)
+                new BrokerData(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName(), brokerAddrs)
         );
         this.grpcPort = ConfigurationManager.getProxyConfig().getGrpcServerPort();
     }
@@ -58,7 +59,7 @@ public class LocalTopicRouteService extends TopicRouteService {
 
     @Override
     public ProxyTopicRouteData getTopicRouteForProxy(ProxyContext ctx, List<Address> requestHostAndPortList,
-        String topicName) throws Exception {
+                                                     String topicName) throws Exception {
         MessageQueueView messageQueueView = getAllMessageQueueView(ctx, topicName);
         TopicRouteData topicRouteData = messageQueueView.getTopicRouteData();
         return new ProxyTopicRouteData(topicRouteData, grpcPort);

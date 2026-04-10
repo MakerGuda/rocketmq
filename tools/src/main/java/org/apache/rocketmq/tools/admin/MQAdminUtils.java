@@ -16,12 +16,6 @@
  */
 package org.apache.rocketmq.tools.admin;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.TopicConfig;
@@ -38,12 +32,10 @@ import org.apache.rocketmq.remoting.protocol.admin.TopicStatsTable;
 import org.apache.rocketmq.remoting.protocol.body.ClusterInfo;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
-import org.apache.rocketmq.remoting.protocol.statictopic.LogicQueueMappingItem;
-import org.apache.rocketmq.remoting.protocol.statictopic.TopicConfigAndQueueMapping;
-import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingDetail;
-import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingOne;
-import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils;
+import org.apache.rocketmq.remoting.protocol.statictopic.*;
 import org.apache.rocketmq.remoting.rpc.ClientMetadata;
+
+import java.util.*;
 
 import static org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils.checkAndBuildMappingItems;
 import static org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils.getMappingDetailFromConfig;
@@ -52,20 +44,20 @@ public class MQAdminUtils {
 
 
     public static ClientMetadata getBrokerMetadata(DefaultMQAdminExt defaultMQAdminExt) throws InterruptedException, RemotingConnectException, RemotingTimeoutException, RemotingSendRequestException, MQBrokerException {
-        ClientMetadata clientMetadata  = new ClientMetadata();
+        ClientMetadata clientMetadata = new ClientMetadata();
         refreshClusterInfo(defaultMQAdminExt, clientMetadata);
         return clientMetadata;
     }
 
     public static ClientMetadata getBrokerAndTopicMetadata(String topic, DefaultMQAdminExt defaultMQAdminExt) throws InterruptedException, RemotingException, MQBrokerException {
-        ClientMetadata clientMetadata  = new ClientMetadata();
+        ClientMetadata clientMetadata = new ClientMetadata();
         refreshClusterInfo(defaultMQAdminExt, clientMetadata);
         refreshTopicRouteInfo(topic, defaultMQAdminExt, clientMetadata);
         return clientMetadata;
     }
 
     public static void refreshClusterInfo(DefaultMQAdminExt defaultMQAdminExt, ClientMetadata clientMetadata) throws InterruptedException, MQBrokerException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
-        ClusterInfo clusterInfo  = defaultMQAdminExt.examineBrokerClusterInfo();
+        ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
         if (clusterInfo == null
                 || clusterInfo.getClusterAddrTable().isEmpty()) {
             throw new RuntimeException("The Cluster info is empty");
@@ -89,13 +81,13 @@ public class MQAdminUtils {
     }
 
     public static Set<String> getAllBrokersInSameCluster(Collection<String> brokers, DefaultMQAdminExt defaultMQAdminExt) throws InterruptedException, MQBrokerException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
-        ClusterInfo clusterInfo  = defaultMQAdminExt.examineBrokerClusterInfo();
+        ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
         if (clusterInfo == null
                 || clusterInfo.getClusterAddrTable().isEmpty()) {
             throw new RuntimeException("The Cluster info is empty");
         }
         Set<String> allBrokers = new HashSet<>();
-        for (String broker: brokers) {
+        for (String broker : brokers) {
             if (allBrokers.contains(broker)) {
                 continue;
             }
@@ -109,13 +101,13 @@ public class MQAdminUtils {
         return allBrokers;
     }
 
-    public static  void completeNoTargetBrokers(Map<String, TopicConfigAndQueueMapping> brokerConfigMap, DefaultMQAdminExt defaultMQAdminExt) throws InterruptedException, RemotingConnectException, RemotingTimeoutException, RemotingSendRequestException, MQBrokerException {
+    public static void completeNoTargetBrokers(Map<String, TopicConfigAndQueueMapping> brokerConfigMap, DefaultMQAdminExt defaultMQAdminExt) throws InterruptedException, RemotingConnectException, RemotingTimeoutException, RemotingSendRequestException, MQBrokerException {
         TopicConfigAndQueueMapping configMapping = brokerConfigMap.values().iterator().next();
         String topic = configMapping.getTopicName();
         int queueNum = configMapping.getMappingDetail().getTotalQueues();
         long newEpoch = configMapping.getMappingDetail().getEpoch();
         Set<String> allBrokers = getAllBrokersInSameCluster(brokerConfigMap.keySet(), defaultMQAdminExt);
-        for (String broker: allBrokers) {
+        for (String broker : allBrokers) {
             if (!brokerConfigMap.containsKey(broker)) {
                 brokerConfigMap.put(broker, new TopicConfigAndQueueMapping(new TopicConfig(topic, 0, 0), new TopicQueueMappingDetail(topic, queueNum, broker, newEpoch)));
             }
@@ -149,19 +141,19 @@ public class MQAdminUtils {
         MQAdminUtils.checkIfMasterAlive(brokerConfigMap.keySet(), defaultMQAdminExt, clientMetadata);
         // now do the remapping
         //Step1: let the new leader can be written without the logicOffset
-        for (String broker: brokersToMapIn) {
+        for (String broker : brokersToMapIn) {
             String addr = clientMetadata.findMasterBrokerAddr(broker);
             TopicConfigAndQueueMapping configMapping = brokerConfigMap.get(broker);
             defaultMQAdminExt.createStaticTopic(addr, defaultMQAdminExt.getCreateTopicKey(), configMapping, configMapping.getMappingDetail(), force);
         }
         //Step2: forbid to write of old leader
-        for (String broker: brokersToMapOut) {
+        for (String broker : brokersToMapOut) {
             String addr = clientMetadata.findMasterBrokerAddr(broker);
             TopicConfigAndQueueMapping configMapping = brokerConfigMap.get(broker);
             defaultMQAdminExt.createStaticTopic(addr, defaultMQAdminExt.getCreateTopicKey(), configMapping, configMapping.getMappingDetail(), force);
         }
         //Step3: decide the logic offset
-        for (String broker: brokersToMapOut) {
+        for (String broker : brokersToMapOut) {
             String addr = clientMetadata.findMasterBrokerAddr(broker);
             TopicStatsTable statsTable = defaultMQAdminExt.examineTopicStats(addr, topic);
             TopicConfigAndQueueMapping mapOutConfig = brokerConfigMap.get(broker);
@@ -173,7 +165,7 @@ public class MQAdminUtils {
                 }
                 LogicQueueMappingItem newLeader = items.get(items.size() - 1);
                 LogicQueueMappingItem oldLeader = items.get(items.size() - 2);
-                if (newLeader.getLogicOffset()  > 0) {
+                if (newLeader.getLogicOffset() > 0) {
                     continue;
                 }
                 TopicOffset topicOffset = statsTable.getOffsetTable().get(new MessageQueue(topic, oldLeader.getBname(), oldLeader.getQueueId()));
@@ -191,13 +183,13 @@ public class MQAdminUtils {
             }
         }
         //Step4: write to the new leader with logic offset
-        for (String broker: brokersToMapIn) {
+        for (String broker : brokersToMapIn) {
             String addr = clientMetadata.findMasterBrokerAddr(broker);
             TopicConfigAndQueueMapping configMapping = brokerConfigMap.get(broker);
             defaultMQAdminExt.createStaticTopic(addr, defaultMQAdminExt.getCreateTopicKey(), configMapping, configMapping.getMappingDetail(), force);
         }
         //Step5: write the non-target brokers
-        for (String broker: brokerConfigMap.keySet()) {
+        for (String broker : brokerConfigMap.keySet()) {
             if (brokersToMapIn.contains(broker) || brokersToMapOut.contains(broker)) {
                 continue;
             }
@@ -207,7 +199,7 @@ public class MQAdminUtils {
         }
     }
 
-    public static Map<String, TopicConfigAndQueueMapping> examineTopicConfigAll(String topic, DefaultMQAdminExt defaultMQAdminExt) throws RemotingException,  InterruptedException, MQBrokerException {
+    public static Map<String, TopicConfigAndQueueMapping> examineTopicConfigAll(String topic, DefaultMQAdminExt defaultMQAdminExt) throws RemotingException, InterruptedException, MQBrokerException {
         Map<String, TopicConfigAndQueueMapping> brokerConfigMap = new HashMap<>();
         ClientMetadata clientMetadata = new ClientMetadata();
         //check all the brokers
@@ -227,7 +219,7 @@ public class MQAdminUtils {
                     }
                     brokerConfigMap.put(broker, mapping);
                 }
-            }  catch (MQBrokerException exception1) {
+            } catch (MQBrokerException exception1) {
                 if (exception1.getResponseCode() != ResponseCode.TOPIC_NOT_EXIST) {
                     throw exception1;
                 }
@@ -237,7 +229,7 @@ public class MQAdminUtils {
     }
 
 
-    public static Map<String, TopicConfigAndQueueMapping> examineTopicConfigFromRoute(String topic, TopicRouteData topicRouteData, DefaultMQAdminExt defaultMQAdminExt) throws RemotingException,  InterruptedException, MQBrokerException {
+    public static Map<String, TopicConfigAndQueueMapping> examineTopicConfigFromRoute(String topic, TopicRouteData topicRouteData, DefaultMQAdminExt defaultMQAdminExt) throws RemotingException, InterruptedException, MQBrokerException {
         Map<String, TopicConfigAndQueueMapping> brokerConfigMap = new HashMap<>();
         for (BrokerData bd : topicRouteData.getBrokerDatas()) {
             String broker = bd.getBrokerName();
@@ -265,17 +257,17 @@ public class MQAdminUtils {
 
     public static void convertPhysicalTopicStats(String topic, Map<String, TopicConfigAndQueueMapping> brokerConfigMap, TopicStatsTable topicStatsTable) {
         Map<Integer, TopicQueueMappingOne> globalIdMap = checkAndBuildMappingItems(getMappingDetailFromConfig(brokerConfigMap.values()), true, false);
-        for (Map.Entry<Integer, TopicQueueMappingOne> entry: globalIdMap.entrySet()) {
+        for (Map.Entry<Integer, TopicQueueMappingOne> entry : globalIdMap.entrySet()) {
             Integer qid = entry.getKey();
-            TopicQueueMappingOne mappingOne =  entry.getValue();
+            TopicQueueMappingOne mappingOne = entry.getValue();
             LogicQueueMappingItem minItem = TopicQueueMappingUtils.findLogicQueueMappingItem(mappingOne.getItems(), 0, true);
             LogicQueueMappingItem maxItem = TopicQueueMappingUtils.findLogicQueueMappingItem(mappingOne.getItems(), Long.MAX_VALUE, true);
-            assert  minItem != null && maxItem != null;
+            assert minItem != null && maxItem != null;
             TopicOffset minTopicOffset = topicStatsTable.getOffsetTable().get(new MessageQueue(topic, minItem.getBname(), minItem.getQueueId()));
             TopicOffset maxTopicOffset = topicStatsTable.getOffsetTable().get(new MessageQueue(topic, maxItem.getBname(), maxItem.getQueueId()));
 
             if (minTopicOffset == null
-                || maxTopicOffset == null) {
+                    || maxTopicOffset == null) {
                 continue;
             }
             long min = minItem.computeStaticQueueOffsetLoosely(minTopicOffset.getMinOffset());
@@ -316,21 +308,21 @@ public class MQAdminUtils {
                 }
 
                 if (consumerOffset == -1
-                    && phyOffsetWrapper.getConsumerOffset() >= 0) {
+                        && phyOffsetWrapper.getConsumerOffset() >= 0) {
                     consumerOffset = phyOffsetWrapper.getConsumerOffset();
                     lastTimestamp = phyOffsetWrapper.getLastTimestamp();
                 }
                 if (brokerOffset == -1
-                    && item.getLogicOffset() >= 0) {
+                        && item.getLogicOffset() >= 0) {
                     brokerOffset = item.computeStaticQueueOffsetStrictly(phyOffsetWrapper.getBrokerOffset());
                 }
                 if (consumerOffset >= 0
-                    && brokerOffset >= 0) {
+                        && brokerOffset >= 0) {
                     break;
                 }
             }
             if (brokerOffset >= 0
-                && consumerOffset >= 0) {
+                    && consumerOffset >= 0) {
                 offsetWrapper.setBrokerOffset(brokerOffset);
                 offsetWrapper.setConsumerOffset(consumerOffset);
                 offsetWrapper.setLastTimestamp(lastTimestamp);

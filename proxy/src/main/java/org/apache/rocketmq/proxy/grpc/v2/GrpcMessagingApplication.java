@@ -17,40 +17,10 @@
 
 package org.apache.rocketmq.proxy.grpc.v2;
 
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.AckMessageResponse;
-import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
-import apache.rocketmq.v2.ChangeInvisibleDurationResponse;
-import apache.rocketmq.v2.Code;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.EndTransactionResponse;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueRequest;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueResponse;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.HeartbeatResponse;
-import apache.rocketmq.v2.MessagingServiceGrpc;
-import apache.rocketmq.v2.NotifyClientTerminationRequest;
-import apache.rocketmq.v2.NotifyClientTerminationResponse;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryAssignmentResponse;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.QueryRouteResponse;
-import apache.rocketmq.v2.RecallMessageRequest;
-import apache.rocketmq.v2.RecallMessageResponse;
-import apache.rocketmq.v2.ReceiveMessageRequest;
-import apache.rocketmq.v2.ReceiveMessageResponse;
-import apache.rocketmq.v2.SendMessageRequest;
-import apache.rocketmq.v2.SendMessageResponse;
-import apache.rocketmq.v2.Status;
-import apache.rocketmq.v2.TelemetryCommand;
+import apache.rocketmq.v2.*;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.constant.GrpcConstants;
@@ -71,13 +41,16 @@ import org.apache.rocketmq.proxy.grpc.v2.common.ResponseBuilder;
 import org.apache.rocketmq.proxy.grpc.v2.common.ResponseWriter;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
 public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServiceImplBase implements StartAndShutdown {
     private final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
-
-    private final GrpcMessagingActivity grpcMessagingActivity;
-
     protected final RequestPipeline requestPipeline;
-
+    private final GrpcMessagingActivity grpcMessagingActivity;
     protected ThreadPoolExecutor routeThreadPoolExecutor;
     protected ThreadPoolExecutor producerThreadPoolExecutor;
     protected ThreadPoolExecutor consumerThreadPoolExecutor;
@@ -91,47 +64,62 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
 
         ProxyConfig config = ConfigurationManager.getProxyConfig();
         this.routeThreadPoolExecutor = ThreadPoolMonitor.createAndMonitor(
-            config.getGrpcRouteThreadPoolNums(),
-            config.getGrpcRouteThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "GrpcRouteThreadPool",
-            config.getGrpcRouteThreadQueueCapacity()
+                config.getGrpcRouteThreadPoolNums(),
+                config.getGrpcRouteThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "GrpcRouteThreadPool",
+                config.getGrpcRouteThreadQueueCapacity()
         );
         this.producerThreadPoolExecutor = ThreadPoolMonitor.createAndMonitor(
-            config.getGrpcProducerThreadPoolNums(),
-            config.getGrpcProducerThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "GrpcProducerThreadPool",
-            config.getGrpcProducerThreadQueueCapacity()
+                config.getGrpcProducerThreadPoolNums(),
+                config.getGrpcProducerThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "GrpcProducerThreadPool",
+                config.getGrpcProducerThreadQueueCapacity()
         );
         this.consumerThreadPoolExecutor = ThreadPoolMonitor.createAndMonitor(
-            config.getGrpcConsumerThreadPoolNums(),
-            config.getGrpcConsumerThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "GrpcConsumerThreadPool",
-            config.getGrpcConsumerThreadQueueCapacity()
+                config.getGrpcConsumerThreadPoolNums(),
+                config.getGrpcConsumerThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "GrpcConsumerThreadPool",
+                config.getGrpcConsumerThreadQueueCapacity()
         );
         this.clientManagerThreadPoolExecutor = ThreadPoolMonitor.createAndMonitor(
-            config.getGrpcClientManagerThreadPoolNums(),
-            config.getGrpcClientManagerThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "GrpcClientManagerThreadPool",
-            config.getGrpcClientManagerThreadQueueCapacity()
+                config.getGrpcClientManagerThreadPoolNums(),
+                config.getGrpcClientManagerThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "GrpcClientManagerThreadPool",
+                config.getGrpcClientManagerThreadQueueCapacity()
         );
         this.transactionThreadPoolExecutor = ThreadPoolMonitor.createAndMonitor(
-            config.getGrpcTransactionThreadPoolNums(),
-            config.getGrpcTransactionThreadPoolNums(),
-            1,
-            TimeUnit.MINUTES,
-            "GrpcTransactionThreadPool",
-            config.getGrpcTransactionThreadQueueCapacity()
+                config.getGrpcTransactionThreadPoolNums(),
+                config.getGrpcTransactionThreadPoolNums(),
+                1,
+                TimeUnit.MINUTES,
+                "GrpcTransactionThreadPool",
+                config.getGrpcTransactionThreadQueueCapacity()
         );
 
         this.init();
+    }
+
+    public static GrpcMessagingApplication create(MessagingProcessor messagingProcessor) {
+        RequestPipeline pipeline = (context, headers, request) -> {
+        };
+        // add pipeline
+        // the last pipe add will execute at the first
+        AuthConfig authConfig = ConfigurationManager.getAuthConfig();
+        if (authConfig != null) {
+            pipeline = pipeline
+                    .pipe(new AuthorizationPipeline(authConfig, messagingProcessor))
+                    .pipe(new AuthenticationPipeline(authConfig, messagingProcessor));
+        }
+        pipeline = pipeline.pipe(new ContextInitPipeline());
+        return new GrpcMessagingApplication(new DefaultGrpcMessagingActivity(messagingProcessor), pipeline);
     }
 
     protected void init() {
@@ -144,21 +132,6 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         this.transactionThreadPoolExecutor.setRejectedExecutionHandler(rejectedExecutionHandler);
     }
 
-    public static GrpcMessagingApplication create(MessagingProcessor messagingProcessor) {
-        RequestPipeline pipeline = (context, headers, request) -> {
-        };
-        // add pipeline
-        // the last pipe add will execute at the first
-        AuthConfig authConfig = ConfigurationManager.getAuthConfig();
-        if (authConfig != null) {
-            pipeline = pipeline
-                .pipe(new AuthorizationPipeline(authConfig, messagingProcessor))
-                .pipe(new AuthenticationPipeline(authConfig, messagingProcessor));
-        }
-        pipeline = pipeline.pipe(new ContextInitPipeline());
-        return new GrpcMessagingApplication(new DefaultGrpcMessagingActivity(messagingProcessor), pipeline);
-    }
-
     protected Status flowLimitStatus() {
         return ResponseBuilder.getInstance().buildStatus(Code.TOO_MANY_REQUESTS, "flow limit");
     }
@@ -168,7 +141,7 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
     }
 
     protected <V, T> void addExecutor(ExecutorService executor, ProxyContext context, V request, Runnable runnable,
-        StreamObserver<T> responseObserver, Function<Status, T> statusResponseCreator) {
+                                      StreamObserver<T> responseObserver, Function<Status, T> statusResponseCreator) {
         if (request instanceof GeneratedMessageV3) {
             requestPipeline.execute(context, GrpcConstants.METADATA.get(Context.current()), (GeneratedMessageV3) request);
             validateContext(context);
@@ -179,11 +152,11 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
     }
 
     protected <V, T> void writeResponse(ProxyContext context, V request, T response, StreamObserver<T> responseObserver,
-        Throwable t, Function<Status, T> errorResponseCreator) {
+                                        Throwable t, Function<Status, T> errorResponseCreator) {
         if (t != null) {
             ResponseWriter.getInstance().write(
-                responseObserver,
-                errorResponseCreator.apply(convertExceptionToStatus(t))
+                    responseObserver,
+                    errorResponseCreator.apply(convertExceptionToStatus(t))
             );
         } else {
             ResponseWriter.getInstance().write(responseObserver, response);
@@ -206,12 +179,12 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.routeThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.queryRoute(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.queryRoute(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -223,12 +196,12 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.clientManagerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.heartbeat(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.heartbeat(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -240,12 +213,12 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.producerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.sendMessage(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.sendMessage(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -253,17 +226,17 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
 
     @Override
     public void queryAssignment(QueryAssignmentRequest request,
-        StreamObserver<QueryAssignmentResponse> responseObserver) {
+                                StreamObserver<QueryAssignmentResponse> responseObserver) {
         Function<Status, QueryAssignmentResponse> statusResponseCreator = status -> QueryAssignmentResponse.newBuilder().setStatus(status).build();
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.routeThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.queryAssignment(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.queryAssignment(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -275,11 +248,11 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.consumerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.receiveMessage(context, request, responseObserver),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.receiveMessage(context, request, responseObserver),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -291,12 +264,12 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.consumerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.ackMessage(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.ackMessage(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -304,17 +277,17 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
 
     @Override
     public void forwardMessageToDeadLetterQueue(ForwardMessageToDeadLetterQueueRequest request,
-        StreamObserver<ForwardMessageToDeadLetterQueueResponse> responseObserver) {
+                                                StreamObserver<ForwardMessageToDeadLetterQueueResponse> responseObserver) {
         Function<Status, ForwardMessageToDeadLetterQueueResponse> statusResponseCreator = status -> ForwardMessageToDeadLetterQueueResponse.newBuilder().setStatus(status).build();
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.producerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.forwardMessageToDeadLetterQueue(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.forwardMessageToDeadLetterQueue(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -326,12 +299,12 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.transactionThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.endTransaction(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.endTransaction(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -339,17 +312,17 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
 
     @Override
     public void notifyClientTermination(NotifyClientTerminationRequest request,
-        StreamObserver<NotifyClientTerminationResponse> responseObserver) {
+                                        StreamObserver<NotifyClientTerminationResponse> responseObserver) {
         Function<Status, NotifyClientTerminationResponse> statusResponseCreator = status -> NotifyClientTerminationResponse.newBuilder().setStatus(status).build();
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.clientManagerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.notifyClientTermination(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.notifyClientTermination(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -357,10 +330,10 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
 
     @Override
     public void changeInvisibleDuration(ChangeInvisibleDurationRequest request,
-        StreamObserver<ChangeInvisibleDurationResponse> responseObserver) {
+                                        StreamObserver<ChangeInvisibleDurationResponse> responseObserver) {
         Function<Status, ChangeInvisibleDurationResponse> statusResponseCreator = status -> {
             ChangeInvisibleDurationResponse.Builder builder =
-                ChangeInvisibleDurationResponse.newBuilder().setStatus(status);
+                    ChangeInvisibleDurationResponse.newBuilder().setStatus(status);
             if (Code.TOO_MANY_REQUESTS.equals(status.getCode())) {
                 builder.setReceiptHandle(request.getReceiptHandle());
             }
@@ -369,12 +342,12 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.consumerThreadPoolExecutor,
-                context,
-                request,
-                () -> grpcMessagingActivity.changeInvisibleDuration(context, request)
-                    .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.changeInvisibleDuration(context, request)
+                            .whenComplete((response, throwable) -> writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -383,17 +356,17 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
     @Override
     public void recallMessage(RecallMessageRequest request, StreamObserver<RecallMessageResponse> responseObserver) {
         Function<Status, RecallMessageResponse> statusResponseCreator =
-            status -> RecallMessageResponse.newBuilder().setStatus(status).build();
+                status -> RecallMessageResponse.newBuilder().setStatus(status).build();
         ProxyContext context = createContext();
         try {
             this.addExecutor(this.producerThreadPoolExecutor, // reuse producer thread pool
-                context,
-                request,
-                () -> grpcMessagingActivity.recallMessage(context, request)
-                    .whenComplete((response, throwable) ->
-                        writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
-                responseObserver,
-                statusResponseCreator);
+                    context,
+                    request,
+                    () -> grpcMessagingActivity.recallMessage(context, request)
+                            .whenComplete((response, throwable) ->
+                                    writeResponse(context, request, response, responseObserver, throwable, statusResponseCreator)),
+                    responseObserver,
+                    statusResponseCreator);
         } catch (Throwable t) {
             writeResponse(context, request, null, responseObserver, t, statusResponseCreator);
         }
@@ -409,11 +382,11 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
                 ProxyContext context = createContext();
                 try {
                     addExecutor(clientManagerThreadPoolExecutor,
-                        context,
-                        value,
-                        () -> responseTelemetryCommand.onNext(context, value),
-                        responseObserver,
-                        statusResponseCreator);
+                            context,
+                            value,
+                            () -> responseTelemetryCommand.onNext(context, value),
+                            responseObserver,
+                            statusResponseCreator);
                 } catch (Throwable t) {
                     writeResponse(context, value, null, responseObserver, t, statusResponseCreator);
                 }
@@ -457,7 +430,7 @@ public class GrpcMessagingApplication extends MessagingServiceGrpc.MessagingServ
         protected final StreamObserver<T> streamObserver;
 
         public GrpcTask(Runnable runnable, ProxyContext context, V request, StreamObserver<T> streamObserver,
-            T executeRejectResponse) {
+                        T executeRejectResponse) {
             this.runnable = runnable;
             this.context = context;
             this.streamObserver = streamObserver;

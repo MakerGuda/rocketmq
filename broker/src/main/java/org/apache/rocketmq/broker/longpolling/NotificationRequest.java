@@ -16,11 +16,10 @@
  */
 package org.apache.rocketmq.broker.longpolling;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import io.netty.channel.Channel;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
-import io.netty.channel.Channel;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Broker 子系统组件 <b>NotificationRequest</b>（Notification Request）。

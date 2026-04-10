@@ -17,9 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.tag;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.test.base.BaseConf;
@@ -33,6 +30,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Collection;
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -60,9 +60,9 @@ public class TagMessageWithMulConsumerIT extends BaseConf {
         String tag2 = "jueyin2";
         int msgSize = 10;
         RMQNormalConsumer consumerTag1 = getConsumer(NAMESRV_ADDR, topic, tag1,
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQNormalConsumer consumerTag2 = getConsumer(NAMESRV_ADDR, topic, tag2,
-            new RMQNormalListener());
+                new RMQNormalListener());
 
         List<Object> tag1Msgs = MQMessageFactory.getRMQMessage(tag1, topic, msgSize);
         producer.send(tag1Msgs);
@@ -72,16 +72,16 @@ public class TagMessageWithMulConsumerIT extends BaseConf {
         Assert.assertEquals("Not all are sent", msgSize * 2, producer.getAllUndupMsgBody().size());
 
         consumerTag1.getListener().waitForMessageConsume(MQMessageFactory.getMessageBody(tag1Msgs),
-            CONSUME_TIME);
+                CONSUME_TIME);
         consumerTag2.getListener().waitForMessageConsume(MQMessageFactory.getMessageBody(tag2Msgs),
-            CONSUME_TIME);
+                CONSUME_TIME);
 
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerTag1.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(MQMessageFactory.getMessageBody(tag1Msgs));
+                consumerTag1.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(MQMessageFactory.getMessageBody(tag1Msgs));
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerTag2.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(MQMessageFactory.getMessageBody(tag2Msgs));
+                consumerTag2.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(MQMessageFactory.getMessageBody(tag2Msgs));
     }
 
     @Test
@@ -91,26 +91,26 @@ public class TagMessageWithMulConsumerIT extends BaseConf {
 
         TagMessage tagMessage = new TagMessage(tags, topic, msgSize);
         RMQNormalConsumer consumerTag1 = getConsumer(NAMESRV_ADDR, topic, tags[0],
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQNormalConsumer consumerTag2 = getConsumer(NAMESRV_ADDR, topic, tags[1],
-            new RMQNormalListener());
+                new RMQNormalListener());
 
         List<Object> tagMsgs = tagMessage.getMixedTagMessages();
         producer.send(tagMsgs);
         Assert.assertEquals("Not all are sent", msgSize * tags.length,
-            producer.getAllUndupMsgBody().size());
+                producer.getAllUndupMsgBody().size());
 
         consumerTag1.getListener().waitForMessageConsume(tagMessage.getMessageBodyByTag(tags[0]),
-            CONSUME_TIME);
+                CONSUME_TIME);
         consumerTag2.getListener().waitForMessageConsume(tagMessage.getMessageBodyByTag(tags[1]),
-            CONSUME_TIME);
+                CONSUME_TIME);
 
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerTag1.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
+                consumerTag1.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerTag2.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[1]));
+                consumerTag2.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[1]));
     }
 
     @Test
@@ -122,26 +122,26 @@ public class TagMessageWithMulConsumerIT extends BaseConf {
 
         TagMessage tagMessage = new TagMessage(tags, topic, msgSize);
         RMQNormalConsumer consumerTag1 = getConsumer(NAMESRV_ADDR, topic, sub1,
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQNormalConsumer consumerTag2 = getConsumer(NAMESRV_ADDR, topic, sub2,
-            new RMQNormalListener());
+                new RMQNormalListener());
 
         List<Object> tagMsgs = tagMessage.getMixedTagMessages();
         producer.send(tagMsgs);
         Assert.assertEquals("Not all are sent", msgSize * tags.length,
-            producer.getAllUndupMsgBody().size());
+                producer.getAllUndupMsgBody().size());
 
         consumerTag1.getListener().waitForMessageConsume(tagMessage.getMessageBodyByTag(tags),
-            CONSUME_TIME);
+                CONSUME_TIME);
         consumerTag2.getListener().waitForMessageConsume(tagMessage.getMessageBodyByTag(tags[0]),
-            CONSUME_TIME);
+                CONSUME_TIME);
 
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerTag1.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getAllTagMessageBody());
+                consumerTag1.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getAllTagMessageBody());
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerTag2.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
+                consumerTag2.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
     }
 
     @Test
@@ -154,13 +154,13 @@ public class TagMessageWithMulConsumerIT extends BaseConf {
         int msgSize = 10;
 
         RMQNormalConsumer consumerSubTwoMatchAll = getConsumer(NAMESRV_ADDR, topic, sub1,
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQNormalConsumer consumerSubTwoMachieOne = getConsumer(NAMESRV_ADDR, topic, sub2,
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQNormalConsumer consumerSubTag1 = getConsumer(NAMESRV_ADDR, topic, sub3,
-            new RMQNormalListener());
+                new RMQNormalListener());
         RMQNormalConsumer consumerSubAll = getConsumer(NAMESRV_ADDR, topic, sub4,
-            new RMQNormalListener());
+                new RMQNormalListener());
 
         producer.send(msgSize);
         Assert.assertEquals("Not all are sent", msgSize, producer.getAllUndupMsgBody().size());
@@ -172,27 +172,27 @@ public class TagMessageWithMulConsumerIT extends BaseConf {
         Assert.assertEquals("Not all are sent", msgSize * 3, producer.getAllUndupMsgBody().size());
 
         consumerSubTwoMatchAll.getListener()
-            .waitForMessageConsume(tagMessage.getMessageBodyByTag(tags), CONSUME_TIME);
+                .waitForMessageConsume(tagMessage.getMessageBodyByTag(tags), CONSUME_TIME);
         consumerSubTwoMachieOne.getListener()
-            .waitForMessageConsume(tagMessage.getMessageBodyByTag(tags[0]), CONSUME_TIME);
+                .waitForMessageConsume(tagMessage.getMessageBodyByTag(tags[0]), CONSUME_TIME);
         consumerSubTag1.getListener().waitForMessageConsume(tagMessage.getMessageBodyByTag(tags[0]),
-            CONSUME_TIME);
+                CONSUME_TIME);
         consumerSubAll.getListener().waitForMessageConsume(
-            MQMessageFactory.getMessage(msgsWithNoTag, tagMessage.getAllTagMessageBody()),
-            CONSUME_TIME);
+                MQMessageFactory.getMessage(msgsWithNoTag, tagMessage.getAllTagMessageBody()),
+                CONSUME_TIME);
 
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerSubTwoMatchAll.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getAllTagMessageBody());
+                consumerSubTwoMatchAll.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getAllTagMessageBody());
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerSubTwoMachieOne.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
+                consumerSubTwoMachieOne.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerSubTag1.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
+                consumerSubTag1.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(tagMessage.getMessageBodyByTag(tags[0]));
         assertThat(VerifyUtils.getFilterdMessage(producer.getAllMsgBody(),
-            consumerSubAll.getListener().getAllMsgBody()))
-            .containsExactlyElementsIn(MQMessageFactory.getMessage(msgsWithNoTag,
-                tagMessage.getAllTagMessageBody()));
+                consumerSubAll.getListener().getAllMsgBody()))
+                .containsExactlyElementsIn(MQMessageFactory.getMessage(msgsWithNoTag,
+                        tagMessage.getAllTagMessageBody()));
     }
 }

@@ -16,16 +16,17 @@
  */
 package org.apache.rocketmq.broker.loadbalance;
 
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.BrokerPathConfigHelper;
 import org.apache.rocketmq.common.ConfigManager;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.body.SetMessageRequestModeRequestBody;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * <b>MessageRequestModeManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
- * 
+ * <p>
  * 继承关系：<code>ConfigManager</code>。
  */
 public class MessageRequestModeManager extends ConfigManager {
@@ -33,7 +34,7 @@ public class MessageRequestModeManager extends ConfigManager {
     private transient BrokerController brokerController;
 
     private ConcurrentHashMap<String/*topic*/, ConcurrentHashMap<String/*consumerGroup*/, SetMessageRequestModeRequestBody>>
-        messageRequestModeMap = new ConcurrentHashMap<>();
+            messageRequestModeMap = new ConcurrentHashMap<>();
 
     public MessageRequestModeManager() {
         // empty construct for decode
@@ -48,7 +49,7 @@ public class MessageRequestModeManager extends ConfigManager {
         if (consumerGroup2ModeMap == null) {
             consumerGroup2ModeMap = new ConcurrentHashMap<>();
             ConcurrentHashMap<String, SetMessageRequestModeRequestBody> pre =
-                messageRequestModeMap.putIfAbsent(topic, consumerGroup2ModeMap);
+                    messageRequestModeMap.putIfAbsent(topic, consumerGroup2ModeMap);
             if (pre != null) {
                 consumerGroup2ModeMap = pre;
             }

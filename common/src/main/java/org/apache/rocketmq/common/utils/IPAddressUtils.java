@@ -16,10 +16,11 @@
  */
 package org.apache.rocketmq.common.utils;
 
-import java.math.BigInteger;
-import java.net.InetAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
+
+import java.math.BigInteger;
+import java.net.InetAddress;
 
 public class IPAddressUtils {
 

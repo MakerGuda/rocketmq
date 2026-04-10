@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingDetail;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingInfo;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TopicConfigAndMappingSerializeWrapper extends TopicConfigSerializeWrapper {
     private Map<String/* topic */, TopicQueueMappingInfo> topicQueueMappingInfoMap = new ConcurrentHashMap<>();
@@ -30,6 +31,15 @@ public class TopicConfigAndMappingSerializeWrapper extends TopicConfigSerializeW
 
     private DataVersion mappingDataVersion = new DataVersion();
 
+    public static TopicConfigAndMappingSerializeWrapper from(TopicConfigSerializeWrapper wrapper) {
+        if (wrapper instanceof TopicConfigAndMappingSerializeWrapper) {
+            return (TopicConfigAndMappingSerializeWrapper) wrapper;
+        }
+        TopicConfigAndMappingSerializeWrapper mappingSerializeWrapper = new TopicConfigAndMappingSerializeWrapper();
+        mappingSerializeWrapper.setDataVersion(wrapper.getDataVersion());
+        mappingSerializeWrapper.setTopicConfigTable(wrapper.getTopicConfigTable());
+        return mappingSerializeWrapper;
+    }
 
     public Map<String, TopicQueueMappingInfo> getTopicQueueMappingInfoMap() {
         return topicQueueMappingInfoMap;
@@ -53,15 +63,5 @@ public class TopicConfigAndMappingSerializeWrapper extends TopicConfigSerializeW
 
     public void setMappingDataVersion(DataVersion mappingDataVersion) {
         this.mappingDataVersion = mappingDataVersion;
-    }
-
-    public static TopicConfigAndMappingSerializeWrapper from(TopicConfigSerializeWrapper wrapper) {
-        if (wrapper instanceof  TopicConfigAndMappingSerializeWrapper) {
-            return (TopicConfigAndMappingSerializeWrapper) wrapper;
-        }
-        TopicConfigAndMappingSerializeWrapper mappingSerializeWrapper =  new TopicConfigAndMappingSerializeWrapper();
-        mappingSerializeWrapper.setDataVersion(wrapper.getDataVersion());
-        mappingSerializeWrapper.setTopicConfigTable(wrapper.getTopicConfigTable());
-        return mappingSerializeWrapper;
     }
 }

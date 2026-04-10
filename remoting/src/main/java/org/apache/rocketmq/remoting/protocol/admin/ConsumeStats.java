@@ -16,11 +16,12 @@
  */
 package org.apache.rocketmq.remoting.protocol.admin;
 
+import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.rocketmq.common.message.MessageQueue;
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
 public class ConsumeStats extends RemotingSerializable {
     private Map<MessageQueue, OffsetWrapper> offsetTable = new ConcurrentHashMap<>();

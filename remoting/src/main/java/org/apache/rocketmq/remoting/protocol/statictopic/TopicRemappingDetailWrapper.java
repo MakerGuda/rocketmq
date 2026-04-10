@@ -16,11 +16,12 @@
  */
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
+import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
 public class TopicRemappingDetailWrapper extends RemotingSerializable {
     public static final String TYPE_CREATE_OR_UPDATE = "CREATE_OR_UPDATE";
@@ -57,47 +58,47 @@ public class TopicRemappingDetailWrapper extends RemotingSerializable {
         return topic;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public long getEpoch() {
-        return epoch;
-    }
-
-    public Map<String, TopicConfigAndQueueMapping> getBrokerConfigMap() {
-        return brokerConfigMap;
-    }
-
-    public Set<String> getBrokerToMapIn() {
-        return brokerToMapIn;
-    }
-
-    public Set<String> getBrokerToMapOut() {
-        return brokerToMapOut;
-    }
-
-    public void setBrokerConfigMap(Map<String, TopicConfigAndQueueMapping> brokerConfigMap) {
-        this.brokerConfigMap = brokerConfigMap;
-    }
-
-    public void setBrokerToMapIn(Set<String> brokerToMapIn) {
-        this.brokerToMapIn = brokerToMapIn;
-    }
-
-    public void setBrokerToMapOut(Set<String> brokerToMapOut) {
-        this.brokerToMapOut = brokerToMapOut;
-    }
-
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public void setType(String type) {
         this.type = type;
     }
 
+    public long getEpoch() {
+        return epoch;
+    }
+
     public void setEpoch(long epoch) {
         this.epoch = epoch;
+    }
+
+    public Map<String, TopicConfigAndQueueMapping> getBrokerConfigMap() {
+        return brokerConfigMap;
+    }
+
+    public void setBrokerConfigMap(Map<String, TopicConfigAndQueueMapping> brokerConfigMap) {
+        this.brokerConfigMap = brokerConfigMap;
+    }
+
+    public Set<String> getBrokerToMapIn() {
+        return brokerToMapIn;
+    }
+
+    public void setBrokerToMapIn(Set<String> brokerToMapIn) {
+        this.brokerToMapIn = brokerToMapIn;
+    }
+
+    public Set<String> getBrokerToMapOut() {
+        return brokerToMapOut;
+    }
+
+    public void setBrokerToMapOut(Set<String> brokerToMapOut) {
+        this.brokerToMapOut = brokerToMapOut;
     }
 }

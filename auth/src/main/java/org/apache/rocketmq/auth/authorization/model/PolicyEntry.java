@@ -16,11 +16,12 @@
  */
 package org.apache.rocketmq.auth.authorization.model;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.rocketmq.auth.authorization.enums.Decision;
+import org.apache.rocketmq.common.action.Action;
+
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.rocketmq.common.action.Action;
-import org.apache.rocketmq.auth.authorization.enums.Decision;
 
 public class PolicyEntry {
 
@@ -42,7 +43,7 @@ public class PolicyEntry {
     }
 
     public void updateEntry(List<Action> actions, Environment environment,
-        Decision decision) {
+                            Decision decision) {
         this.setActions(actions);
         this.setEnvironment(environment);
         this.setDecision(decision);
@@ -60,8 +61,8 @@ public class PolicyEntry {
             return true;
         }
         return actions.stream()
-            .anyMatch(action -> this.actions.contains(action)
-                || this.actions.contains(Action.ALL));
+                .anyMatch(action -> this.actions.contains(action)
+                        || this.actions.contains(Action.ALL));
     }
 
     public boolean isMatchEnvironment(Environment environment) {
@@ -83,7 +84,7 @@ public class PolicyEntry {
             return null;
         }
         return actions.stream().map(Action::getName)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     public Resource getResource() {

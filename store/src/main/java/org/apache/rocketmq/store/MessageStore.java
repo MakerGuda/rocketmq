@@ -20,14 +20,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.ViewBuilder;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.SystemClock;
@@ -41,6 +33,7 @@ import org.apache.rocketmq.store.ha.HAService;
 import org.apache.rocketmq.store.hook.PutMessageHook;
 import org.apache.rocketmq.store.hook.SendMessageBackHook;
 import org.apache.rocketmq.store.logfile.MappedFile;
+import org.apache.rocketmq.store.metrics.StoreMetricsManager;
 import org.apache.rocketmq.store.queue.ConsumeQueueInterface;
 import org.apache.rocketmq.store.queue.ConsumeQueueStoreInterface;
 import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
@@ -49,8 +42,16 @@ import org.apache.rocketmq.store.timer.TimerMessageStore;
 import org.apache.rocketmq.store.timer.rocksdb.TimerMessageRocksDBStore;
 import org.apache.rocketmq.store.transaction.TransMessageRocksDBStore;
 import org.apache.rocketmq.store.util.PerfCounter;
-import org.apache.rocketmq.store.metrics.StoreMetricsManager;
 import org.rocksdb.RocksDBException;
+
+import javax.annotation.Nonnull;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /**
  * This class defines contracting interfaces to implement, allowing third-party vendor to use customized message store.
@@ -131,11 +132,10 @@ public interface MessageStore {
      * @return Matched messages.
      */
     GetMessageResult getMessage(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final MessageFilter messageFilter);
+                                final long offset, final int maxMsgNums, final MessageFilter messageFilter);
 
     /**
      * Asynchronous get message
-     * @see #getMessage(String, String, int, long, int, MessageFilter) getMessage
      *
      * @param group         Consumer group that launches this query.
      * @param topic         Topic to query.
@@ -144,9 +144,10 @@ public interface MessageStore {
      * @param maxMsgNums    Maximum count of messages to query.
      * @param messageFilter Message filter used to screen desired messages.
      * @return Matched messages.
+     * @see #getMessage(String, String, int, long, int, MessageFilter) getMessage
      */
     CompletableFuture<GetMessageResult> getMessageAsync(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final MessageFilter messageFilter);
+                                                        final long offset, final int maxMsgNums, final MessageFilter messageFilter);
 
     /**
      * Query at most <code>maxMsgNums</code> messages belonging to <code>topic</code> at <code>queueId</code> starting
@@ -162,11 +163,10 @@ public interface MessageStore {
      * @return Matched messages.
      */
     GetMessageResult getMessage(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
+                                final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
 
     /**
      * Asynchronous get message
-     * @see #getMessage(String, String, int, long, int, int, MessageFilter) getMessage
      *
      * @param group           Consumer group that launches this query.
      * @param topic           Topic to query.
@@ -176,9 +176,10 @@ public interface MessageStore {
      * @param maxTotalMsgSize Maximum total msg size of the messages
      * @param messageFilter   Message filter used to screen desired messages.
      * @return Matched messages.
+     * @see #getMessage(String, String, int, long, int, int, MessageFilter) getMessage
      */
     CompletableFuture<GetMessageResult> getMessageAsync(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
+                                                        final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
 
     /**
      * Get maximum offset of the topic queue.
@@ -210,13 +211,13 @@ public interface MessageStore {
 
     TimerMessageStore getTimerMessageStore();
 
-    TimerMessageRocksDBStore getTimerMessageRocksDBStore();
-
-    TransMessageRocksDBStore getTransMessageRocksDBStore();
-
     void setTimerMessageStore(TimerMessageStore timerMessageStore);
 
+    TimerMessageRocksDBStore getTimerMessageRocksDBStore();
+
     void setTimerMessageRocksDBStore(TimerMessageRocksDBStore timerMessageRocksDBStore);
+
+    TransMessageRocksDBStore getTransMessageRocksDBStore();
 
     void setTransMessageRocksDBStore(TransMessageRocksDBStore transMessageRocksDBStore);
 
@@ -303,6 +304,7 @@ public interface MessageStore {
 
     /**
      * HA runtime information
+     *
      * @return runtime information of ha
      */
     HARuntimeInfo getHARuntimeInfo();
@@ -339,9 +341,9 @@ public interface MessageStore {
 
     /**
      * Asynchronous get the store time of the earliest message in this store.
-     * @see #getEarliestMessageTime() getEarliestMessageTime
      *
      * @return timestamp of the earliest message in this store.
+     * @see #getEarliestMessageTime() getEarliestMessageTime
      */
     CompletableFuture<Long> getEarliestMessageTimeAsync(final String topic, final int queueId);
 
@@ -357,15 +359,15 @@ public interface MessageStore {
 
     /**
      * Asynchronous get the store time of the message specified.
-     * @see #getMessageStoreTimeStamp(String, int, long) getMessageStoreTimeStamp
      *
      * @param topic              message topic.
      * @param queueId            queue ID.
      * @param consumeQueueOffset consume queue offset.
      * @return store timestamp of the message.
+     * @see #getMessageStoreTimeStamp(String, int, long) getMessageStoreTimeStamp
      */
     CompletableFuture<Long> getMessageStoreTimeStampAsync(final String topic, final int queueId,
-        final long consumeQueueOffset);
+                                                          final long consumeQueueOffset);
 
     /**
      * Get the total number of the messages in the specified queue.
@@ -419,22 +421,22 @@ public interface MessageStore {
      * @param end    end timestamp.
      */
     QueryMessageResult queryMessage(final String topic, final String key, final int maxNum, final long begin,
-        final long end);
+                                    final long end);
 
     QueryMessageResult queryMessage(final String topic, final String key, final int maxNum, final long begin, final long end, final String indexType, final String lastKey);
 
     /**
      * Asynchronous query messages by given key.
-     * @see #queryMessage(String, String, int, long, long) queryMessage
      *
      * @param topic  topic of the message.
      * @param key    message key.
      * @param maxNum maximum number of the messages possible.
      * @param begin  begin timestamp.
      * @param end    end timestamp.
+     * @see #queryMessage(String, String, int, long, long) queryMessage
      */
     CompletableFuture<QueryMessageResult> queryMessageAsync(final String topic, final String key, final int maxNum,
-        final long begin, final long end);
+                                                            final long begin, final long end);
 
     CompletableFuture<QueryMessageResult> queryMessageAsync(final String topic, final String key, final int maxNum, final long begin, final long end, final String indexType, final String lastKey);
 
@@ -615,6 +617,7 @@ public interface MessageStore {
 
     /**
      * Get consume queue of the topic/queue. If consume queue not exist, will create one then return it.
+     *
      * @param topic   Topic.
      * @param queueId Queue ID.
      * @return Consume queue.
@@ -645,10 +648,10 @@ public interface MessageStore {
      * @param commitLogFile   commit log file
      * @param isRecover       is from recover process
      * @param isFileEnd       if the dispatch request represents 'file end'
-     * @throws RocksDBException      only in rocksdb mode
+     * @throws RocksDBException only in rocksdb mode
      */
     void onCommitLogDispatch(DispatchRequest dispatchRequest, boolean doDispatch, MappedFile commitLogFile,
-        boolean isRecover, boolean isFileEnd) throws RocksDBException;
+                             boolean isRecover, boolean isFileEnd) throws RocksDBException;
 
     /**
      * Get the message store config
@@ -761,7 +764,7 @@ public interface MessageStore {
      * Assign a message to queue offset. If there is a race condition, you need to lock/unlock this method
      * yourself.
      *
-     * @param msg        message
+     * @param msg message
      * @throws RocksDBException
      */
     void assignOffset(MessageExtBrokerInner msg) throws RocksDBException;
@@ -799,18 +802,18 @@ public interface MessageStore {
     boolean getData(long offset, int size, ByteBuffer byteBuffer);
 
     /**
-     * Set the number of alive replicas in group.
-     *
-     * @param aliveReplicaNums number of alive replicas
-     */
-    void setAliveReplicaNumInGroup(int aliveReplicaNums);
-
-    /**
      * Get the number of alive replicas in group.
      *
      * @return number of alive replicas
      */
     int getAliveReplicaNumInGroup();
+
+    /**
+     * Set the number of alive replicas in group.
+     *
+     * @param aliveReplicaNums number of alive replicas
+     */
+    void setAliveReplicaNumInGroup(int aliveReplicaNums);
 
     /**
      * Wake up AutoRecoverHAClient to start HA connection.
@@ -825,18 +828,18 @@ public interface MessageStore {
     long getMasterFlushedOffset();
 
     /**
-     * Get broker init max offset.
-     *
-     * @return broker max offset in startup
-     */
-    long getBrokerInitMaxOffset();
-
-    /**
      * Set master flushed offset.
      *
      * @param masterFlushedOffset master flushed offset
      */
     void setMasterFlushedOffset(long masterFlushedOffset);
+
+    /**
+     * Get broker init max offset.
+     *
+     * @return broker max offset in startup
+     */
+    long getBrokerInitMaxOffset();
 
     /**
      * Set broker init max offset.
@@ -879,18 +882,18 @@ public interface MessageStore {
     List<PutMessageHook> getPutMessageHookList();
 
     /**
-     * Set send message back hook
-     *
-     * @param sendMessageBackHook
-     */
-    void setSendMessageBackHook(SendMessageBackHook sendMessageBackHook);
-
-    /**
      * Get send message back hook
      *
      * @return SendMessageBackHook
      */
     SendMessageBackHook getSendMessageBackHook();
+
+    /**
+     * Set send message back hook
+     *
+     * @param sendMessageBackHook
+     */
+    void setSendMessageBackHook(SendMessageBackHook sendMessageBackHook);
 
     //The following interfaces are used for duplication mode
 
@@ -947,7 +950,7 @@ public interface MessageStore {
      * @return DispatchRequest
      */
     DispatchRequest checkMessageAndReturnSize(final ByteBuffer byteBuffer, final boolean checkCRC,
-        final boolean checkDupInfo, final boolean readBody);
+                                              final boolean checkDupInfo, final boolean readBody);
 
     /**
      * Get remain transientStoreBuffer numbers

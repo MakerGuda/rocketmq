@@ -36,10 +36,6 @@ public enum MetricCollectorMode {
         this.modeString = modeString;
     }
 
-    public String getModeString() {
-        return modeString;
-    }
-
     public static MetricCollectorMode getEnumByString(String modeString) {
         for (MetricCollectorMode mode : MetricCollectorMode.values()) {
             if (mode.modeString.equals(modeString.toLowerCase())) {
@@ -47,5 +43,9 @@ public enum MetricCollectorMode {
             }
         }
         return OFF;
+    }
+
+    public String getModeString() {
+        return modeString;
     }
 }

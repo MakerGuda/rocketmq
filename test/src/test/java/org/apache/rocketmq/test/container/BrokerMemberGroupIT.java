@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.time.Duration;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.remoting.protocol.body.BrokerMemberGroup;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.time.Duration;
 
 import static org.awaitility.Awaitility.await;
 
@@ -32,7 +33,7 @@ public class BrokerMemberGroupIT extends ContainerIntegrationTestBase {
         await().atMost(Duration.ofSeconds(5)).until(() -> {
             final BrokerConfig brokerConfig = master1With3Replicas.getBrokerConfig();
             final BrokerMemberGroup memberGroup = master1With3Replicas.getBrokerOuterAPI()
-                .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
+                    .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
 
             return memberGroup.getBrokerAddrs().size() == 3;
         });
@@ -40,7 +41,7 @@ public class BrokerMemberGroupIT extends ContainerIntegrationTestBase {
         await().atMost(Duration.ofSeconds(5)).until(() -> {
             final BrokerConfig brokerConfig = master3With3Replicas.getBrokerConfig();
             final BrokerMemberGroup memberGroup = master3With3Replicas.getBrokerOuterAPI()
-                .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
+                    .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
 
             return memberGroup.getBrokerAddrs().size() == 3;
         });
@@ -51,7 +52,7 @@ public class BrokerMemberGroupIT extends ContainerIntegrationTestBase {
         await().atMost(Duration.ofSeconds(5)).until(() -> {
             final BrokerConfig brokerConfig = master1With3Replicas.getBrokerConfig();
             final BrokerMemberGroup memberGroup = master1With3Replicas.getBrokerOuterAPI()
-                .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
+                    .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
 
             return memberGroup.getBrokerAddrs().size() == 2 && memberGroup.getBrokerAddrs().get(1L) == null;
         });
@@ -59,7 +60,7 @@ public class BrokerMemberGroupIT extends ContainerIntegrationTestBase {
         await().atMost(Duration.ofSeconds(5)).until(() -> {
             final BrokerConfig brokerConfig = master3With3Replicas.getBrokerConfig();
             final BrokerMemberGroup memberGroup = master3With3Replicas.getBrokerOuterAPI()
-                .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
+                    .syncBrokerMemberGroup(brokerConfig.getBrokerClusterName(), brokerConfig.getBrokerName());
             return memberGroup.getBrokerAddrs().size() == 2 && memberGroup.getBrokerAddrs().get(1L) == null;
         });
 

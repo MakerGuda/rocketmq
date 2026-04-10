@@ -17,15 +17,15 @@
 
 package org.apache.rocketmq.store.ha;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class FlowMonitor extends ServiceThread {
     private final AtomicLong transferredByte = new AtomicLong(0L);
-    private volatile long transferredByteInSecond;
     protected MessageStoreConfig messageStoreConfig;
+    private volatile long transferredByteInSecond;
 
     public FlowMonitor(MessageStoreConfig messageStoreConfig) {
         this.messageStoreConfig = messageStoreConfig;

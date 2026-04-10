@@ -52,12 +52,12 @@ public class ChangeInvisibleTimeRequestHeader extends TopicQueueRequestHeader {
     public void checkFields() throws RemotingCommandException {
     }
 
-    public void setOffset(Long offset) {
-        this.offset = offset;
-    }
-
     public Long getOffset() {
         return offset;
+    }
+
+    public void setOffset(Long offset) {
+        this.offset = offset;
     }
 
     public Long getInvisibleTime() {
@@ -72,8 +72,8 @@ public class ChangeInvisibleTimeRequestHeader extends TopicQueueRequestHeader {
         return consumerGroup;
     }
 
-    public void setExtraInfo(String extraInfo) {
-        this.extraInfo = extraInfo;
+    public void setConsumerGroup(String consumerGroup) {
+        this.consumerGroup = consumerGroup;
     }
 
     /**
@@ -83,8 +83,8 @@ public class ChangeInvisibleTimeRequestHeader extends TopicQueueRequestHeader {
         return extraInfo;
     }
 
-    public void setConsumerGroup(String consumerGroup) {
-        this.consumerGroup = consumerGroup;
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
     }
 
     public String getTopic() {
@@ -106,12 +106,12 @@ public class ChangeInvisibleTimeRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("extraInfo", extraInfo)
-            .add("offset", offset)
-            .add("invisibleTime", invisibleTime)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("extraInfo", extraInfo)
+                .add("offset", offset)
+                .add("invisibleTime", invisibleTime)
+                .toString();
     }
 }

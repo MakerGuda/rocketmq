@@ -17,10 +17,11 @@
 
 package org.apache.rocketmq.tieredstore.index;
 
+import org.apache.rocketmq.tieredstore.common.AppendResult;
+
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import org.apache.rocketmq.tieredstore.common.AppendResult;
 
 public interface IndexService {
 
@@ -39,7 +40,7 @@ public interface IndexService {
      * @return The result of the put operation.
      */
     AppendResult putKey(
-        String topic, int topicId, int queueId, Set<String> keySet, long offset, int size, long timestamp);
+            String topic, int topicId, int queueId, Set<String> keySet, long offset, int size, long timestamp);
 
     /**
      * Asynchronously queries the index for a specific key within a given time range.
@@ -65,7 +66,9 @@ public interface IndexService {
      */
     default void forceShutdown() {
         shutdown();
-    };
+    }
+
+    ;
 
     /**
      * Destroys the index service and releases all resources.

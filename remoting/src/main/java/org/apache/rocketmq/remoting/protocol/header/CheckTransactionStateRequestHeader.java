@@ -97,11 +97,11 @@ public class CheckTransactionStateRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("tranStateTableOffset", tranStateTableOffset)
-            .add("commitLogOffset", commitLogOffset)
-            .add("msgId", msgId)
-            .add("transactionId", transactionId)
-            .add("offsetMsgId", offsetMsgId)
-            .toString();
+                .add("tranStateTableOffset", tranStateTableOffset)
+                .add("commitLogOffset", commitLogOffset)
+                .add("msgId", msgId)
+                .add("transactionId", transactionId)
+                .add("offsetMsgId", offsetMsgId)
+                .toString();
     }
 }

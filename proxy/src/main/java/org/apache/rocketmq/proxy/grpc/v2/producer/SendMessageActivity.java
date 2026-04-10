@@ -16,26 +16,13 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2.producer;
 
-import apache.rocketmq.v2.Code;
-import apache.rocketmq.v2.Encoding;
-import apache.rocketmq.v2.MessageType;
-import apache.rocketmq.v2.Resource;
-import apache.rocketmq.v2.SendMessageRequest;
-import apache.rocketmq.v2.SendMessageResponse;
-import apache.rocketmq.v2.SendResultEntry;
+import apache.rocketmq.v2.*;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
@@ -56,10 +43,14 @@ import org.apache.rocketmq.proxy.processor.QueueSelector;
 import org.apache.rocketmq.proxy.service.route.AddressableMessageQueue;
 import org.apache.rocketmq.proxy.service.route.MessageQueueView;
 
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 public class SendMessageActivity extends AbstractMessagingActivity {
 
     public SendMessageActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
+                               GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
     }
 
@@ -77,11 +68,11 @@ public class SendMessageActivity extends AbstractMessagingActivity {
             validateTopic(topic);
 
             future = this.messagingProcessor.sendMessage(
-                ctx,
-                new SendMessageQueueSelector(request),
-                topic.getName(),
-                buildSysFlag(message),
-                buildMessage(ctx, request.getMessagesList(), topic)
+                    ctx,
+                    new SendMessageQueueSelector(request),
+                    topic.getName(),
+                    buildSysFlag(message),
+                    buildMessage(ctx, request.getMessagesList(), topic)
             ).thenApply(result -> convertToSendMessageResponse(ctx, request, result));
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -90,7 +81,7 @@ public class SendMessageActivity extends AbstractMessagingActivity {
     }
 
     protected List<Message> buildMessage(ProxyContext context, List<apache.rocketmq.v2.Message> protoMessageList,
-        Resource topic) {
+                                         Resource topic) {
         String topicName = topic.getName();
         List<Message> messageExtList = new ArrayList<>();
         for (apache.rocketmq.v2.Message protoMessage : protoMessageList) {
@@ -255,7 +246,7 @@ public class SendMessageActivity extends AbstractMessagingActivity {
                 long transactionRecoverySecond = Durations.toSeconds(message.getSystemProperties().getOrphanedTransactionRecoveryDuration());
                 validateTransactionRecoverySecond(transactionRecoverySecond);
                 MessageAccessor.putProperty(messageWithHeader, MessageConst.PROPERTY_CHECK_IMMUNITY_TIME_IN_SECONDS,
-                    String.valueOf(transactionRecoverySecond));
+                        String.valueOf(transactionRecoverySecond));
             }
         }
 
@@ -319,7 +310,7 @@ public class SendMessageActivity extends AbstractMessagingActivity {
     }
 
     protected SendMessageResponse convertToSendMessageResponse(ProxyContext ctx, SendMessageRequest request,
-        List<SendResult> resultList) {
+                                                               List<SendResult> resultList) {
         SendMessageResponse.Builder builder = SendMessageResponse.newBuilder();
 
         Set<Code> responseCodes = new HashSet<>();
@@ -328,32 +319,32 @@ public class SendMessageActivity extends AbstractMessagingActivity {
             switch (result.getSendStatus()) {
                 case FLUSH_DISK_TIMEOUT:
                     resultEntry = SendResultEntry.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.MASTER_PERSISTENCE_TIMEOUT, "send message failed, sendStatus=" + result.getSendStatus()))
-                        .build();
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.MASTER_PERSISTENCE_TIMEOUT, "send message failed, sendStatus=" + result.getSendStatus()))
+                            .build();
                     break;
                 case FLUSH_SLAVE_TIMEOUT:
                     resultEntry = SendResultEntry.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.SLAVE_PERSISTENCE_TIMEOUT, "send message failed, sendStatus=" + result.getSendStatus()))
-                        .build();
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.SLAVE_PERSISTENCE_TIMEOUT, "send message failed, sendStatus=" + result.getSendStatus()))
+                            .build();
                     break;
                 case SLAVE_NOT_AVAILABLE:
                     resultEntry = SendResultEntry.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.HA_NOT_AVAILABLE, "send message failed, sendStatus=" + result.getSendStatus()))
-                        .build();
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.HA_NOT_AVAILABLE, "send message failed, sendStatus=" + result.getSendStatus()))
+                            .build();
                     break;
                 case SEND_OK:
                     resultEntry = SendResultEntry.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                        .setOffset(result.getQueueOffset())
-                        .setMessageId(StringUtils.defaultString(result.getMsgId()))
-                        .setTransactionId(StringUtils.defaultString(result.getTransactionId()))
-                        .setRecallHandle(StringUtils.defaultString(result.getRecallHandle()))
-                        .build();
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                            .setOffset(result.getQueueOffset())
+                            .setMessageId(StringUtils.defaultString(result.getMsgId()))
+                            .setTransactionId(StringUtils.defaultString(result.getTransactionId()))
+                            .setRecallHandle(StringUtils.defaultString(result.getRecallHandle()))
+                            .build();
                     break;
                 default:
                     resultEntry = SendResultEntry.newBuilder()
-                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.INTERNAL_SERVER_ERROR, "send message failed, sendStatus=" + result.getSendStatus()))
-                        .build();
+                            .setStatus(ResponseBuilder.getInstance().buildStatus(Code.INTERNAL_SERVER_ERROR, "send message failed, sendStatus=" + result.getSendStatus()))
+                            .build();
                     break;
             }
             builder.addEntries(resultEntry);

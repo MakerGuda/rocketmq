@@ -16,14 +16,15 @@
  */
 package org.apache.rocketmq.tieredstore.file;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.locks.Lock;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
 import org.apache.rocketmq.tieredstore.common.AppendResult;
+
+import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.Lock;
 
 public interface FlatFileInterface {
 
@@ -123,17 +124,18 @@ public interface FlatFileInterface {
      * or last message, depending on the boundary type. If the specified message does not exist,
      * it returns the offset of the next message as the pull offset. For example:
      * ------------------------------------------------------------
-     *   store time   : 40, 50, 50, 50, 60, 60, 70
-     *   queue offset : 10, 11, 12, 13, 14, 15, 16
+     * store time   : 40, 50, 50, 50, 60, 60, 70
+     * queue offset : 10, 11, 12, 13, 14, 15, 16
      * ------------------------------------------------------------
-     *   query timestamp | boundary | result (reason)
-     *         35        |    -     |   10 (minimum offset)
-     *         45        |    -     |   11 (next offset)
-     *         50        |   lower  |   11
-     *         50        |   upper  |   13
-     *         60        |    -     |   14 (default to lower)
-     *         75        |    -     |   17 (maximum offset + 1)
+     * query timestamp | boundary | result (reason)
+     * 35        |    -     |   10 (minimum offset)
+     * 45        |    -     |   11 (next offset)
+     * 50        |   lower  |   11
+     * 50        |   upper  |   13
+     * 60        |    -     |   14 (default to lower)
+     * 75        |    -     |   17 (maximum offset + 1)
      * ------------------------------------------------------------
+     *
      * @param timestamp    The search time
      * @param boundaryType 'lower' or 'upper' to determine the boundary
      * @return Returns the offset of the message in the consume queue

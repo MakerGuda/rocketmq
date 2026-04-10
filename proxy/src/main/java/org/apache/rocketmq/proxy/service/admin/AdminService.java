@@ -17,16 +17,17 @@
 
 package org.apache.rocketmq.proxy.service.admin;
 
-import java.util.List;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
+
+import java.util.List;
 
 public interface AdminService {
 
     boolean topicExist(String topic);
 
     boolean createTopicOnTopicBrokerIfNotExist(String createTopic, String sampleTopic, int wQueueNum,
-        int rQueueNum, boolean examineTopic, int retryCheckCount);
+                                               int rQueueNum, boolean examineTopic, int retryCheckCount);
 
     boolean createTopicOnBroker(String topic, int wQueueNum, int rQueueNum, List<BrokerData> curBrokerDataList,
-        List<BrokerData> sampleBrokerDataList, boolean examineTopic, int retryCheckCount) throws Exception;
+                                List<BrokerData> sampleBrokerDataList, boolean examineTopic, int retryCheckCount) throws Exception;
 }

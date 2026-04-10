@@ -44,8 +44,8 @@ public class AclConfig {
     @Override
     public String toString() {
         return "AclConfig{" +
-            "globalWhiteAddrs=" + globalWhiteAddrs +
-            ", plainAccessConfigs=" + plainAccessConfigs +
-            '}';
+                "globalWhiteAddrs=" + globalWhiteAddrs +
+                ", plainAccessConfigs=" + plainAccessConfigs +
+                '}';
     }
 }

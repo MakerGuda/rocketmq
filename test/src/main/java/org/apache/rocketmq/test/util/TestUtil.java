@@ -86,7 +86,7 @@ public final class TestUtil {
 
     public static void waitForInput(String keyWord) {
         waitForInput(keyWord,
-            String.format("The thread will wait until you input stop command[%s]:", keyWord));
+                String.format("The thread will wait until you input stop command[%s]:", keyWord));
     }
 
     public static void waitForInput(String keyWord, String info) {

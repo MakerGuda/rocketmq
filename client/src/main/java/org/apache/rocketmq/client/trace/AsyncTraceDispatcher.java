@@ -16,19 +16,6 @@
  */
 package org.apache.rocketmq.client.trace;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.client.AccessChannel;
 import org.apache.rocketmq.client.common.ThreadLocalIndex;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -49,6 +36,15 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.RPCHook;
 
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import static org.apache.rocketmq.client.trace.TraceConstants.TRACE_INSTANCE_NAME;
 
 public class AsyncTraceDispatcher implements TraceDispatcher {
@@ -56,18 +52,18 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final AtomicInteger INSTANCE_NUM = new AtomicInteger(0);
     private static final long WAIT_FOR_SHUTDOWN = 5000L;
-    private volatile boolean stopped = false;
     private final int traceInstanceId = INSTANCE_NUM.getAndIncrement();
     private final int batchNum;
     private final int maxMsgSize;
     private final DefaultMQProducer traceProducer;
-    private AtomicLong discardCount;
-    private Thread worker;
     private final ThreadPoolExecutor traceExecutor;
     private final ArrayBlockingQueue<TraceContext> traceContextQueue;
     private final ArrayBlockingQueue<Runnable> appenderQueue;
+    private final int flushTraceInterval = 5000;
+    private volatile boolean stopped = false;
+    private AtomicLong discardCount;
+    private Thread worker;
     private volatile Thread shutDownHook;
-
     private DefaultMQProducerImpl hostProducer;
     private DefaultMQPushConsumerImpl hostConsumer;
     private volatile ThreadLocalIndex sendWhichQueue = new ThreadLocalIndex();
@@ -77,8 +73,6 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
     private String group;
     private Type type;
     private String namespaceV2;
-    private final int flushTraceInterval = 5000;
-
     private long lastFlushTime = System.currentTimeMillis();
 
     public AsyncTraceDispatcher(String group, Type type, int batchNum, String traceTopicName, RPCHook rpcHook) {
@@ -95,12 +89,12 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
             this.traceTopicName = TopicValidator.RMQ_SYS_TRACE_TOPIC;
         }
         this.traceExecutor = new ThreadPoolExecutor(//
-            2, //
-            4, //
-            1000 * 60, //
-            TimeUnit.MILLISECONDS, //
-            this.appenderQueue, //
-            new ThreadFactoryImpl("MQTraceSendThread_" + traceInstanceId + "_"));
+                2, //
+                4, //
+                1000 * 60, //
+                TimeUnit.MILLISECONDS, //
+                this.appenderQueue, //
+                new ThreadFactoryImpl("MQTraceSendThread_" + traceInstanceId + "_"));
         traceProducer = getAndCreateTraceProducer(rpcHook);
     }
 
@@ -158,7 +152,7 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
         }
         this.accessChannel = accessChannel;
         this.worker = new ThreadFactoryImpl("MQ-AsyncArrayDispatcher-Thread" + traceInstanceId, true)
-            .newThread(new AsyncRunnable());
+                .newThread(new AsyncRunnable());
         this.worker.setDaemon(true);
         this.worker.start();
         this.registerShutDownHook();
@@ -226,7 +220,7 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
                     }
                 }
             }, "ShutdownHookMQTrace");
-            
+
 
             try {
                 Runtime.getRuntime().addShutdownHook(shutDownHook);
@@ -242,25 +236,6 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
                 Runtime.getRuntime().removeShutdownHook(shutDownHook);
             } catch (IllegalStateException e) {
                 // ignore - VM is already shutting down
-            }
-        }
-    }
-
-    class AsyncRunnable implements Runnable {
-        private volatile boolean stopped = false;
-
-        @Override
-        public void run() {
-            while (!stopped) {
-                try {
-                    flushTraceContext(false);
-                } catch (Throwable e) {
-                    log.error("flushTraceContext error", e);
-                }
-
-                if (AsyncTraceDispatcher.this.stopped) {
-                    this.stopped = true;
-                }
             }
         }
     }
@@ -290,6 +265,25 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
         AsyncDataSendTask request = new AsyncDataSendTask(contextList);
         traceExecutor.submit(request);
         lastFlushTime = System.currentTimeMillis();
+    }
+
+    class AsyncRunnable implements Runnable {
+        private volatile boolean stopped = false;
+
+        @Override
+        public void run() {
+            while (!stopped) {
+                try {
+                    flushTraceContext(false);
+                } catch (Throwable e) {
+                    log.error("flushTraceContext error", e);
+                }
+
+                if (AsyncTraceDispatcher.this.stopped) {
+                    this.stopped = true;
+                }
+            }
+        }
     }
 
     class AsyncDataSendTask implements Runnable {

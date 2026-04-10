@@ -16,25 +16,13 @@
  */
 package org.apache.rocketmq.test.schema;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.rocketmq.test.schema.SchemaDefiner.FIELD_CLASS_NAMES;
@@ -53,17 +41,18 @@ public class SchemaTools {
             return "private";
         }
     }
+
     public static TreeMap<String, String> buildSchemaOfFields(Class apiClass) throws Exception {
         List<Field> fields = new ArrayList<>();
         Class current = apiClass;
         do {
             fields.addAll(Arrays.asList(current.getDeclaredFields()));
         } while ((current = current.getSuperclass()) != null
-            && current != Object.class);
+                && current != Object.class);
         Object obj = null;
         if (!apiClass.isInterface()
-            && !Modifier.isAbstract(apiClass.getModifiers())
-            && !apiClass.isEnum()) {
+                && !Modifier.isAbstract(apiClass.getModifiers())
+                && !apiClass.isEnum()) {
             Constructor<?> constructor = null;
             for (Constructor<?> tmp : apiClass.getConstructors()) {
                 if (constructor == null) {
@@ -81,7 +70,8 @@ public class SchemaTools {
                     try {
                         if (x.isEnum()) {
                             return x.getEnumConstants()[0];
-                        } if (x == boolean.class) {
+                        }
+                        if (x == boolean.class) {
                             return false;
                         } else if (x == char.class) {
                             return "";
@@ -102,33 +92,33 @@ public class SchemaTools {
         }
         TreeMap<String, String> map = new TreeMap<>();
         if (apiClass.isEnum()) {
-            for (Object enumObject: apiClass.getEnumConstants()) {
-                String name = ((Enum<?>)enumObject).name();
-                int ordinal = ((Enum<?>)enumObject).ordinal();
+            for (Object enumObject : apiClass.getEnumConstants()) {
+                String name = ((Enum<?>) enumObject).name();
+                int ordinal = ((Enum<?>) enumObject).ordinal();
                 String key = String.format("Field %s", name);
                 String value = String.format("%s %s %s", "public", "int", "" + ordinal);
                 map.put(key, value);
             }
             return map;
         }
-        for (Field field: fields) {
+        for (Field field : fields) {
             if (field.getName().startsWith("$")) {
                 //inner fields
                 continue;
             }
             String key = String.format("Field %s", field.getName());
             boolean ignore = false;
-            for (Class<?> tmpClass: IGNORED_FIELDS.keySet()) {
+            for (Class<?> tmpClass : IGNORED_FIELDS.keySet()) {
                 if (tmpClass.isAssignableFrom(apiClass)
-                    && IGNORED_FIELDS.get(tmpClass).contains(field.getName())) {
+                        && IGNORED_FIELDS.get(tmpClass).contains(field.getName())) {
                     ignore = true;
                     //System.out.printf("Ignore AAA:%s %s %s\n", apiClass.getName(), field.getName(), field.getType().getName());
                     break;
                 }
             }
             if (!field.getType().isEnum()
-                && !field.getType().isPrimitive()
-                && !FIELD_CLASS_NAMES.contains(field.getType().getName())) {
+                    && !field.getType().isPrimitive()
+                    && !FIELD_CLASS_NAMES.contains(field.getType().getName())) {
                 //System.out.printf("Ignore BBB:%s %s %s\n", apiClass.getName(), field.getName(), field.getType().getName());
                 ignore = true;
             }
@@ -155,12 +145,12 @@ public class SchemaTools {
         do {
             methods.addAll(Arrays.asList(current.getDeclaredMethods()));
         } while ((current = current.getSuperclass()) != null
-            && current != Object.class);
+                && current != Object.class);
         TreeMap<String, String> map = new TreeMap<>();
         if (apiClass.isEnum()) {
             return map;
         }
-        for (Method method: methods) {
+        for (Method method : methods) {
             if (!Modifier.isPublic(method.getModifiers())) {
                 //only care for the public methods
                 continue;
@@ -171,9 +161,9 @@ public class SchemaTools {
             Arrays.sort(exceptionTypes, Comparator.comparing(Class::getName));
             String key = String.format("Method %s(%s)", method.getName(), Arrays.stream(parameterTypes).map(Class::getName).collect(Collectors.joining(",")));
             String value = String.format("%s throws (%s): %s",
-                isPublicOrPrivate(method.getModifiers()),
-                method.getReturnType().getName(),
-                Arrays.stream(exceptionTypes).map(Class::getName).collect(Collectors.joining(",")));
+                    isPublicOrPrivate(method.getModifiers()),
+                    method.getReturnType().getName(),
+                    Arrays.stream(exceptionTypes).map(Class::getName).collect(Collectors.joining(",")));
             map.put(key, value);
         }
         return map;
@@ -199,22 +189,22 @@ public class SchemaTools {
             FileOutputStream fileStream = new FileOutputStream(file);
             Writer writer = new OutputStreamWriter(fileStream, StandardCharsets.UTF_8);
             writer.write("/*\n" +
-                " * Licensed to the Apache Software Foundation (ASF) under one or more\n" +
-                " * contributor license agreements.  See the NOTICE file distributed with\n" +
-                " * this work for additional information regarding copyright ownership.\n" +
-                " * The ASF licenses this file to You under the Apache License, Version 2.0\n" +
-                " * (the \"License\"); you may not use this file except in compliance with\n" +
-                " * the License.  You may obtain a copy of the License at\n" +
-                " *\n" +
-                " *     http://www.apache.org/licenses/LICENSE-2.0\n" +
-                " *\n" +
-                " * Unless required by applicable law or agreed to in writing, software\n" +
-                " * distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
-                " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
-                " * See the License for the specific language governing permissions and\n" +
-                " * limitations under the License.\n" +
-                " */\n\n\n");
-            for (Map.Entry<String, String> kv: map.entrySet()) {
+                    " * Licensed to the Apache Software Foundation (ASF) under one or more\n" +
+                    " * contributor license agreements.  See the NOTICE file distributed with\n" +
+                    " * this work for additional information regarding copyright ownership.\n" +
+                    " * The ASF licenses this file to You under the Apache License, Version 2.0\n" +
+                    " * (the \"License\"); you may not use this file except in compliance with\n" +
+                    " * the License.  You may obtain a copy of the License at\n" +
+                    " *\n" +
+                    " *     http://www.apache.org/licenses/LICENSE-2.0\n" +
+                    " *\n" +
+                    " * Unless required by applicable law or agreed to in writing, software\n" +
+                    " * distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
+                    " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
+                    " * See the License for the specific language governing permissions and\n" +
+                    " * limitations under the License.\n" +
+                    " */\n\n\n");
+            for (Map.Entry<String, String> kv : map.entrySet()) {
                 writer.append(String.format("%s : %s\n", kv.getKey(), kv.getValue()));
             }
             writer.close();
@@ -224,7 +214,7 @@ public class SchemaTools {
     public static Map<String, TreeMap<String, String>> load(String base, String label) throws Exception {
         File dir = new File(String.format("%s/%s", base, label));
         Map<String, TreeMap<String, String>> schemaMap = new TreeMap<>();
-        for (File file: dir.listFiles()) {
+        for (File file : dir.listFiles()) {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
             String line = null;
             TreeMap<String, String> kvs = new TreeMap<>();

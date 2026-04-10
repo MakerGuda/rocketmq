@@ -42,26 +42,14 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class BrokerContainer implements IBrokerContainer {
     private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
-    private final ScheduledExecutorService scheduledExecutorService = ThreadUtils.newScheduledThreadPool(1,
-        new BasicThreadFactory.Builder()
-            .namingPattern("BrokerContainerScheduledThread")
-            .daemon(true)
-            .build());
     protected final NettyServerConfig nettyServerConfig;
     protected final NettyClientConfig nettyClientConfig;
     protected final BrokerOuterAPI brokerOuterAPI;
     protected final ContainerClientHouseKeepingService containerClientHouseKeepingService;
-
     protected final ConcurrentMap<BrokerIdentity, InnerSalveBrokerController> slaveBrokerControllers = new ConcurrentHashMap<>();
     protected final ConcurrentMap<BrokerIdentity, InnerBrokerController> masterBrokerControllers = new ConcurrentHashMap<>();
     protected final ConcurrentMap<BrokerIdentity, InnerBrokerController> dLedgerBrokerControllers = new ConcurrentHashMap<>();
@@ -69,15 +57,19 @@ public class BrokerContainer implements IBrokerContainer {
     protected final BrokerContainerProcessor brokerContainerProcessor;
     protected final Configuration configuration;
     protected final BrokerContainerConfig brokerContainerConfig;
-
+    private final ScheduledExecutorService scheduledExecutorService = ThreadUtils.newScheduledThreadPool(1,
+            new BasicThreadFactory.Builder()
+                    .namingPattern("BrokerContainerScheduledThread")
+                    .daemon(true)
+                    .build());
     protected RemotingServer remotingServer;
     protected RemotingServer fastRemotingServer;
     protected ExecutorService brokerContainerExecutor;
 
     public BrokerContainer(
-        final BrokerContainerConfig brokerContainerConfig,
-        final NettyServerConfig nettyServerConfig,
-        final NettyClientConfig nettyClientConfig
+            final BrokerContainerConfig brokerContainerConfig,
+            final NettyServerConfig nettyServerConfig,
+            final NettyClientConfig nettyClientConfig
     ) {
         this.brokerContainerConfig = brokerContainerConfig;
         this.nettyServerConfig = nettyServerConfig;
@@ -90,9 +82,9 @@ public class BrokerContainer implements IBrokerContainer {
         this.containerClientHouseKeepingService = new ContainerClientHouseKeepingService(this);
 
         this.configuration = new Configuration(
-            LOG,
-            BrokerPathConfigHelper.getBrokerConfigPath(),
-            this.brokerContainerConfig, this.nettyServerConfig, this.nettyClientConfig);
+                LOG,
+                BrokerPathConfigHelper.getBrokerConfigPath(),
+                this.brokerContainerConfig, this.nettyServerConfig, this.nettyClientConfig);
     }
 
     @Override
@@ -142,12 +134,12 @@ public class BrokerContainer implements IBrokerContainer {
         this.fastRemotingServer = this.remotingServer.newRemotingServer(this.nettyServerConfig.getListenPort() - 2);
 
         this.brokerContainerExecutor = ThreadUtils.newThreadPoolExecutor(
-            1,
-            1,
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(10000),
-            new ThreadFactoryImpl("SharedBrokerThread_"));
+                1,
+                1,
+                1000 * 60,
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(10000),
+                new ThreadFactoryImpl("SharedBrokerThread_"));
 
         this.registerProcessor();
 
@@ -289,7 +281,7 @@ public class BrokerContainer implements IBrokerContainer {
     }
 
     public InnerBrokerController addDLedgerBroker(final BrokerConfig brokerConfig, final MessageStoreConfig storeConfig,
-        final AuthConfig authConfig) throws Exception {
+                                                  final AuthConfig authConfig) throws Exception {
         brokerConfig.setInBrokerContainer(true);
         if (storeConfig.isDuplicationEnable()) {
             LOG.error("Can not add broker to container when duplicationEnable is true currently");
@@ -319,7 +311,7 @@ public class BrokerContainer implements IBrokerContainer {
     }
 
     public InnerBrokerController addMasterBroker(final BrokerConfig masterBrokerConfig,
-        final MessageStoreConfig storeConfig, final AuthConfig authConfig) throws Exception {
+                                                 final MessageStoreConfig storeConfig, final AuthConfig authConfig) throws Exception {
 
         masterBrokerConfig.setInBrokerContainer(true);
         if (storeConfig.isDuplicationEnable()) {
@@ -362,7 +354,7 @@ public class BrokerContainer implements IBrokerContainer {
      * @throws Exception is thrown if an error occurs
      */
     public InnerSalveBrokerController addSlaveBroker(final BrokerConfig slaveBrokerConfig,
-        final MessageStoreConfig storeConfig, final AuthConfig authConfig) throws Exception {
+                                                     final MessageStoreConfig storeConfig, final AuthConfig authConfig) throws Exception {
 
         slaveBrokerConfig.setInBrokerContainer(true);
         if (storeConfig.isDuplicationEnable()) {

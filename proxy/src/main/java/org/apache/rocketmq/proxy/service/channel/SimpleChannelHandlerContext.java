@@ -18,18 +18,13 @@
 package org.apache.rocketmq.proxy.service.channel;
 
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelProgressivePromise;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.*;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
-import java.net.SocketAddress;
 import org.apache.commons.lang3.NotImplementedException;
+
+import java.net.SocketAddress;
 
 public class SimpleChannelHandlerContext implements ChannelHandlerContext {
 

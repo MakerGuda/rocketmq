@@ -16,11 +16,12 @@
  */
 package org.apache.rocketmq.auth.authentication.provider;
 
+import org.apache.rocketmq.auth.authentication.model.User;
+import org.apache.rocketmq.auth.config.AuthConfig;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import org.apache.rocketmq.auth.authentication.model.User;
-import org.apache.rocketmq.auth.config.AuthConfig;
 
 public interface AuthenticationMetadataProvider {
 

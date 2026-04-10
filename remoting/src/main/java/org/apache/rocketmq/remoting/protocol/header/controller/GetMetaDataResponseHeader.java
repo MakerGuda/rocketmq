@@ -80,12 +80,12 @@ public class GetMetaDataResponseHeader implements CommandCustomHeader {
     @Override
     public String toString() {
         return "GetMetaDataResponseHeader{" +
-            "group='" + group + '\'' +
-            ", controllerLeaderId='" + controllerLeaderId + '\'' +
-            ", controllerLeaderAddress='" + controllerLeaderAddress + '\'' +
-            ", isLeader=" + isLeader +
-            ", peers='" + peers + '\'' +
-            '}';
+                "group='" + group + '\'' +
+                ", controllerLeaderId='" + controllerLeaderId + '\'' +
+                ", controllerLeaderAddress='" + controllerLeaderAddress + '\'' +
+                ", isLeader=" + isLeader +
+                ", peers='" + peers + '\'' +
+                '}';
     }
 
     @Override

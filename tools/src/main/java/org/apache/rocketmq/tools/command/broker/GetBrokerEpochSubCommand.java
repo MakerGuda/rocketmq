@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.broker;
 
-import java.util.List;
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -30,6 +28,9 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.List;
+import java.util.Set;
 
 public class GetBrokerEpochSubCommand implements SubCommand {
     @Override
@@ -59,7 +60,7 @@ public class GetBrokerEpochSubCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -90,7 +91,7 @@ public class GetBrokerEpochSubCommand implements SubCommand {
     }
 
     private void innerExec(CommandLine commandLine, Options options,
-        DefaultMQAdminExt defaultMQAdminExt) throws Exception {
+                           DefaultMQAdminExt defaultMQAdminExt) throws Exception {
         if (commandLine.hasOption('b')) {
             String brokerName = commandLine.getOptionValue('b').trim();
             final Set<String> brokers = CommandUtil.fetchMasterAndSlaveAddrByBrokerName(defaultMQAdminExt, brokerName);
@@ -108,7 +109,7 @@ public class GetBrokerEpochSubCommand implements SubCommand {
         for (String brokerAddr : brokers) {
             final EpochEntryCache epochCache = defaultMQAdminExt.getBrokerEpochCache(brokerAddr);
             System.out.printf("\n#clusterName\t%s\n#brokerName\t%s\n#brokerAddr\t%s\n#brokerId\t%d",
-                epochCache.getClusterName(), epochCache.getBrokerName(), brokerAddr, epochCache.getBrokerId());
+                    epochCache.getClusterName(), epochCache.getBrokerName(), brokerAddr, epochCache.getBrokerId());
             final List<EpochEntry> epochList = epochCache.getEpochList();
             for (int i = 0; i < epochList.size(); i++) {
                 final EpochEntry epochEntry = epochList.get(i);

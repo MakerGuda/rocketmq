@@ -55,7 +55,7 @@ public class DynamicCrashConsumerIT extends BaseConf {
         int msgSize = 100;
         RMQNormalConsumer consumer1 = getConsumer(NAMESRV_ADDR, topic, "*", new RMQNormalListener());
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
 
         MQAsyncProducer asyncDefaultMQProducer = new MQAsyncProducer(producer, msgSize, 100);
         asyncDefaultMQProducer.start();
@@ -66,10 +66,10 @@ public class DynamicCrashConsumerIT extends BaseConf {
         asyncDefaultMQProducer.waitSendAll(WAIT_TIME * 6);
 
         MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(), consumer1.getListener(),
-            consumer2.getListener());
+                consumer2.getListener());
 
         boolean recvAll = MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(),
-            consumer1.getListener(), consumer2.getListener());
+                consumer1.getListener(), consumer2.getListener());
         assertThat(recvAll).isEqualTo(true);
     }
 
@@ -78,9 +78,9 @@ public class DynamicCrashConsumerIT extends BaseConf {
         int msgSize = 100;
         RMQNormalConsumer consumer1 = getConsumer(NAMESRV_ADDR, topic, "*", new RMQNormalListener());
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         RMQNormalConsumer consumer3 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
 
         MQAsyncProducer asyncDefaultMQProducer = new MQAsyncProducer(producer, msgSize, 100);
         asyncDefaultMQProducer.start();
@@ -92,10 +92,10 @@ public class DynamicCrashConsumerIT extends BaseConf {
         asyncDefaultMQProducer.waitSendAll(WAIT_TIME * 6);
 
         MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(), consumer1.getListener(),
-            consumer2.getListener(), consumer3.getListener());
+                consumer2.getListener(), consumer3.getListener());
 
         boolean recvAll = MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(),
-            consumer1.getListener(), consumer2.getListener(), consumer3.getListener());
+                consumer1.getListener(), consumer2.getListener(), consumer3.getListener());
         assertThat(recvAll).isEqualTo(true);
     }
 }

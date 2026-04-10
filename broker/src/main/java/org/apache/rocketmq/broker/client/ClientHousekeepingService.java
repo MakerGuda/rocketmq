@@ -17,8 +17,6 @@
 package org.apache.rocketmq.broker.client;
 
 import io.netty.channel.Channel;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -26,6 +24,9 @@ import org.apache.rocketmq.common.utils.ThreadUtils;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.ChannelEventListener;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 服务组件 <b>ClientHousekeepingService</b>，封装一组可启动/关闭的 Broker 侧能力。
@@ -39,7 +40,7 @@ public class ClientHousekeepingService implements ChannelEventListener {
     public ClientHousekeepingService(final BrokerController brokerController) {
         this.brokerController = brokerController;
         scheduledExecutorService = ThreadUtils.newScheduledThreadPool(1,
-            new ThreadFactoryImpl("ClientHousekeepingScheduledThread", brokerController.getBrokerIdentity()));
+                new ThreadFactoryImpl("ClientHousekeepingScheduledThread", brokerController.getBrokerIdentity()));
     }
 
     public void start() {

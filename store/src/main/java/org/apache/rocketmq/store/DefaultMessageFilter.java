@@ -16,9 +16,10 @@
  */
 package org.apache.rocketmq.store;
 
+import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
 import java.nio.ByteBuffer;
 import java.util.Map;
-import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
 public class DefaultMessageFilter implements MessageFilter {
 
@@ -39,7 +40,7 @@ public class DefaultMessageFilter implements MessageFilter {
         }
 
         return subscriptionData.getSubString().equals(SubscriptionData.SUB_ALL)
-            || subscriptionData.getCodeSet().contains(tagsCode.intValue());
+                || subscriptionData.getCodeSet().contains(tagsCode.intValue());
     }
 
     @Override

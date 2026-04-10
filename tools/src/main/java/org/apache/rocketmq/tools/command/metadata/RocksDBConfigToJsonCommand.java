@@ -38,13 +38,7 @@ import org.rocksdb.RocksIterator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,6 +46,102 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RocksDBConfigToJsonCommand implements SubCommand {
+
+    private static void printConfigMapJsonDisable(Map<String, JSONObject> configMap) {
+        AtomicLong count = new AtomicLong(0);
+        for (Map.Entry<String, JSONObject> entry : configMap.entrySet()) {
+            String configKey = entry.getKey();
+            System.out.printf("type: %s", configKey);
+            JSONObject jsonObject = entry.getValue();
+            jsonObject.forEach((k, v) -> System.out.printf("%d, Key: %s, Value: %s%n", count.incrementAndGet(), k, v));
+        }
+    }
+
+    private static Map<String, JSONObject> getConfigMapFromRocksDB(String path,
+                                                                   ExportRocksDBConfigToJsonRequestHeader.ConfigType configType) {
+
+        if (ExportRocksDBConfigToJsonRequestHeader.ConfigType.CONSUMER_OFFSETS.equals(configType)) {
+            return loadConsumerOffsets(path);
+        }
+
+        ConfigRocksDBStorage configRocksDBStorage = ConfigRocksDBStorage.getStore(path, true);
+        if (!configRocksDBStorage.start()) {
+            System.out.print("Failed to initialize ConfigRocksDBStorage.\n");
+            return null;
+        }
+
+        RocksIterator iterator = configRocksDBStorage.iterator();
+        try {
+            final Map<String, JSONObject> configMap = new HashMap<>();
+            final JSONObject configTable = new JSONObject();
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                final byte[] key = iterator.key();
+                final byte[] value = iterator.value();
+                final String name = new String(key, DataConverter.CHARSET_UTF8);
+                final String config = new String(value, DataConverter.CHARSET_UTF8);
+                final JSONObject jsonObject = JSONObject.parseObject(config);
+                configTable.put(name, jsonObject);
+                iterator.next();
+            }
+
+            // Try to get data version
+            try {
+                byte[] kvDataVersion = configRocksDBStorage.get("kvDataVersion",
+                        "kvDataVersionKey".getBytes(DataConverter.CHARSET_UTF8));
+                if (kvDataVersion != null) {
+                    configMap.put("dataVersion",
+                            JSONObject.parseObject(new String(kvDataVersion, DataConverter.CHARSET_UTF8)));
+                }
+            } catch (Exception e) {
+                // Ignore if data version is not available
+            }
+
+            if (ExportRocksDBConfigToJsonRequestHeader.ConfigType.TOPICS.equals(configType)) {
+                configMap.put("topicConfigTable", configTable);
+            }
+            if (ExportRocksDBConfigToJsonRequestHeader.ConfigType.SUBSCRIPTION_GROUPS.equals(configType)) {
+                configMap.put("subscriptionGroupTable", configTable);
+            }
+            return configMap;
+        } catch (Exception e) {
+            System.out.print("Error occurred while converting RocksDB kv config to json, " + "configType=" + configType + ", " + e.getMessage() + "\n");
+        } finally {
+            ConfigRocksDBStorage.shutdown(path);
+        }
+        return null;
+    }
+
+    private static Map<String, JSONObject> loadConsumerOffsets(String path) {
+        ConfigRocksDBStorage configRocksDBStorage = ConfigRocksDBStorage.getStore(path, true);
+        if (!configRocksDBStorage.start()) {
+            System.out.print("Failed to initialize ConfigRocksDBStorage for consumer offsets.\n");
+            return null;
+        }
+
+        RocksIterator iterator = configRocksDBStorage.iterator();
+        try {
+            final Map<String, JSONObject> configMap = new HashMap<>();
+            final JSONObject configTable = new JSONObject();
+            iterator.seekToFirst();
+            while (iterator.isValid()) {
+                final byte[] key = iterator.key();
+                final byte[] value = iterator.value();
+                final String name = new String(key, DataConverter.CHARSET_UTF8);
+                final String config = new String(value, DataConverter.CHARSET_UTF8);
+                final RocksDBOffsetSerializeWrapper jsonObject = JSONObject.parseObject(config, RocksDBOffsetSerializeWrapper.class);
+                configTable.put(name, jsonObject.getOffsetTable());
+                iterator.next();
+            }
+            configMap.put("offsetTable", configTable);
+            return configMap;
+        } catch (Exception e) {
+            System.out.print("Error occurred while converting RocksDB kv config to json, " + "configType=consumerOffsets, " + e.getMessage() + "\n");
+        } finally {
+            ConfigRocksDBStorage.shutdown(path);
+        }
+        return null;
+    }
 
     @Override
     public String commandName() {
@@ -61,40 +151,40 @@ public class RocksDBConfigToJsonCommand implements SubCommand {
     @Override
     public String commandDesc() {
         return "Convert RocksDB kv config (topics/subscriptionGroups/consumerOffsets) to json. " +
-            "[rpc mode] Use [-n, -c, -b, -t] to send Request to broker ( version >= 5.3.2 ) or [local mode] use [-p, -t, -j, -e] to load RocksDB. " +
-            "If -e is provided, tools will export json file instead of std print";
+                "[rpc mode] Use [-n, -c, -b, -t] to send Request to broker ( version >= 5.3.2 ) or [local mode] use [-p, -t, -j, -e] to load RocksDB. " +
+                "If -e is provided, tools will export json file instead of std print";
     }
 
     @Override
     public Options buildCommandlineOptions(Options options) {
         Option configTypeOption = new Option("t", "configType", true, "Name of kv config, e.g. " +
-            "topics/subscriptionGroups/consumerOffsets. Required in local mode and default all in rpc mode.");
+                "topics/subscriptionGroups/consumerOffsets. Required in local mode and default all in rpc mode.");
         options.addOption(configTypeOption);
 
         // [local mode] options
         Option pathOption = new Option("p", "configPath", true,
-            "[local mode] Absolute path to the metadata config directory");
+                "[local mode] Absolute path to the metadata config directory");
         options.addOption(pathOption);
 
         Option exportPathOption = new Option("e", "exportFile", true,
-            "[local mode] Absolute file path for exporting, auto backup existing file, not directory. If exportFile is provided, will export Json file and ignore [-j].");
+                "[local mode] Absolute file path for exporting, auto backup existing file, not directory. If exportFile is provided, will export Json file and ignore [-j].");
         options.addOption(exportPathOption);
 
         Option jsonEnableOption = new Option("j", "jsonEnable", true,
-            "[local mode] Json format enable, Default: true. If exportFile is provided, will export Json file and ignore [-j].");
+                "[local mode] Json format enable, Default: true. If exportFile is provided, will export Json file and ignore [-j].");
         options.addOption(jsonEnableOption);
 
         // [rpc mode] options
         Option nameserverOption = new Option("n", "nameserverAddr", true,
-            "[rpc mode] nameserverAddr. If nameserverAddr and clusterName are provided, will ignore [-p, -e, -j, -b] args");
+                "[rpc mode] nameserverAddr. If nameserverAddr and clusterName are provided, will ignore [-p, -e, -j, -b] args");
         options.addOption(nameserverOption);
 
         Option clusterOption = new Option("c", "cluster", true,
-            "[rpc mode] Cluster name. If nameserverAddr and clusterName are provided, will ignore [-p, -e, -j, -b] args");
+                "[rpc mode] Cluster name. If nameserverAddr and clusterName are provided, will ignore [-p, -e, -j, -b] args");
         options.addOption(clusterOption);
 
         Option brokerAddrOption = new Option("b", "brokerAddr", true,
-            "[rpc mode] Broker address. If brokerAddr is provided, will ignore [-p, -e, -j] args");
+                "[rpc mode] Broker address. If brokerAddr is provided, will ignore [-p, -e, -j] args");
         options.addOption(brokerAddrOption);
 
         return options;
@@ -152,7 +242,7 @@ public class RocksDBConfigToJsonCommand implements SubCommand {
     }
 
     private void checkRequiredArgsProvided(CommandLine commandLine, String mode,
-        String... args) throws SubCommandException {
+                                           String... args) throws SubCommandException {
         for (String arg : args) {
             if (!commandLine.hasOption(arg)) {
                 System.out.printf("%s Invalid args, please input %s\n", mode, String.join(",", args));
@@ -177,73 +267,8 @@ public class RocksDBConfigToJsonCommand implements SubCommand {
         return typeList;
     }
 
-    private static void printConfigMapJsonDisable(Map<String, JSONObject> configMap) {
-        AtomicLong count = new AtomicLong(0);
-        for (Map.Entry<String, JSONObject> entry : configMap.entrySet()) {
-            String configKey = entry.getKey();
-            System.out.printf("type: %s", configKey);
-            JSONObject jsonObject = entry.getValue();
-            jsonObject.forEach((k, v) -> System.out.printf("%d, Key: %s, Value: %s%n", count.incrementAndGet(), k, v));
-        }
-    }
-
-    private static Map<String, JSONObject> getConfigMapFromRocksDB(String path,
-        ExportRocksDBConfigToJsonRequestHeader.ConfigType configType) {
-
-        if (ExportRocksDBConfigToJsonRequestHeader.ConfigType.CONSUMER_OFFSETS.equals(configType)) {
-            return loadConsumerOffsets(path);
-        }
-
-        ConfigRocksDBStorage configRocksDBStorage = ConfigRocksDBStorage.getStore(path, true);
-        if (!configRocksDBStorage.start()) {
-            System.out.print("Failed to initialize ConfigRocksDBStorage.\n");
-            return null;
-        }
-
-        RocksIterator iterator = configRocksDBStorage.iterator();
-        try {
-            final Map<String, JSONObject> configMap = new HashMap<>();
-            final JSONObject configTable = new JSONObject();
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                final byte[] key = iterator.key();
-                final byte[] value = iterator.value();
-                final String name = new String(key, DataConverter.CHARSET_UTF8);
-                final String config = new String(value, DataConverter.CHARSET_UTF8);
-                final JSONObject jsonObject = JSONObject.parseObject(config);
-                configTable.put(name, jsonObject);
-                iterator.next();
-            }
-
-            // Try to get data version
-            try {
-                byte[] kvDataVersion = configRocksDBStorage.get("kvDataVersion",
-                    "kvDataVersionKey".getBytes(DataConverter.CHARSET_UTF8));
-                if (kvDataVersion != null) {
-                    configMap.put("dataVersion",
-                        JSONObject.parseObject(new String(kvDataVersion, DataConverter.CHARSET_UTF8)));
-                }
-            } catch (Exception e) {
-                // Ignore if data version is not available
-            }
-
-            if (ExportRocksDBConfigToJsonRequestHeader.ConfigType.TOPICS.equals(configType)) {
-                configMap.put("topicConfigTable", configTable);
-            }
-            if (ExportRocksDBConfigToJsonRequestHeader.ConfigType.SUBSCRIPTION_GROUPS.equals(configType)) {
-                configMap.put("subscriptionGroupTable", configTable);
-            }
-            return configMap;
-        } catch (Exception e) {
-            System.out.print("Error occurred while converting RocksDB kv config to json, " + "configType=" + configType + ", " + e.getMessage() + "\n");
-        } finally {
-            ConfigRocksDBStorage.shutdown(path);
-        }
-        return null;
-    }
-
     private void handleRpcMode(CommandLine commandLine, RPCHook rpcHook,
-        List<ExportRocksDBConfigToJsonRequestHeader.ConfigType> type) {
+                               List<ExportRocksDBConfigToJsonRequestHeader.ConfigType> type) {
         String nameserverAddr = commandLine.hasOption('n') ? commandLine.getOptionValue("nameserverAddr").trim() : null;
         String inputBrokerAddr = commandLine.hasOption('b') ? commandLine.getOptionValue('b').trim() : null;
         String clusterName = commandLine.hasOption('c') ? commandLine.getOptionValue('c').trim() : null;
@@ -274,7 +299,7 @@ public class RocksDBConfigToJsonCommand implements SubCommand {
                 futureList.add(sendRequest(type, defaultMQAdminExt, inputBrokerAddr, null));
             }
             CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0])).whenComplete(
-                (v, t) -> System.out.print("broker export done.")
+                    (v, t) -> System.out.print("broker export done.")
             ).join();
         } catch (Exception e) {
             throw new RuntimeException(this.getClass().getSimpleName() + " command failed", e);
@@ -284,7 +309,7 @@ public class RocksDBConfigToJsonCommand implements SubCommand {
     }
 
     private CompletableFuture<Void> sendRequest(List<ExportRocksDBConfigToJsonRequestHeader.ConfigType> type,
-        DefaultMQAdminExt defaultMQAdminExt, String brokerAddr, String brokerName) {
+                                                DefaultMQAdminExt defaultMQAdminExt, String brokerAddr, String brokerName) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 defaultMQAdminExt.exportRocksDBConfigToJson(brokerAddr, type);
@@ -294,37 +319,6 @@ public class RocksDBConfigToJsonCommand implements SubCommand {
             }
             return null;
         });
-    }
-
-    private static Map<String, JSONObject> loadConsumerOffsets(String path) {
-        ConfigRocksDBStorage configRocksDBStorage = ConfigRocksDBStorage.getStore(path, true);
-        if (!configRocksDBStorage.start()) {
-            System.out.print("Failed to initialize ConfigRocksDBStorage for consumer offsets.\n");
-            return null;
-        }
-
-        RocksIterator iterator = configRocksDBStorage.iterator();
-        try {
-            final Map<String, JSONObject> configMap = new HashMap<>();
-            final JSONObject configTable = new JSONObject();
-            iterator.seekToFirst();
-            while (iterator.isValid()) {
-                final byte[] key = iterator.key();
-                final byte[] value = iterator.value();
-                final String name = new String(key, DataConverter.CHARSET_UTF8);
-                final String config = new String(value, DataConverter.CHARSET_UTF8);
-                final RocksDBOffsetSerializeWrapper jsonObject = JSONObject.parseObject(config, RocksDBOffsetSerializeWrapper.class);
-                configTable.put(name, jsonObject.getOffsetTable());
-                iterator.next();
-            }
-            configMap.put("offsetTable", configTable);
-            return configMap;
-        } catch (Exception e) {
-            System.out.print("Error occurred while converting RocksDB kv config to json, " + "configType=consumerOffsets, " + e.getMessage() + "\n");
-        } finally {
-            ConfigRocksDBStorage.shutdown(path);
-        }
-        return null;
     }
 
     static class RocksDBOffsetSerializeWrapper {

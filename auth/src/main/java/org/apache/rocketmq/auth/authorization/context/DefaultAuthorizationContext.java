@@ -16,11 +16,12 @@
  */
 package org.apache.rocketmq.auth.authorization.context;
 
-import java.util.Collections;
-import java.util.List;
 import org.apache.rocketmq.auth.authentication.model.Subject;
 import org.apache.rocketmq.auth.authorization.model.Resource;
 import org.apache.rocketmq.common.action.Action;
+
+import java.util.Collections;
+import java.util.List;
 
 public class DefaultAuthorizationContext extends AuthorizationContext {
 

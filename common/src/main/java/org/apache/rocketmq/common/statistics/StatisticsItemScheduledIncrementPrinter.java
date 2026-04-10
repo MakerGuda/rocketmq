@@ -23,20 +23,17 @@ import java.util.concurrent.TimeUnit;
 
 public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemScheduledPrinter {
 
-    private String[] tpsItemNames;
-
     public static final int TPS_INITIAL_DELAY = 0;
     public static final int TPS_INTREVAL = 1000;
     public static final String SEPARATOR = "|";
-
     /**
      * last snapshots of all scheduled items
      */
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> lastItemSnapshots
-        = new ConcurrentHashMap<>();
-
+            = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItemSampleBrief>> sampleBriefs
-        = new ConcurrentHashMap<>();
+            = new ConcurrentHashMap<>();
+    private String[] tpsItemNames;
 
     public StatisticsItemScheduledIncrementPrinter(String name, StatisticsItemPrinter printer,
                                                    ScheduledExecutorService executor, InitialDelay initialDelay,
@@ -62,7 +59,7 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
 
                 StatisticsItem snapshot = item.snapshot();
                 StatisticsItem lastSnapshot = getItemSnapshot(lastItemSnapshots, item.getStatKind(),
-                    item.getStatObject());
+                        item.getStatObject());
                 StatisticsItem increment = snapshot.subtract(lastSnapshot);
 
                 Interceptor interceptor = item.getInterceptor();
@@ -123,8 +120,8 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
     }
 
     private StatisticsItem getItemSnapshot(
-        ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> snapshots,
-        String kind, String key) {
+            ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> snapshots,
+            String kind, String key) {
         ConcurrentHashMap<String, StatisticsItem> itemMap = snapshots.get(kind);
         return (itemMap != null) ? itemMap.get(key) : null;
     }
@@ -171,7 +168,7 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
 
         if (interceptor instanceof StatisticsBriefInterceptor) {
             StringBuilder sb = new StringBuilder();
-            StatisticsBriefInterceptor briefInterceptor = (StatisticsBriefInterceptor)interceptor;
+            StatisticsBriefInterceptor briefInterceptor = (StatisticsBriefInterceptor) interceptor;
             for (StatisticsBrief brief : briefInterceptor.getStatisticsBriefs()) {
                 long max = brief.getMax();
                 long tp999 = Math.min(brief.tp999(), max);
@@ -187,10 +184,9 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
     }
 
     public static class StatisticsItemSampleBrief {
-        private StatisticsItem lastSnapshot;
-
         public String[] itemNames;
         public ItemSampleBrief[] briefs;
+        private StatisticsItem lastSnapshot;
 
         public StatisticsItemSampleBrief(StatisticsItem statItem, String[] itemNames) {
             this.lastSnapshot = statItem.snapshot();
@@ -284,7 +280,7 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
         }
 
         public double getAvg() {
-            return cnt != 0 ? ((double)total) / cnt : 0;
+            return cnt != 0 ? ((double) total) / cnt : 0;
         }
     }
 }

@@ -33,7 +33,7 @@ public class RelayData<T, R> {
     }
 
     public void setRelayFuture(
-        CompletableFuture<ProxyRelayResult<R>> relayFuture) {
+            CompletableFuture<ProxyRelayResult<R>> relayFuture) {
         this.relayFuture = relayFuture;
     }
 

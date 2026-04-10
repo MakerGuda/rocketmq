@@ -17,13 +17,6 @@
 
 package org.apache.rocketmq.broker;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.broker.plugin.BrokerAttachedPlugin;
 import org.apache.rocketmq.broker.schedule.DelayOffsetSerializeWrapper;
 import org.apache.rocketmq.common.MixAll;
@@ -39,6 +32,10 @@ import org.apache.rocketmq.store.config.StorePathConfigHelper;
 import org.apache.rocketmq.store.ha.HAConnectionState;
 import org.apache.rocketmq.store.ha.HAConnectionStateNotificationRequest;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Broker 正式对外「上线」前的预检服务：当 Broker 处于隔离（{@link BrokerController#isIsolated()}）等状态时，
@@ -92,7 +89,7 @@ public class BrokerPreOnlineService extends ServiceThread {
     CompletableFuture<Boolean> waitForHaHandshakeComplete(String brokerAddr) {
         LOGGER.info("wait for handshake completion with {}", brokerAddr);
         HAConnectionStateNotificationRequest request =
-            new HAConnectionStateNotificationRequest(HAConnectionState.TRANSFER, RemotingHelper.parseHostFromAddress(brokerAddr), true);
+                new HAConnectionStateNotificationRequest(HAConnectionState.TRANSFER, RemotingHelper.parseHostFromAddress(brokerAddr), true);
         if (this.brokerController.getMessageStore().getHaService() != null) {
             this.brokerController.getMessageStore().getHaService().putGroupConnectionStateRequest(request);
         } else {
@@ -129,15 +126,15 @@ public class BrokerPreOnlineService extends ServiceThread {
 
             try {
                 this.brokerController.getBrokerOuterAPI().
-                    sendBrokerHaInfo(brokerAddrToWait, this.brokerController.getHAServerAddr(),
-                        this.brokerController.getMessageStore().getBrokerInitMaxOffset(), this.brokerController.getBrokerAddr());
+                        sendBrokerHaInfo(brokerAddrToWait, this.brokerController.getHAServerAddr(),
+                                this.brokerController.getMessageStore().getBrokerInitMaxOffset(), this.brokerController.getBrokerAddr());
             } catch (Exception e) {
                 LOGGER.error("send ha address to {} exception, {}", brokerAddrToWait, e);
                 return false;
             }
 
             CompletableFuture<Boolean> haHandshakeFuture = waitForHaHandshakeComplete(brokerAddrToWait)
-                .thenApply(result -> futureWaitAction(result, brokerMemberGroup));
+                    .thenApply(result -> futureWaitAction(result, brokerMemberGroup));
 
             try {
                 if (!haHandshakeFuture.get()) {
@@ -162,7 +159,7 @@ public class BrokerPreOnlineService extends ServiceThread {
 
             String delayOffset = this.brokerController.getBrokerOuterAPI().getAllDelayOffset(brokerAddr);
             DelayOffsetSerializeWrapper delayOffsetSerializeWrapper =
-                DelayOffsetSerializeWrapper.fromJson(delayOffset, DelayOffsetSerializeWrapper.class);
+                    DelayOffsetSerializeWrapper.fromJson(delayOffset, DelayOffsetSerializeWrapper.class);
 
             ConsumerOffsetSerializeWrapper consumerOffsetSerializeWrapper = this.brokerController.getBrokerOuterAPI().getAllConsumerOffset(brokerAddr);
 
@@ -171,7 +168,7 @@ public class BrokerPreOnlineService extends ServiceThread {
             if (null != consumerOffsetSerializeWrapper && brokerController.getConsumerOffsetManager().getDataVersion().compare(consumerOffsetSerializeWrapper.getDataVersion()) <= 0) {
                 LOGGER.info("{}'s consumerOffset data version is larger than master broker, {}'s consumerOffset will be used.", brokerAddr, brokerAddr);
                 this.brokerController.getConsumerOffsetManager().getOffsetTable()
-                    .putAll(consumerOffsetSerializeWrapper.getOffsetTable());
+                        .putAll(consumerOffsetSerializeWrapper.getOffsetTable());
                 this.brokerController.getConsumerOffsetManager().getDataVersion().assignNewOne(consumerOffsetSerializeWrapper.getDataVersion());
                 this.brokerController.getConsumerOffsetManager().persist();
             }
@@ -179,8 +176,8 @@ public class BrokerPreOnlineService extends ServiceThread {
             if (null != delayOffset && brokerController.getScheduleMessageService().getDataVersion().compare(delayOffsetSerializeWrapper.getDataVersion()) <= 0) {
                 LOGGER.info("{}'s scheduleMessageService data version is larger than master broker, {}'s delayOffset will be used.", brokerAddr, brokerAddr);
                 String fileName =
-                    StorePathConfigHelper.getDelayOffsetStorePath(this.brokerController
-                        .getMessageStoreConfig().getStorePathRootDir());
+                        StorePathConfigHelper.getDelayOffsetStorePath(this.brokerController
+                                .getMessageStoreConfig().getStorePathRootDir());
                 try {
                     MixAll.string2File(delayOffset, fileName);
                     this.brokerController.getScheduleMessageService().load();
@@ -215,14 +212,14 @@ public class BrokerPreOnlineService extends ServiceThread {
         BrokerSyncInfo brokerSyncInfo;
         try {
             brokerSyncInfo = this.brokerController.getBrokerOuterAPI()
-                .retrieveBrokerHaInfo(brokerMemberGroup.getBrokerAddrs().get(MixAll.MASTER_ID));
+                    .retrieveBrokerHaInfo(brokerMemberGroup.getBrokerAddrs().get(MixAll.MASTER_ID));
         } catch (Exception e) {
             LOGGER.error("retrieve master ha info exception, {}", e);
             return false;
         }
 
         if (this.brokerController.getMessageStore().getMasterFlushedOffset() == 0
-            && this.brokerController.getMessageStoreConfig().isSyncMasterFlushOffsetWhenStartup()) {
+                && this.brokerController.getMessageStoreConfig().isSyncMasterFlushOffsetWhenStartup()) {
             LOGGER.info("Set master flush offset in slave to {}", brokerSyncInfo.getMasterFlushOffset());
             this.brokerController.getMessageStore().setMasterFlushedOffset(brokerSyncInfo.getMasterFlushOffset());
         }
@@ -238,7 +235,7 @@ public class BrokerPreOnlineService extends ServiceThread {
         }
 
         CompletableFuture<Boolean> haHandshakeFuture = waitForHaHandshakeComplete(brokerSyncInfo.getMasterHaAddress())
-            .thenApply(result -> futureWaitAction(result, brokerMemberGroup));
+                .thenApply(result -> futureWaitAction(result, brokerMemberGroup));
 
         try {
             if (!haHandshakeFuture.get()) {
@@ -256,9 +253,9 @@ public class BrokerPreOnlineService extends ServiceThread {
         BrokerMemberGroup brokerMemberGroup;
         try {
             brokerMemberGroup = this.brokerController.getBrokerOuterAPI().syncBrokerMemberGroup(
-                this.brokerController.getBrokerConfig().getBrokerClusterName(),
-                this.brokerController.getBrokerConfig().getBrokerName(),
-                this.brokerController.getBrokerConfig().isCompatibleWithOldNameSrv());
+                    this.brokerController.getBrokerConfig().getBrokerClusterName(),
+                    this.brokerController.getBrokerConfig().getBrokerName(),
+                    this.brokerController.getBrokerConfig().isCompatibleWithOldNameSrv());
         } catch (Exception e) {
             LOGGER.error("syncBrokerMemberGroup from namesrv error, start service failed, will try later, ", e);
             return false;

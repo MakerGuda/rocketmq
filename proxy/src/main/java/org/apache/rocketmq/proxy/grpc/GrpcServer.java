@@ -31,18 +31,15 @@ import java.util.concurrent.TimeUnit;
 
 public class GrpcServer implements StartAndShutdown {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
-
+    @VisibleForTesting
+    final GrpcTlsReloadHandler tlsReloadHandler;
     private final Server server;
-
     private final long timeout;
-
     private final TimeUnit unit;
-
     private final TlsCertificateManager tlsCertificateManager;
-    @VisibleForTesting final GrpcTlsReloadHandler tlsReloadHandler;
 
     protected GrpcServer(Server server, long timeout, TimeUnit unit,
-        TlsCertificateManager tlsCertificateManager) throws Exception {
+                         TlsCertificateManager tlsCertificateManager) throws Exception {
         this.server = server;
         this.timeout = timeout;
         this.unit = unit;

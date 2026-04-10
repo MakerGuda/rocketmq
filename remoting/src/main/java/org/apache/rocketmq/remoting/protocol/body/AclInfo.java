@@ -27,13 +27,29 @@ public class AclInfo {
     private List<PolicyInfo> policies;
 
     public static AclInfo of(String subject, List<String> resources, List<String> actions,
-        List<String> sourceIps,
-        String decision) {
+                             List<String> sourceIps,
+                             String decision) {
         AclInfo aclInfo = new AclInfo();
         aclInfo.setSubject(subject);
         PolicyInfo policyInfo = PolicyInfo.of(resources, actions, sourceIps, decision);
         aclInfo.setPolicies(Collections.singletonList(policyInfo));
         return aclInfo;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public List<PolicyInfo> getPolicies() {
+        return policies;
+    }
+
+    public void setPolicies(List<PolicyInfo> policies) {
+        this.policies = policies;
     }
 
     public static class PolicyInfo {
@@ -43,11 +59,11 @@ public class AclInfo {
         private List<PolicyEntryInfo> entries;
 
         public static PolicyInfo of(List<String> resources, List<String> actions,
-            List<String> sourceIps, String decision) {
+                                    List<String> sourceIps, String decision) {
             PolicyInfo policyInfo = new PolicyInfo();
             List<PolicyEntryInfo> entries = resources.stream()
-                .map(resource -> PolicyEntryInfo.of(resource, actions, sourceIps, decision))
-                .collect(Collectors.toList());
+                    .map(resource -> PolicyEntryInfo.of(resource, actions, sourceIps, decision))
+                    .collect(Collectors.toList());
             policyInfo.setEntries(entries);
             return policyInfo;
         }
@@ -79,7 +95,7 @@ public class AclInfo {
         private String decision;
 
         public static PolicyEntryInfo of(String resource, List<String> actions, List<String> sourceIps,
-            String decision) {
+                                         String decision) {
             PolicyEntryInfo policyEntryInfo = new PolicyEntryInfo();
             policyEntryInfo.setResource(resource);
             policyEntryInfo.setActions(actions);
@@ -119,21 +135,5 @@ public class AclInfo {
         public void setDecision(String decision) {
             this.decision = decision;
         }
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-
-    public List<PolicyInfo> getPolicies() {
-        return policies;
-    }
-
-    public void setPolicies(List<PolicyInfo> policies) {
-        this.policies = policies;
     }
 }

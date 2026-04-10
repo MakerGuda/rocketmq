@@ -64,10 +64,6 @@ public class Message implements Serializable {
         this(topic, tags, keys, 0, body, true);
     }
 
-    public void setKeys(String keys) {
-        this.putProperty(MessageConst.PROPERTY_KEYS, keys);
-    }
-
     void putProperty(final String name, final String value) {
         if (null == this.properties) {
             this.properties = new HashMap<>();
@@ -85,13 +81,13 @@ public class Message implements Serializable {
     public void putUserProperty(final String name, final String value) {
         if (MessageConst.STRING_HASH_SET.contains(name)) {
             throw new RuntimeException(String.format(
-                "The Property<%s> is used by system, input another please", name));
+                    "The Property<%s> is used by system, input another please", name));
         }
 
         if (value == null || value.trim().isEmpty()
-            || name == null || name.trim().isEmpty()) {
+                || name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException(
-                "The name or value of property can not be null or blank string!"
+                    "The name or value of property can not be null or blank string!"
             );
         }
 
@@ -137,6 +133,10 @@ public class Message implements Serializable {
         return this.getProperty(MessageConst.PROPERTY_KEYS);
     }
 
+    public void setKeys(String keys) {
+        this.putProperty(MessageConst.PROPERTY_KEYS, keys);
+    }
+
     public void setKeys(Collection<String> keyCollection) {
         String keys = String.join(MessageConst.KEY_SEPARATOR, keyCollection);
 
@@ -156,15 +156,15 @@ public class Message implements Serializable {
         this.putProperty(MessageConst.PROPERTY_DELAY_TIME_LEVEL, String.valueOf(level));
     }
 
+    public int getPriority() {
+        return NumberUtils.toInt(this.getProperty(MessageConst.PROPERTY_PRIORITY), -1);
+    }
+
     public void setPriority(int priority) {
         if (priority < 0) {
             throw new IllegalArgumentException("The priority must be greater than or equal to 0");
         }
         this.putProperty(MessageConst.PROPERTY_PRIORITY, String.valueOf(priority));
-    }
-
-    public int getPriority() {
-        return NumberUtils.toInt(this.getProperty(MessageConst.PROPERTY_PRIORITY), -1);
     }
 
     public boolean isWaitStoreMsgOK() {
@@ -227,16 +227,12 @@ public class Message implements Serializable {
     @Override
     public String toString() {
         return "Message{" +
-            "topic='" + topic + '\'' +
-            ", flag=" + flag +
-            ", properties=" + properties +
-            ", body=" + Arrays.toString(body) +
-            ", transactionId='" + transactionId + '\'' +
-            '}';
-    }
-
-    public void setDelayTimeSec(long sec) {
-        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC, String.valueOf(sec));
+                "topic='" + topic + '\'' +
+                ", flag=" + flag +
+                ", properties=" + properties +
+                ", body=" + Arrays.toString(body) +
+                ", transactionId='" + transactionId + '\'' +
+                '}';
     }
 
     public long getDelayTimeSec() {
@@ -247,8 +243,8 @@ public class Message implements Serializable {
         return 0;
     }
 
-    public void setDelayTimeMs(long timeMs) {
-        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_MS, String.valueOf(timeMs));
+    public void setDelayTimeSec(long sec) {
+        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC, String.valueOf(sec));
     }
 
     public long getDelayTimeMs() {
@@ -259,8 +255,8 @@ public class Message implements Serializable {
         return 0;
     }
 
-    public void setDeliverTimeMs(long timeMs) {
-        this.putProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS, String.valueOf(timeMs));
+    public void setDelayTimeMs(long timeMs) {
+        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_MS, String.valueOf(timeMs));
     }
 
     public long getDeliverTimeMs() {
@@ -269,5 +265,9 @@ public class Message implements Serializable {
             return Long.parseLong(t);
         }
         return 0;
+    }
+
+    public void setDeliverTimeMs(long timeMs) {
+        this.putProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS, String.valueOf(timeMs));
     }
 }

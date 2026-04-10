@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.test.dledger;
 
-import java.util.UUID;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.client.consumer.PullResult;
@@ -25,12 +24,12 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.BrokerConfig;
+import org.apache.rocketmq.common.attribute.CQType;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.apache.rocketmq.common.attribute.CQType;
 import org.apache.rocketmq.test.base.BaseConf;
 import org.apache.rocketmq.test.base.IntegrationTestBase;
 import org.apache.rocketmq.test.factory.ConsumerFactory;
@@ -38,12 +37,14 @@ import org.apache.rocketmq.test.factory.ProducerFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.UUID;
+
 import static sun.util.locale.BaseLocale.SEP;
 
 public class DLedgerProduceAndConsumeIT {
 
     public BrokerConfig buildBrokerConfig(String cluster, String brokerName) {
-        BrokerConfig brokerConfig =  new BrokerConfig();
+        BrokerConfig brokerConfig = new BrokerConfig();
         brokerConfig.setBrokerClusterName(cluster);
         brokerConfig.setBrokerName(brokerName);
         brokerConfig.setBrokerIP1("127.0.0.1");
@@ -53,7 +54,7 @@ public class DLedgerProduceAndConsumeIT {
 
     public MessageStoreConfig buildStoreConfig(String brokerName, String peers, String selfId) {
         MessageStoreConfig storeConfig = new MessageStoreConfig();
-        String baseDir =  IntegrationTestBase.createBaseDir();
+        String baseDir = IntegrationTestBase.createBaseDir();
         storeConfig.setStorePathRootDir(baseDir);
         storeConfig.setStorePathCommitLog(baseDir + SEP + "commitlog");
         storeConfig.setHaListenPort(0);

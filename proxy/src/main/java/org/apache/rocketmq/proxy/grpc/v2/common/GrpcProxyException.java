@@ -17,15 +17,13 @@
 package org.apache.rocketmq.proxy.grpc.v2.common;
 
 import apache.rocketmq.v2.Code;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.proxy.common.ProxyException;
 import org.apache.rocketmq.proxy.common.ProxyExceptionCode;
 
-public class GrpcProxyException extends RuntimeException {
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-    private ProxyException proxyException;
-    private Code code;
+public class GrpcProxyException extends RuntimeException {
 
     protected static final Map<ProxyExceptionCode, Code> CODE_MAPPING = new ConcurrentHashMap<>();
 
@@ -36,6 +34,9 @@ public class GrpcProxyException extends RuntimeException {
         CODE_MAPPING.put(ProxyExceptionCode.INTERNAL_SERVER_ERROR, Code.INTERNAL_SERVER_ERROR);
         CODE_MAPPING.put(ProxyExceptionCode.MESSAGE_PROPERTY_CONFLICT_WITH_TYPE, Code.MESSAGE_PROPERTY_CONFLICT_WITH_TYPE);
     }
+
+    private ProxyException proxyException;
+    private Code code;
 
     public GrpcProxyException(Code code, String message) {
         super(message);

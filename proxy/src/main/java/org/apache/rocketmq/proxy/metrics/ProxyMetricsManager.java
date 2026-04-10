@@ -33,11 +33,6 @@ import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.broker.metrics.BrokerMetricsManager;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -48,29 +43,28 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.config.ProxyConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.AGGREGATION_DELTA;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_AGGREGATION;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_CLUSTER_NAME;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_NODE_ID;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_NODE_TYPE;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.OPEN_TELEMETRY_METER_NAME;
-import static org.apache.rocketmq.proxy.metrics.ProxyMetricsConstant.GAUGE_PROXY_UP;
-import static org.apache.rocketmq.proxy.metrics.ProxyMetricsConstant.LABEL_PROXY_MODE;
-import static org.apache.rocketmq.proxy.metrics.ProxyMetricsConstant.NODE_TYPE_PROXY;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.*;
+import static org.apache.rocketmq.proxy.metrics.ProxyMetricsConstant.*;
 
 public class ProxyMetricsManager implements StartAndShutdown {
     private final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
-
-    private static ProxyConfig proxyConfig;
     private final static Map<String, String> LABEL_MAP = new HashMap<>();
     public static Supplier<AttributesBuilder> attributesBuilderSupplier;
-
+    public static ObservableLongGauge proxyUp = null;
+    private static ProxyConfig proxyConfig;
     private OtlpGrpcMetricExporter metricExporter;
     private PeriodicMetricReader periodicMetricReader;
     private PrometheusHttpServer prometheusHttpServer;
     private MetricExporter loggingMetricExporter;
 
-    public static ObservableLongGauge proxyUp = null;
+    public ProxyMetricsManager() {
+    }
 
     public static void initLocalMode(BrokerMetricsManager brokerMetricsManager, ProxyConfig proxyConfig) {
         if (proxyConfig.getMetricsExporterType() == MetricsExporterType.DISABLE) {
@@ -105,12 +99,9 @@ public class ProxyMetricsManager implements StartAndShutdown {
         ProxyMetricsManager.attributesBuilderSupplier = attributesBuilderSupplier;
 
         proxyUp = meter.gaugeBuilder(GAUGE_PROXY_UP)
-            .setDescription("proxy status")
-            .ofLongs()
-            .buildWithCallback(measurement -> measurement.record(1, newAttributesBuilder().build()));
-    }
-
-    public ProxyMetricsManager() {
+                .setDescription("proxy status")
+                .ofLongs()
+                .buildWithCallback(measurement -> measurement.record(1, newAttributesBuilder().build()));
     }
 
     private boolean checkConfig() {
@@ -165,7 +156,7 @@ public class ProxyMetricsManager implements StartAndShutdown {
         LABEL_MAP.put(LABEL_PROXY_MODE, proxyConfig.getProxyMode().toLowerCase());
 
         SdkMeterProviderBuilder providerBuilder = SdkMeterProvider.builder()
-            .setResource(Resource.empty());
+                .setResource(Resource.empty());
 
         if (metricsExporterType == MetricsExporterType.OTLP_GRPC) {
             String endpoint = proxyConfig.getMetricsGrpcExporterTarget();
@@ -173,15 +164,15 @@ public class ProxyMetricsManager implements StartAndShutdown {
                 endpoint = "https://" + endpoint;
             }
             OtlpGrpcMetricExporterBuilder metricExporterBuilder = OtlpGrpcMetricExporter.builder()
-                .setEndpoint(endpoint)
-                .setTimeout(proxyConfig.getMetricGrpcExporterTimeOutInMills(), TimeUnit.MILLISECONDS)
-                .setAggregationTemporalitySelector(type -> {
-                    if (proxyConfig.isMetricsInDelta() &&
-                        (type == InstrumentType.COUNTER || type == InstrumentType.OBSERVABLE_COUNTER || type == InstrumentType.HISTOGRAM)) {
-                        return AggregationTemporality.DELTA;
-                    }
-                    return AggregationTemporality.CUMULATIVE;
-                });
+                    .setEndpoint(endpoint)
+                    .setTimeout(proxyConfig.getMetricGrpcExporterTimeOutInMills(), TimeUnit.MILLISECONDS)
+                    .setAggregationTemporalitySelector(type -> {
+                        if (proxyConfig.isMetricsInDelta() &&
+                                (type == InstrumentType.COUNTER || type == InstrumentType.OBSERVABLE_COUNTER || type == InstrumentType.HISTOGRAM)) {
+                            return AggregationTemporality.DELTA;
+                        }
+                        return AggregationTemporality.CUMULATIVE;
+                    });
 
             String headers = proxyConfig.getMetricsGrpcExporterHeader();
             if (StringUtils.isNotBlank(headers)) {
@@ -201,8 +192,8 @@ public class ProxyMetricsManager implements StartAndShutdown {
             metricExporter = metricExporterBuilder.build();
 
             periodicMetricReader = PeriodicMetricReader.builder(metricExporter)
-                .setInterval(proxyConfig.getMetricGrpcExporterIntervalInMills(), TimeUnit.MILLISECONDS)
-                .build();
+                    .setInterval(proxyConfig.getMetricGrpcExporterIntervalInMills(), TimeUnit.MILLISECONDS)
+                    .build();
 
             providerBuilder.registerMetricReader(periodicMetricReader);
         }
@@ -213,9 +204,9 @@ public class ProxyMetricsManager implements StartAndShutdown {
                 promExporterHost = "0.0.0.0";
             }
             prometheusHttpServer = PrometheusHttpServer.builder()
-                .setHost(promExporterHost)
-                .setPort(proxyConfig.getMetricsPromExporterPort())
-                .build();
+                    .setHost(promExporterHost)
+                    .setPort(proxyConfig.getMetricsPromExporterPort())
+                    .build();
             providerBuilder.registerMetricReader(prometheusHttpServer);
         }
 
@@ -225,15 +216,15 @@ public class ProxyMetricsManager implements StartAndShutdown {
             loggingMetricExporter = OtlpJsonLoggingMetricExporter.create(proxyConfig.isMetricsInDelta() ? AggregationTemporality.DELTA : AggregationTemporality.CUMULATIVE);
             java.util.logging.Logger.getLogger(OtlpJsonLoggingMetricExporter.class.getName()).setLevel(java.util.logging.Level.FINEST);
             periodicMetricReader = PeriodicMetricReader.builder(loggingMetricExporter)
-                .setInterval(proxyConfig.getMetricLoggingExporterIntervalInMills(), TimeUnit.MILLISECONDS)
-                .build();
+                    .setInterval(proxyConfig.getMetricLoggingExporterIntervalInMills(), TimeUnit.MILLISECONDS)
+                    .build();
             providerBuilder.registerMetricReader(periodicMetricReader);
         }
 
         Meter proxyMeter = OpenTelemetrySdk.builder()
-            .setMeterProvider(providerBuilder.build())
-            .build()
-            .getMeter(OPEN_TELEMETRY_METER_NAME);
+                .setMeterProvider(providerBuilder.build())
+                .build()
+                .getMeter(OPEN_TELEMETRY_METER_NAME);
 
         initMetrics(proxyMeter, null);
     }

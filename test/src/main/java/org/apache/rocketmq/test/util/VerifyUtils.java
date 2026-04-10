@@ -17,12 +17,13 @@
 
 package org.apache.rocketmq.test.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class VerifyUtils {
     private static Logger logger = LoggerFactory.getLogger(VerifyUtils.class);
@@ -39,7 +40,7 @@ public class VerifyUtils {
     }
 
     public static Collection<Object> getFilterdMessage(Collection<Object> sendMsgs,
-        Collection<Object> recvMsgs) {
+                                                       Collection<Object> recvMsgs) {
         Collection<Object> recvMsgsSync = Collections.synchronizedCollection(recvMsgs);
         Collection<Object> filteredMsgs = new ArrayList<Object>();
         int filterNum = 0;
@@ -83,7 +84,7 @@ public class VerifyUtils {
     }
 
     public static boolean verifyDelay(long delayTimeMills, long nextLevelDelayTimeMills,
-        Collection<Object> recvMsgTimes) {
+                                      Collection<Object> recvMsgTimes) {
         boolean delay = true;
         for (Object timeObj : recvMsgTimes) {
             long time = (Long) timeObj;

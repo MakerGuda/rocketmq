@@ -31,12 +31,12 @@ import org.apache.rocketmq.remoting.protocol.RequestCode;
 @RocketMQAction(value = RequestCode.GET_ALL_TOPIC_CONFIG, resource = ResourceType.TOPIC, action = Action.LIST)
 public class GetAllTopicConfigResponseHeader implements CommandCustomHeader {
 
+    @CFNotNull
+    private Integer totalTopicNum;
+
     @Override
     public void checkFields() throws RemotingCommandException {
     }
-
-    @CFNotNull
-    private Integer totalTopicNum;
 
     public Integer getTotalTopicNum() {
         return totalTopicNum;

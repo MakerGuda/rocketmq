@@ -23,15 +23,6 @@ import org.apache.rocketmq.common.constant.CommonConstants;
 
 public interface Subject {
 
-    @JSONField(serialize = false)
-    String getSubjectKey();
-
-    SubjectType getSubjectType();
-
-    default boolean isSubject(SubjectType subjectType) {
-        return subjectType == this.getSubjectType();
-    }
-
     @SuppressWarnings("unchecked")
     static <T extends Subject> T of(String subjectKey) {
         String type = StringUtils.substringBefore(subjectKey, CommonConstants.COLON);
@@ -43,5 +34,14 @@ public interface Subject {
             return (T) User.of(StringUtils.substringAfter(subjectKey, CommonConstants.COLON));
         }
         return null;
+    }
+
+    @JSONField(serialize = false)
+    String getSubjectKey();
+
+    SubjectType getSubjectType();
+
+    default boolean isSubject(SubjectType subjectType) {
+        return subjectType == this.getSubjectType();
     }
 }

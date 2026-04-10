@@ -16,8 +16,8 @@
  */
 package io.openmessaging.rocketmq.promise;
 
-import io.openmessaging.Promise;
 import io.openmessaging.FutureListener;
+import io.openmessaging.Promise;
 import io.openmessaging.exception.OMSRuntimeException;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -222,4 +222,3 @@ public class DefaultPromise<V> implements Promise<V> {
         return true;
     }
 }
-

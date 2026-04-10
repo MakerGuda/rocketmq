@@ -16,30 +16,10 @@
  */
 package org.apache.rocketmq.auth.authorization.builder;
 
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
-import apache.rocketmq.v2.ClientType;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueRequest;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.NotifyClientTerminationRequest;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.RecallMessageRequest;
-import apache.rocketmq.v2.ReceiveMessageRequest;
-import apache.rocketmq.v2.SendMessageRequest;
-import apache.rocketmq.v2.Subscription;
-import apache.rocketmq.v2.SubscriptionEntry;
-import apache.rocketmq.v2.TelemetryCommand;
+import apache.rocketmq.v2.*;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
 import io.netty.channel.ChannelHandlerContext;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -76,6 +56,9 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumerData;
 import org.apache.rocketmq.remoting.protocol.heartbeat.HeartbeatData;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
+import java.lang.reflect.Field;
+import java.util.*;
+
 public class DefaultAuthorizationContextBuilder implements AuthorizationContextBuilder {
 
     private static final String TOPIC = "topic";
@@ -90,6 +73,82 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
     public DefaultAuthorizationContextBuilder(AuthConfig authConfig) {
         this.authConfig = authConfig;
         this.requestHeaderRegistry = RequestHeaderRegistry.getInstance();
+    }
+
+    private static List<DefaultAuthorizationContext> newContext(Metadata metadata, TelemetryCommand request) {
+        if (request.getCommandCase() != TelemetryCommand.CommandCase.SETTINGS) {
+            return null;
+        }
+        if (!request.getSettings().hasPublishing() && !request.getSettings().hasSubscription()) {
+            throw new AclException("settings command doesn't have publishing or subscription.");
+        }
+        List<DefaultAuthorizationContext> result = new ArrayList<>();
+        if (request.getSettings().hasPublishing()) {
+            List<apache.rocketmq.v2.Resource> topicList = request.getSettings().getPublishing().getTopicsList();
+            for (apache.rocketmq.v2.Resource topic : topicList) {
+                result.addAll(newPubContext(metadata, topic));
+            }
+        }
+        if (request.getSettings().hasSubscription()) {
+            Subscription subscription = request.getSettings().getSubscription();
+            result.addAll(newSubContexts(metadata, ResourceType.GROUP, subscription.getGroup()));
+            for (SubscriptionEntry entry : subscription.getSubscriptionsList()) {
+                result.addAll(newSubContexts(metadata, ResourceType.TOPIC, entry.getTopic()));
+            }
+        }
+        return result;
+    }
+
+    private static List<DefaultAuthorizationContext> newPubContext(Metadata metadata, apache.rocketmq.v2.Resource topic) {
+        if (topic == null || StringUtils.isBlank(topic.getName())) {
+            throw new AuthorizationException("topic is null.");
+        }
+        Subject subject = null;
+        if (metadata.containsKey(GrpcConstants.AUTHORIZATION_AK)) {
+            subject = User.of(metadata.get(GrpcConstants.AUTHORIZATION_AK));
+        }
+        Resource resource = Resource.ofTopic(topic.getName());
+        String sourceIp = StringUtils.substringBeforeLast(metadata.get(GrpcConstants.REMOTE_ADDRESS), CommonConstants.COLON);
+        DefaultAuthorizationContext context = DefaultAuthorizationContext.of(subject, resource, Action.PUB, sourceIp);
+        return Collections.singletonList(context);
+    }
+
+    private static List<DefaultAuthorizationContext> newTopicSubContexts(Metadata metadata,
+                                                                         apache.rocketmq.v2.Resource resource) {
+        return newSubContexts(metadata, ResourceType.TOPIC, resource);
+    }
+
+    private static List<DefaultAuthorizationContext> newGroupSubContexts(Metadata metadata,
+                                                                         apache.rocketmq.v2.Resource resource) {
+        return newSubContexts(metadata, ResourceType.GROUP, resource);
+    }
+
+    private static List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, ResourceType resourceType,
+                                                                    apache.rocketmq.v2.Resource resource) {
+        if (resourceType == ResourceType.GROUP) {
+            if (resource == null || StringUtils.isBlank(resource.getName())) {
+                throw new AuthorizationException("group is null.");
+            }
+            return newSubContexts(metadata, Resource.ofGroup(resource.getName()));
+        }
+        if (resourceType == ResourceType.TOPIC) {
+            if (resource == null || StringUtils.isBlank(resource.getName())) {
+                throw new AuthorizationException("topic is null.");
+            }
+            return newSubContexts(metadata, Resource.ofTopic(resource.getName()));
+        }
+        throw new AuthorizationException("unknown resource type.");
+    }
+
+    private static List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, Resource resource) {
+        List<DefaultAuthorizationContext> result = new ArrayList<>();
+        Subject subject = null;
+        if (metadata.containsKey(GrpcConstants.AUTHORIZATION_AK)) {
+            subject = User.of(metadata.get(GrpcConstants.AUTHORIZATION_AK));
+        }
+        String sourceIp = StringUtils.substringBeforeLast(metadata.get(GrpcConstants.REMOTE_ADDRESS), CommonConstants.COLON);
+        result.add(DefaultAuthorizationContext.of(subject, resource, Action.SUB, sourceIp));
+        return result;
     }
 
     @Override
@@ -251,7 +310,7 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                     break;
                 case RequestCode.UNREGISTER_CLIENT:
                     final UnregisterClientRequestHeader unregisterClientRequestHeader =
-                        command.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
+                            command.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
                     if (StringUtils.isNotBlank(unregisterClientRequestHeader.getConsumerGroup())) {
                         group = Resource.ofGroup(unregisterClientRequestHeader.getConsumerGroup());
                         result.add(DefaultAuthorizationContext.of(subject, group, Action.SUB, sourceIp));
@@ -259,13 +318,13 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                     break;
                 case RequestCode.GET_CONSUMER_LIST_BY_GROUP:
                     final GetConsumerListByGroupRequestHeader getConsumerListByGroupRequestHeader =
-                        command.decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
+                            command.decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
                     group = Resource.ofGroup(getConsumerListByGroupRequestHeader.getConsumerGroup());
                     result.add(DefaultAuthorizationContext.of(subject, group, Arrays.asList(Action.SUB, Action.GET), sourceIp));
                     break;
                 case RequestCode.QUERY_CONSUMER_OFFSET:
                     final QueryConsumerOffsetRequestHeader queryConsumerOffsetRequestHeader =
-                        command.decodeCommandCustomHeader(QueryConsumerOffsetRequestHeader.class);
+                            command.decodeCommandCustomHeader(QueryConsumerOffsetRequestHeader.class);
                     if (!NamespaceUtil.isRetryTopic(queryConsumerOffsetRequestHeader.getTopic())) {
                         topic = Resource.ofTopic(queryConsumerOffsetRequestHeader.getTopic());
                         result.add(DefaultAuthorizationContext.of(subject, topic, Arrays.asList(Action.SUB, Action.GET), sourceIp));
@@ -275,7 +334,7 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                     break;
                 case RequestCode.UPDATE_CONSUMER_OFFSET:
                     final UpdateConsumerOffsetRequestHeader updateConsumerOffsetRequestHeader =
-                        command.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
+                            command.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
                     if (!NamespaceUtil.isRetryTopic(updateConsumerOffsetRequestHeader.getTopic())) {
                         topic = Resource.ofTopic(updateConsumerOffsetRequestHeader.getTopic());
                         result.add(DefaultAuthorizationContext.of(subject, topic, Arrays.asList(Action.SUB, Action.UPDATE), sourceIp));
@@ -330,7 +389,7 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
     }
 
     private List<DefaultAuthorizationContext> buildContextByAnnotation(Subject subject, RemotingCommand request,
-        String sourceIp) throws Exception {
+                                                                       String sourceIp) throws Exception {
         List<DefaultAuthorizationContext> result = new ArrayList<>();
 
         Class<? extends CommandCustomHeader> clazz = this.requestHeaderRegistry.getRequestHeader(request.getCode());
@@ -366,7 +425,7 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                     if (StringUtils.isNotBlank(splitter)) {
                         resourceValues = StringUtils.split(value.toString(), splitter);
                     } else {
-                        resourceValues = new String[] {value.toString()};
+                        resourceValues = new String[]{value.toString()};
                     }
                     for (String resourceValue : resourceValues) {
                         if (resourceType == ResourceType.TOPIC && NamespaceUtil.isRetryTopic(resourceValue)) {
@@ -405,92 +464,16 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
         return Collections.singletonList(context);
     }
 
-    private static List<DefaultAuthorizationContext> newContext(Metadata metadata, TelemetryCommand request) {
-        if (request.getCommandCase() != TelemetryCommand.CommandCase.SETTINGS) {
-            return null;
-        }
-        if (!request.getSettings().hasPublishing() && !request.getSettings().hasSubscription()) {
-            throw new AclException("settings command doesn't have publishing or subscription.");
-        }
-        List<DefaultAuthorizationContext> result = new ArrayList<>();
-        if (request.getSettings().hasPublishing()) {
-            List<apache.rocketmq.v2.Resource> topicList = request.getSettings().getPublishing().getTopicsList();
-            for (apache.rocketmq.v2.Resource topic : topicList) {
-                result.addAll(newPubContext(metadata, topic));
-            }
-        }
-        if (request.getSettings().hasSubscription()) {
-            Subscription subscription = request.getSettings().getSubscription();
-            result.addAll(newSubContexts(metadata, ResourceType.GROUP, subscription.getGroup()));
-            for (SubscriptionEntry entry : subscription.getSubscriptionsList()) {
-                result.addAll(newSubContexts(metadata, ResourceType.TOPIC, entry.getTopic()));
-            }
-        }
-        return result;
-    }
-
     private boolean isConsumerClientType(ClientType clientType) {
         return Arrays.asList(ClientType.PUSH_CONSUMER, ClientType.SIMPLE_CONSUMER, ClientType.PULL_CONSUMER)
-            .contains(clientType);
-    }
-
-    private static List<DefaultAuthorizationContext> newPubContext(Metadata metadata, apache.rocketmq.v2.Resource topic) {
-        if (topic == null || StringUtils.isBlank(topic.getName())) {
-            throw new AuthorizationException("topic is null.");
-        }
-        Subject subject = null;
-        if (metadata.containsKey(GrpcConstants.AUTHORIZATION_AK)) {
-            subject = User.of(metadata.get(GrpcConstants.AUTHORIZATION_AK));
-        }
-        Resource resource = Resource.ofTopic(topic.getName());
-        String sourceIp = StringUtils.substringBeforeLast(metadata.get(GrpcConstants.REMOTE_ADDRESS), CommonConstants.COLON);
-        DefaultAuthorizationContext context = DefaultAuthorizationContext.of(subject, resource, Action.PUB, sourceIp);
-        return Collections.singletonList(context);
+                .contains(clientType);
     }
 
     private List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, apache.rocketmq.v2.Resource group,
-        apache.rocketmq.v2.Resource topic) {
+                                                             apache.rocketmq.v2.Resource topic) {
         List<DefaultAuthorizationContext> result = new ArrayList<>();
         result.addAll(newGroupSubContexts(metadata, group));
         result.addAll(newTopicSubContexts(metadata, topic));
-        return result;
-    }
-
-    private static List<DefaultAuthorizationContext> newTopicSubContexts(Metadata metadata,
-        apache.rocketmq.v2.Resource resource) {
-        return newSubContexts(metadata, ResourceType.TOPIC, resource);
-    }
-
-    private static List<DefaultAuthorizationContext> newGroupSubContexts(Metadata metadata,
-        apache.rocketmq.v2.Resource resource) {
-        return newSubContexts(metadata, ResourceType.GROUP, resource);
-    }
-
-    private static List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, ResourceType resourceType,
-        apache.rocketmq.v2.Resource resource) {
-        if (resourceType == ResourceType.GROUP) {
-            if (resource == null || StringUtils.isBlank(resource.getName())) {
-                throw new AuthorizationException("group is null.");
-            }
-            return newSubContexts(metadata, Resource.ofGroup(resource.getName()));
-        }
-        if (resourceType == ResourceType.TOPIC) {
-            if (resource == null || StringUtils.isBlank(resource.getName())) {
-                throw new AuthorizationException("topic is null.");
-            }
-            return newSubContexts(metadata, Resource.ofTopic(resource.getName()));
-        }
-        throw new AuthorizationException("unknown resource type.");
-    }
-
-    private static List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, Resource resource) {
-        List<DefaultAuthorizationContext> result = new ArrayList<>();
-        Subject subject = null;
-        if (metadata.containsKey(GrpcConstants.AUTHORIZATION_AK)) {
-            subject = User.of(metadata.get(GrpcConstants.AUTHORIZATION_AK));
-        }
-        String sourceIp = StringUtils.substringBeforeLast(metadata.get(GrpcConstants.REMOTE_ADDRESS), CommonConstants.COLON);
-        result.add(DefaultAuthorizationContext.of(subject, resource, Action.SUB, sourceIp));
         return result;
     }
 }

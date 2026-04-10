@@ -19,7 +19,6 @@ package org.apache.rocketmq.remoting.protocol.header;
 
 import com.google.common.base.MoreObjects;
 import io.netty.buffer.ByteBuf;
-import java.util.HashMap;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.common.action.RocketMQAction;
 import org.apache.rocketmq.common.resource.ResourceType;
@@ -29,8 +28,10 @@ import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.annotation.CFNullable;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.protocol.FastCodesHeader;
-import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
+
+import java.util.HashMap;
 
 /**
  * Use short variable name to speed up FastJson deserialization process.
@@ -309,21 +310,21 @@ public class SendMessageRequestHeaderV2 extends TopicQueueRequestHeader implemen
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("a", a)
-            .add("b", b)
-            .add("c", c)
-            .add("d", d)
-            .add("e", e)
-            .add("f", f)
-            .add("g", g)
-            .add("h", h)
-            .add("i", i)
-            .add("j", j)
-            .add("k", k)
-            .add("l", l)
-            .add("m", m)
-            .add("n", n)
-            .toString();
+                .add("a", a)
+                .add("b", b)
+                .add("c", c)
+                .add("d", d)
+                .add("e", e)
+                .add("f", f)
+                .add("g", g)
+                .add("h", h)
+                .add("i", i)
+                .add("j", j)
+                .add("k", k)
+                .add("l", l)
+                .add("m", m)
+                .add("n", n)
+                .toString();
     }
 
     @Override

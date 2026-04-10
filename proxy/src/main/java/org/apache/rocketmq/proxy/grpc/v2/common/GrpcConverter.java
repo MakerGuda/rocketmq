@@ -17,24 +17,9 @@
 
 package org.apache.rocketmq.proxy.grpc.v2.common;
 
-import apache.rocketmq.v2.Broker;
-import apache.rocketmq.v2.DeadLetterQueue;
-import apache.rocketmq.v2.Digest;
-import apache.rocketmq.v2.DigestType;
-import apache.rocketmq.v2.Encoding;
-import apache.rocketmq.v2.FilterType;
-import apache.rocketmq.v2.Message;
-import apache.rocketmq.v2.MessageQueue;
-import apache.rocketmq.v2.MessageType;
-import apache.rocketmq.v2.Resource;
-import apache.rocketmq.v2.SystemProperties;
+import apache.rocketmq.v2.*;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Timestamps;
-import java.net.SocketAddress;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.filter.ExpressionType;
@@ -47,10 +32,15 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
 
-public class GrpcConverter {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
+import java.net.SocketAddress;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+public class GrpcConverter {
     protected static final Object INSTANCE_CREATE_LOCK = new Object();
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     protected static volatile GrpcConverter instance;
 
     public static GrpcConverter getInstance() {
@@ -68,18 +58,18 @@ public class GrpcConverter {
         Broker broker = Broker.getDefaultInstance();
         if (!StringUtils.isEmpty(brokerName)) {
             broker = Broker.newBuilder()
-                .setName(brokerName)
-                .setId(0)
-                .build();
+                    .setName(brokerName)
+                    .setId(0)
+                    .build();
         }
         return MessageQueue.newBuilder()
-            .setId(messageExt.getQueueId())
-            .setTopic(Resource.newBuilder()
-                .setName(NamespaceUtil.withoutNamespace(messageExt.getTopic()))
-                .setResourceNamespace(NamespaceUtil.getNamespaceFromResource(messageExt.getTopic()))
-                .build())
-            .setBroker(broker)
-            .build();
+                .setId(messageExt.getQueueId())
+                .setTopic(Resource.newBuilder()
+                        .setName(NamespaceUtil.withoutNamespace(messageExt.getTopic()))
+                        .setResourceNamespace(NamespaceUtil.getNamespaceFromResource(messageExt.getTopic()))
+                        .build())
+                .setBroker(broker)
+                .build();
     }
 
     public String buildExpressionType(FilterType filterType) {
@@ -98,11 +88,11 @@ public class GrpcConverter {
         Resource topic = buildResource(messageExt.getTopic());
 
         return Message.newBuilder()
-            .setTopic(topic)
-            .putAllUserProperties(userProperties)
-            .setSystemProperties(systemProperties)
-            .setBody(ByteString.copyFrom(messageExt.getBody()))
-            .build();
+                .setTopic(topic)
+                .putAllUserProperties(userProperties)
+                .setSystemProperties(systemProperties)
+                .setBody(ByteString.copyFrom(messageExt.getBody()))
+                .build();
     }
 
     protected Map<String, String> buildUserAttributes(MessageExt messageExt) {
@@ -148,9 +138,9 @@ public class GrpcConverter {
         // body_digest & body_encoding
         String md5Result = BinaryUtil.generateMd5(messageExt.getBody());
         Digest digest = Digest.newBuilder()
-            .setType(DigestType.MD5)
-            .setChecksum(md5Result)
-            .build();
+                .setType(DigestType.MD5)
+                .setChecksum(md5Result)
+                .build();
         systemPropertiesBuilder.setBodyDigest(digest);
 
         if ((messageExt.getSysFlag() & MessageSysFlag.COMPRESSED_FLAG) == MessageSysFlag.COMPRESSED_FLAG) {
@@ -165,8 +155,8 @@ public class GrpcConverter {
         if (isTransValue.equals(isTrans)) {
             systemPropertiesBuilder.setMessageType(MessageType.TRANSACTION);
         } else if (messageExt.getProperty(MessageConst.PROPERTY_DELAY_TIME_LEVEL) != null
-            || messageExt.getProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS) != null
-            || messageExt.getProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC) != null) {
+                || messageExt.getProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS) != null
+                || messageExt.getProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC) != null) {
             systemPropertiesBuilder.setMessageType(MessageType.DELAY);
         } else if (messageExt.getProperty(MessageConst.PROPERTY_SHARDING_KEY) != null) {
             systemPropertiesBuilder.setMessageType(MessageType.FIFO);
@@ -249,9 +239,9 @@ public class GrpcConverter {
         String dlqOriginMessageId = messageExt.getProperty(MessageConst.PROPERTY_DLQ_ORIGIN_MESSAGE_ID);
         if (dlqOriginTopic != null && dlqOriginMessageId != null) {
             DeadLetterQueue dlq = DeadLetterQueue.newBuilder()
-                .setTopic(dlqOriginTopic)
-                .setMessageId(dlqOriginMessageId)
-                .build();
+                    .setTopic(dlqOriginTopic)
+                    .setMessageId(dlqOriginMessageId)
+                    .build();
             systemPropertiesBuilder.setDeadLetterQueue(dlq);
         }
         return systemPropertiesBuilder.build();
@@ -259,8 +249,8 @@ public class GrpcConverter {
 
     public Resource buildResource(String resourceNameWithNamespace) {
         return Resource.newBuilder()
-            .setResourceNamespace(NamespaceUtil.getNamespaceFromResource(resourceNameWithNamespace))
-            .setName(NamespaceUtil.withoutNamespace(resourceNameWithNamespace))
-            .build();
+                .setResourceNamespace(NamespaceUtil.getNamespaceFromResource(resourceNameWithNamespace))
+                .setName(NamespaceUtil.withoutNamespace(resourceNameWithNamespace))
+                .build();
     }
 }

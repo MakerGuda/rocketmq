@@ -60,17 +60,17 @@ public class DynamicAddAndCrashIT extends BaseConf {
         TestUtils.waitForSeconds(WAIT_TIME);
 
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         TestUtils.waitForSeconds(WAIT_TIME);
         consumer2.shutdown();
 
         asyncDefaultMQProducer.waitSendAll(WAIT_TIME * 6);
 
         MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(), consumer1.getListener(),
-            consumer2.getListener());
+                consumer2.getListener());
 
         boolean recvAll = MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(),
-            consumer1.getListener(), consumer2.getListener());
+                consumer1.getListener(), consumer2.getListener());
         assertThat(recvAll).isEqualTo(true);
     }
 
@@ -84,9 +84,9 @@ public class DynamicAddAndCrashIT extends BaseConf {
         TestUtils.waitForSeconds(WAIT_TIME);
 
         RMQNormalConsumer consumer2 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         RMQNormalConsumer consumer3 = getConsumer(NAMESRV_ADDR, consumer1.getConsumerGroup(), topic,
-            "*", new RMQNormalListener());
+                "*", new RMQNormalListener());
         TestUtils.waitForSeconds(WAIT_TIME);
 
         consumer2.shutdown();
@@ -95,10 +95,10 @@ public class DynamicAddAndCrashIT extends BaseConf {
         asyncDefaultMQProducer.waitSendAll(WAIT_TIME * 6);
 
         MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(), consumer1.getListener(),
-            consumer2.getListener(), consumer3.getListener());
+                consumer2.getListener(), consumer3.getListener());
 
         boolean recvAll = MQWait.waitConsumeAll(CONSUME_TIME, producer.getAllMsgBody(),
-            consumer1.getListener(), consumer2.getListener(), consumer3.getListener());
+                consumer1.getListener(), consumer2.getListener(), consumer3.getListener());
         assertThat(recvAll).isEqualTo(true);
     }
 }

@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.export;
 
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -27,6 +25,9 @@ import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class ExportPopRecordCommand implements SubCommand {
 
@@ -43,7 +44,7 @@ public class ExportPopRecordCommand implements SubCommand {
     @Override
     public Options buildCommandlineOptions(Options options) {
         Option opt = new Option(
-            "c", "clusterName", true, "choose one cluster to export");
+                "c", "clusterName", true, "choose one cluster to export");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -66,7 +67,7 @@ public class ExportPopRecordCommand implements SubCommand {
         try {
             adminExt.start();
             boolean dryRun = commandLine.hasOption('d') &&
-                Boolean.FALSE.toString().equalsIgnoreCase(commandLine.getOptionValue('d'));
+                    Boolean.FALSE.toString().equalsIgnoreCase(commandLine.getOptionValue('d'));
             if (commandLine.hasOption('b')) {
                 String brokerAddr = commandLine.getOptionValue('b').trim();
                 String brokerName = adminExt.getBrokerConfig(brokerAddr).getProperty("brokerName");
@@ -81,7 +82,7 @@ public class ExportPopRecordCommand implements SubCommand {
                             BrokerData brokerData = clusterInfo.getBrokerAddrTable().get(brokerName);
                             if (brokerData != null) {
                                 brokerData.getBrokerAddrs().forEach(
-                                    (brokerId, brokerAddr) -> export(adminExt, brokerAddr, brokerName, dryRun));
+                                        (brokerId, brokerAddr) -> export(adminExt, brokerAddr, brokerName, dryRun));
                             }
                         });
                     }
@@ -100,11 +101,10 @@ public class ExportPopRecordCommand implements SubCommand {
                 adminExt.exportPopRecords(brokerAddr, TimeUnit.SECONDS.toMillis(30));
             }
             System.out.printf("Export broker records, " +
-                "brokerName=%s, brokerAddr=%s, dryRun=%s%n", brokerName, brokerAddr, dryRun);
+                    "brokerName=%s, brokerAddr=%s, dryRun=%s%n", brokerName, brokerAddr, dryRun);
         } catch (Exception e) {
             System.out.printf("Export broker records error, " +
-                "brokerName=%s, brokerAddr=%s, dryRun=%s%n%s", brokerName, brokerAddr, dryRun, e);
+                    "brokerName=%s, brokerAddr=%s, dryRun=%s%n%s", brokerName, brokerAddr, dryRun, e);
         }
     }
 }
-

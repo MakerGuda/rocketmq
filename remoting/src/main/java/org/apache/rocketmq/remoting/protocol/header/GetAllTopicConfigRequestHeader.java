@@ -27,17 +27,15 @@ import org.apache.rocketmq.remoting.protocol.RequestCode;
 
 @RocketMQAction(value = RequestCode.GET_ALL_TOPIC_CONFIG, resource = ResourceType.TOPIC, action = Action.GET)
 public class GetAllTopicConfigRequestHeader implements CommandCustomHeader {
+    @CFNotNull
+    private Integer topicSeq;
+    private String dataVersion;
+    private Integer maxTopicNum;
+
     @Override
     public void checkFields() throws RemotingCommandException {
         // nothing
     }
-
-    @CFNotNull
-    private Integer topicSeq;
-
-    private String dataVersion;
-
-    private Integer maxTopicNum;
 
     public Integer getTopicSeq() {
         return topicSeq;

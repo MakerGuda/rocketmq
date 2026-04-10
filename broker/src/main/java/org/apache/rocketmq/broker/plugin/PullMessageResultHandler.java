@@ -34,15 +34,15 @@ public interface PullMessageResultHandler {
     /**
      * Handle result of get message from store.
      *
-     * @param getMessageResult store result
-     * @param request request
-     * @param requestHeader request header
-     * @param channel channel
-     * @param subscriptionData sub data
+     * @param getMessageResult        store result
+     * @param request                 request
+     * @param requestHeader           request header
+     * @param channel                 channel
+     * @param subscriptionData        sub data
      * @param subscriptionGroupConfig sub config
-     * @param brokerAllowSuspend brokerAllowSuspend
-     * @param messageFilter store message filter
-     * @param response response
+     * @param brokerAllowSuspend      brokerAllowSuspend
+     * @param messageFilter           store message filter
+     * @param response                response
      * @return response or null
      */
     RemotingCommand handle(final GetMessageResult getMessageResult,

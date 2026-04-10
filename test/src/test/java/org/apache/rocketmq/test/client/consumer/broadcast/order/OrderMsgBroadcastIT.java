@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.broadcast.order;
 
-import java.util.List;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -32,6 +31,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -63,9 +64,9 @@ public class OrderMsgBroadcastIT extends BaseBroadcast {
         int msgSize = 10;
 
         RMQBroadCastConsumer consumer1 = getBroadCastConsumer(NAMESRV_ADDR, topic, "*",
-            new RMQOrderListener());
+                new RMQOrderListener());
         RMQBroadCastConsumer consumer2 = getBroadCastConsumer(NAMESRV_ADDR,
-            consumer1.getConsumerGroup(), topic, "*", new RMQOrderListener());
+                consumer1.getConsumerGroup(), topic, "*", new RMQOrderListener());
         TestUtils.waitForSeconds(WAIT_TIME);
 
         List<MessageQueue> mqs = producer.getMessageQueue();
@@ -75,8 +76,8 @@ public class OrderMsgBroadcastIT extends BaseBroadcast {
         consumer2.getListener().waitForMessageConsume(producer.getAllMsgBody(), broadcastConsumeTime);
 
         assertThat(VerifyUtils.verifyOrder(((RMQOrderListener) consumer1.getListener()).getMsgs()))
-            .isEqualTo(true);
+                .isEqualTo(true);
         assertThat(VerifyUtils.verifyOrder(((RMQOrderListener) consumer2.getListener()).getMsgs()))
-            .isEqualTo(true);
+                .isEqualTo(true);
     }
 }

@@ -17,6 +17,10 @@
 
 package org.apache.rocketmq.common.utils;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.rocketmq.common.MixAll;
+import org.apache.rocketmq.common.UtilAll;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -24,9 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.rocketmq.common.MixAll;
-import org.apache.rocketmq.common.UtilAll;
 
 /**
  * Entry Checkpoint file util
@@ -49,18 +50,6 @@ public class CheckpointFile<T> {
     private static final int NOT_CHECK_CRC_MAGIC_CODE = 0;
     private final String filePath;
     private final CheckpointSerializer<T> serializer;
-
-    public interface CheckpointSerializer<T> {
-        /**
-         * Serialize entry to line
-         */
-        String toLine(final T entry);
-
-        /**
-         * DeSerialize line to entry
-         */
-        T fromLine(final String line);
-    }
 
     public CheckpointFile(final String filePath, final CheckpointSerializer<T> serializer) {
         this.filePath = filePath;
@@ -90,7 +79,7 @@ public class CheckpointFile<T> {
             int crc32 = UtilAll.crc32(entryContent.toString().getBytes(StandardCharsets.UTF_8));
 
             String content = entries.size() + System.lineSeparator() +
-                crc32 + System.lineSeparator() + entryContent;
+                    crc32 + System.lineSeparator() + entryContent;
             MixAll.string2File(content, this.filePath);
         }
     }
@@ -124,13 +113,13 @@ public class CheckpointFile<T> {
 
                 if (result.size() != expectedLines) {
                     final String err = String.format(
-                        "Expect %d entries, only found %d entries", expectedLines, result.size());
+                            "Expect %d entries, only found %d entries", expectedLines, result.size());
                     throw new IOException(err);
                 }
 
                 if (NOT_CHECK_CRC_MAGIC_CODE != expectedCrc32 && truthCrc32 != expectedCrc32) {
                     final String err = String.format(
-                        "Entries crc32 not match, file=%s, truth=%s", expectedCrc32, truthCrc32);
+                            "Entries crc32 not match, file=%s, truth=%s", expectedCrc32, truthCrc32);
                     throw new IOException(err);
                 }
                 return result;
@@ -151,5 +140,17 @@ public class CheckpointFile<T> {
         } catch (IOException e) {
             return this.read(this.getBackFilePath());
         }
+    }
+
+    public interface CheckpointSerializer<T> {
+        /**
+         * Serialize entry to line
+         */
+        String toLine(final T entry);
+
+        /**
+         * DeSerialize line to entry
+         */
+        T fromLine(final String line);
     }
 }

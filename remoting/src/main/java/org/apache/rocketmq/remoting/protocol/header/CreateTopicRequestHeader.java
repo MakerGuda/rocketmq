@@ -151,16 +151,16 @@ public class CreateTopicRequestHeader extends TopicRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("topic", topic)
-            .add("defaultTopic", defaultTopic)
-            .add("readQueueNums", readQueueNums)
-            .add("writeQueueNums", writeQueueNums)
-            .add("perm", perm)
-            .add("topicFilterType", topicFilterType)
-            .add("topicSysFlag", topicSysFlag)
-            .add("order", order)
-            .add("attributes", attributes)
-            .add("force", force)
-            .toString();
+                .add("topic", topic)
+                .add("defaultTopic", defaultTopic)
+                .add("readQueueNums", readQueueNums)
+                .add("writeQueueNums", writeQueueNums)
+                .add("perm", perm)
+                .add("topicFilterType", topicFilterType)
+                .add("topicSysFlag", topicSysFlag)
+                .add("order", order)
+                .add("attributes", attributes)
+                .add("force", force)
+                .toString();
     }
 }

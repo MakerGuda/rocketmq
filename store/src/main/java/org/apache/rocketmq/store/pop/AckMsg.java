@@ -49,24 +49,28 @@ public class AckMsg {
         this.popTime = popTime;
     }
 
-    public void setQueueId(int queueId) {
-        this.queueId = queueId;
-    }
-
     public int getQueueId() {
         return queueId;
     }
 
-    public void setTopic(String topic) {
-        this.topic = topic;
+    public void setQueueId(int queueId) {
+        this.queueId = queueId;
     }
 
     public String getTopic() {
         return topic;
     }
 
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
     public long getAckOffset() {
         return ackOffset;
+    }
+
+    public void setAckOffset(long ackOffset) {
+        this.ackOffset = ackOffset;
     }
 
     public String getConsumerGroup() {
@@ -75,10 +79,6 @@ public class AckMsg {
 
     public void setConsumerGroup(String consumerGroup) {
         this.consumerGroup = consumerGroup;
-    }
-
-    public void setAckOffset(long ackOffset) {
-        this.ackOffset = ackOffset;
     }
 
     public long getStartOffset() {

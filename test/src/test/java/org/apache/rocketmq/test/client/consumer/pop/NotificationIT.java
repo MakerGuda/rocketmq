@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.test.client.consumer.pop;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.attribute.CQType;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.constant.ConsumeInitMode;
@@ -29,8 +28,10 @@ import org.apache.rocketmq.test.message.MessageQueueMsg;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
+
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -63,7 +64,7 @@ public class NotificationIT extends BasePop {
         Boolean result2 = future2.get();
         assertThat(result2).isTrue();
         client.popMessageAsync(brokerAddr, messageQueue, 10000, 1, group, 1000, false,
-            ConsumeInitMode.MIN, false, null, null).get();
+                ConsumeInitMode.MIN, false, null, null).get();
         Boolean result1 = future1.get();
         assertThat(result1).isFalse();
     }
@@ -78,7 +79,7 @@ public class NotificationIT extends BasePop {
         Boolean result1 = future1.get();
         assertThat(result1).isTrue();
         client.popMessageAsync(brokerAddr, messageQueue, 10000, 1, group, 1000, false,
-            ConsumeInitMode.MIN, true, null, null, attemptId).get();
+                ConsumeInitMode.MIN, true, null, null, attemptId).get();
         Boolean result2 = future2.get();
         assertThat(result2).isTrue();
 

@@ -24,6 +24,7 @@ import org.apache.rocketmq.store.Swappable;
 public interface FileQueueLifeCycle extends Swappable {
     /**
      * Load from file.
+     *
      * @return true if loaded successfully.
      */
     boolean load();
@@ -40,7 +41,8 @@ public interface FileQueueLifeCycle extends Swappable {
 
     /**
      * Flush cache to file.
-     * @param flushLeastPages  the minimum number of pages to be flushed
+     *
+     * @param flushLeastPages the minimum number of pages to be flushed
      * @return true if any data has been flushed.
      */
     boolean flush(int flushLeastPages);
@@ -52,12 +54,14 @@ public interface FileQueueLifeCycle extends Swappable {
 
     /**
      * Truncate dirty logic files starting at max commit log position.
+     *
      * @param maxCommitLogPos max commit log position
      */
     void truncateDirtyLogicFiles(long maxCommitLogPos);
 
     /**
      * Delete expired files ending at min commit log position.
+     *
      * @param minCommitLogPos min commit log position
      * @return deleted file numbers.
      */
@@ -65,6 +69,7 @@ public interface FileQueueLifeCycle extends Swappable {
 
     /**
      * Roll to next file.
+     *
      * @param nextBeginOffset next begin offset
      * @return the beginning offset of the next file
      */
@@ -72,12 +77,14 @@ public interface FileQueueLifeCycle extends Swappable {
 
     /**
      * Is the first file available?
+     *
      * @return true if it's available
      */
     boolean isFirstFileAvailable();
 
     /**
      * Does the first file exist?
+     *
      * @return true if it exists
      */
     boolean isFirstFileExist();

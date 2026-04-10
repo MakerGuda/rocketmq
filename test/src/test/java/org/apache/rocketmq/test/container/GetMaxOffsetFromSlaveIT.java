@@ -17,10 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.impl.producer.TopicPublishInfo;
@@ -36,15 +32,19 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @Ignore
 public class GetMaxOffsetFromSlaveIT extends ContainerIntegrationTestBase {
-    private static DefaultMQProducer mqProducer;
-
     private static final String MSG = "Hello RocketMQ ";
     private static final byte[] MESSAGE_BODY = MSG.getBytes(StandardCharsets.UTF_8);
+    private static DefaultMQProducer mqProducer;
 
     public GetMaxOffsetFromSlaveIT() {
     }
@@ -78,23 +78,23 @@ public class GetMaxOffsetFromSlaveIT extends ContainerIntegrationTestBase {
         assertThat(publishInfo).isNotNull();
         for (MessageQueue mq : publishInfo.getMessageQueueList()) {
             maxOffsetMap.put(mq.getQueueId(), mqProducer.getDefaultMQProducerImpl().
-                maxOffset(new MessageQueue(THREE_REPLICAS_TOPIC, master3With3Replicas.getBrokerConfig().getBrokerName(), mq.getQueueId())));
+                    maxOffset(new MessageQueue(THREE_REPLICAS_TOPIC, master3With3Replicas.getBrokerConfig().getBrokerName(), mq.getQueueId())));
         }
 
         isolateBroker(master3With3Replicas);
 
         mqProducer.getDefaultMQProducerImpl().getmQClientFactory().updateTopicRouteInfoFromNameServer(THREE_REPLICAS_TOPIC);
         assertThat(mqProducer.getDefaultMQProducerImpl().getmQClientFactory().findBrokerAddressInPublish(
-            master3With3Replicas.getBrokerConfig().getBrokerName())).isNotNull();
+                master3With3Replicas.getBrokerConfig().getBrokerName())).isNotNull();
 
         for (MessageQueue mq : publishInfo.getMessageQueueList()) {
             assertThat(mqProducer.getDefaultMQProducerImpl().maxOffset(
-                new MessageQueue(THREE_REPLICAS_TOPIC, master3With3Replicas.getBrokerConfig().getBrokerName(), mq.getQueueId())))
-                .isEqualTo(maxOffsetMap.get(mq.getQueueId()));
+                    new MessageQueue(THREE_REPLICAS_TOPIC, master3With3Replicas.getBrokerConfig().getBrokerName(), mq.getQueueId())))
+                    .isEqualTo(maxOffsetMap.get(mq.getQueueId()));
         }
 
         cancelIsolatedBroker(master3With3Replicas);
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master3With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2);
+                .until(() -> ((DefaultMessageStore) master3With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2);
     }
 }

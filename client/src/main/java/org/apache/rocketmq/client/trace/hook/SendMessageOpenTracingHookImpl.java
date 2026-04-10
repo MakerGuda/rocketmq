@@ -48,8 +48,8 @@ public class SendMessageOpenTracingHookImpl implements SendMessageHook {
         }
         Message msg = context.getMessage();
         Tracer.SpanBuilder spanBuilder = tracer
-            .buildSpan(TraceConstants.TO_PREFIX + msg.getTopic())
-            .withTag(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
+                .buildSpan(TraceConstants.TO_PREFIX + msg.getTopic())
+                .withTag(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
         SpanContext spanContext = tracer.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(msg.getProperties()));
         if (spanContext != null) {
             spanBuilder.asChildOf(spanContext);

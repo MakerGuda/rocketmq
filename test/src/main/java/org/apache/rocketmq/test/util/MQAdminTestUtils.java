@@ -17,13 +17,6 @@
 
 package org.apache.rocketmq.test.util;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
@@ -52,6 +45,10 @@ import org.apache.rocketmq.tools.admin.MQAdminUtils;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.topic.RemappingStaticTopicSubCommand;
 import org.apache.rocketmq.tools.command.topic.UpdateStaticTopicSubCommand;
+
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils.getMappingDetailFromConfig;
 import static org.awaitility.Awaitility.await;
@@ -188,7 +185,7 @@ public class MQAdminTestUtils {
                 return false;
             }
         }
-        return  true;
+        return true;
     }
 
     //should only be test, if some middle operation failed, it does not backup the brokerConfigMap
@@ -256,18 +253,18 @@ public class MQAdminTestUtils {
         String[] args;
         if (cluster != null) {
             args = new String[]{
-                "-c", cluster,
-                "-t", topic,
-                "-qn", String.valueOf(queueNum),
-                "-n", nameservers
+                    "-c", cluster,
+                    "-t", topic,
+                    "-qn", String.valueOf(queueNum),
+                    "-n", nameservers
             };
         } else {
             String brokerStr = String.join(",", brokers);
             args = new String[]{
-                "-b", brokerStr,
-                "-t", topic,
-                "-qn", String.valueOf(queueNum),
-                "-n", nameservers
+                    "-b", brokerStr,
+                    "-t", topic,
+                    "-qn", String.valueOf(queueNum),
+                    "-n", nameservers
             };
         }
         final CommandLine commandLine = ServerUtil.parseCmdLine("mqadmin " + cmd.commandName(), args, cmd.buildCommandlineOptions(options), new DefaultParser());
@@ -287,16 +284,16 @@ public class MQAdminTestUtils {
         String[] args;
         if (cluster != null) {
             args = new String[]{
-                "-c", cluster,
-                "-t", topic,
-                "-n", nameservers
+                    "-c", cluster,
+                    "-t", topic,
+                    "-n", nameservers
             };
         } else {
             String brokerStr = String.join(",", brokers);
             args = new String[]{
-                "-b", brokerStr,
-                "-t", topic,
-                "-n", nameservers
+                    "-b", brokerStr,
+                    "-t", topic,
+                    "-n", nameservers
             };
         }
         final CommandLine commandLine = ServerUtil.parseCmdLine("mqadmin " + cmd.commandName(), args, cmd.buildCommandlineOptions(options), new DefaultParser());
@@ -323,8 +320,8 @@ public class MQAdminTestUtils {
      * Delete topic from broker only without cleaning route info from name server forwardly
      *
      * @param nameSrvAddr the namesrv addr to connect
-     * @param brokerName the specific broker
-     * @param topic the specific topic to delete
+     * @param brokerName  the specific broker
+     * @param topic       the specific topic to delete
      */
     public static void deleteTopicFromBrokerOnly(String nameSrvAddr, String brokerName, String topic) {
         DefaultMQAdminExt mqAdminExt = new DefaultMQAdminExt();

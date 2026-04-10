@@ -17,29 +17,28 @@
 
 package org.apache.rocketmq.remoting.protocol.route;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.common.MixAll;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.common.MixAll;
 
 /**
  * The class describes that a typical broker cluster's (in replication) details: the cluster (in sharding) name
  * that it belongs to, and all the single instance information for this cluster.
  */
 public class BrokerData implements Comparable<BrokerData> {
+    private final Random random = new Random();
     private String cluster;
     private String brokerName;
-
     /**
      * The container that store the all single instances for the current broker replication cluster.
      * The key is the brokerId, and the value is the address of the single broker instance.
      */
     private HashMap<Long, String> brokerAddrs;
     private String zoneName;
-    private final Random random = new Random();
-
     /**
      * Enable acting master or not, used for old version HA adaption,
      */
@@ -66,7 +65,7 @@ public class BrokerData implements Comparable<BrokerData> {
     }
 
     public BrokerData(String cluster, String brokerName, HashMap<Long, String> brokerAddrs,
-        boolean enableActingMaster) {
+                      boolean enableActingMaster) {
         this.cluster = cluster;
         this.brokerName = brokerName;
         this.brokerAddrs = brokerAddrs;
@@ -74,7 +73,7 @@ public class BrokerData implements Comparable<BrokerData> {
     }
 
     public BrokerData(String cluster, String brokerName, HashMap<Long, String> brokerAddrs, boolean enableActingMaster,
-        String zoneName) {
+                      String zoneName) {
         this.cluster = cluster;
         this.brokerName = brokerName;
         this.brokerAddrs = brokerAddrs;

@@ -17,22 +17,6 @@
 
 package org.apache.rocketmq.store.ha.autoswitch;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
@@ -46,12 +30,19 @@ import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.apache.rocketmq.store.ha.DefaultHAService;
-import org.apache.rocketmq.store.ha.GroupTransferService;
-import org.apache.rocketmq.store.ha.HAClient;
-import org.apache.rocketmq.store.ha.HAConnection;
-import org.apache.rocketmq.store.ha.HAConnectionStateNotificationService;
+import org.apache.rocketmq.store.ha.*;
 import org.rocksdb.RocksDBException;
+
+import java.io.IOException;
+import java.nio.channels.SocketChannel;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * SwitchAble ha service, support switch role to master or slave.
@@ -217,7 +208,7 @@ public class AutoSwitchHAService extends DefaultHAService {
 
         this.defaultMessageStore.setStateMachineVersion(masterEpoch);
         LOGGER.info("Change ha to master success, last role is master, newMasterEpoch:{}, startOffset:{}",
-            masterEpoch, newEpochEntry.getStartOffset());
+                masterEpoch, newEpochEntry.getStartOffset());
         return true;
     }
 
@@ -231,7 +222,7 @@ public class AutoSwitchHAService extends DefaultHAService {
 
         this.defaultMessageStore.setStateMachineVersion(newMasterEpoch);
         LOGGER.info("Change ha to slave success, master doesn't change, newMasterAddress:{}, newMasterEpoch:{}",
-            newMasterAddr, newMasterEpoch);
+                newMasterAddr, newMasterEpoch);
         return true;
     }
 
@@ -323,7 +314,7 @@ public class AutoSwitchHAService extends DefaultHAService {
             final EpochEntry currentLeaderEpoch = this.epochCache.lastEntry();
             if (slaveMaxOffset >= currentLeaderEpoch.getStartOffset()) {
                 LOGGER.info("The slave {} has caught up, slaveMaxOffset: {}, confirmOffset: {}, epoch: {}, leader epoch startOffset: {}.",
-                    slaveBrokerId, slaveMaxOffset, confirmOffset, currentLeaderEpoch.getEpoch(), currentLeaderEpoch.getStartOffset());
+                        slaveBrokerId, slaveMaxOffset, confirmOffset, currentLeaderEpoch.getEpoch(), currentLeaderEpoch.getStartOffset());
                 currentSyncStateSet.add(slaveBrokerId);
                 markSynchronizingSyncStateSet(currentSyncStateSet);
                 // Notify the upper layer that syncStateSet changed.
@@ -423,7 +414,7 @@ public class AutoSwitchHAService extends DefaultHAService {
     public long computeConfirmOffset() {
         final Set<Long> currentSyncStateSet = getSyncStateSet();
         long newConfirmOffset = this.defaultMessageStore.getMaxPhyOffset();
-        List<Long> idList = this.connectionList.stream().map(connection -> ((AutoSwitchHAConnection)connection).getSlaveId()).collect(Collectors.toList());
+        List<Long> idList = this.connectionList.stream().map(connection -> ((AutoSwitchHAConnection) connection).getSlaveId()).collect(Collectors.toList());
 
         // To avoid the syncStateSet is not consistent with connectionList.
         // Fix issue: https://github.com/apache/rocketmq/issues/6662
@@ -444,18 +435,6 @@ public class AutoSwitchHAService extends DefaultHAService {
         return newConfirmOffset;
     }
 
-    public void setSyncStateSet(final Set<Long> syncStateSet) {
-        this.writeLock.lock();
-        try {
-            markSynchronizingSyncStateSetDone();
-            this.syncStateSet.clear();
-            this.syncStateSet.addAll(syncStateSet);
-            this.defaultMessageStore.setConfirmOffset(computeConfirmOffset());
-        } finally {
-            this.writeLock.unlock();
-        }
-    }
-
     /**
      * Return the union of the local and remote syncStateSets
      */
@@ -474,6 +453,18 @@ public class AutoSwitchHAService extends DefaultHAService {
             }
         } finally {
             this.readLock.unlock();
+        }
+    }
+
+    public void setSyncStateSet(final Set<Long> syncStateSet) {
+        this.writeLock.lock();
+        try {
+            markSynchronizingSyncStateSetDone();
+            this.syncStateSet.clear();
+            this.syncStateSet.addAll(syncStateSet);
+            this.defaultMessageStore.setConfirmOffset(computeConfirmOffset());
+        } finally {
+            this.writeLock.unlock();
         }
     }
 

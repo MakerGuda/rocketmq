@@ -17,10 +17,6 @@
 package org.apache.rocketmq.client.impl.mqclient;
 
 import com.google.common.base.Strings;
-import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.common.NameserverAccessConfig;
@@ -33,9 +29,13 @@ import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.RemotingClient;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 
+import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
 public class MQClientAPIFactory implements StartAndShutdown {
 
-    private MQClientAPIExt[] clients;
     private final String namePrefix;
     private final int clientNum;
     private final ClientRemotingProcessor clientRemotingProcessor;
@@ -43,26 +43,27 @@ public class MQClientAPIFactory implements StartAndShutdown {
     private final ScheduledExecutorService scheduledExecutorService;
     private final NameserverAccessConfig nameserverAccessConfig;
     private final ObjectCreator<RemotingClient> remotingClientCreator;
+    private MQClientAPIExt[] clients;
 
     public MQClientAPIFactory(
-        NameserverAccessConfig nameserverAccessConfig,
-        String namePrefix,
-        int clientNum,
-        ClientRemotingProcessor clientRemotingProcessor,
-        RPCHook rpcHook,
-        ScheduledExecutorService scheduledExecutorService
+            NameserverAccessConfig nameserverAccessConfig,
+            String namePrefix,
+            int clientNum,
+            ClientRemotingProcessor clientRemotingProcessor,
+            RPCHook rpcHook,
+            ScheduledExecutorService scheduledExecutorService
     ) {
         this(nameserverAccessConfig, namePrefix, clientNum, clientRemotingProcessor, rpcHook, scheduledExecutorService, null);
     }
 
     public MQClientAPIFactory(
-        NameserverAccessConfig nameserverAccessConfig,
-        String namePrefix,
-        int clientNum,
-        ClientRemotingProcessor clientRemotingProcessor,
-        RPCHook rpcHook,
-        ScheduledExecutorService scheduledExecutorService,
-        ObjectCreator<RemotingClient> remotingClientCreator
+            NameserverAccessConfig nameserverAccessConfig,
+            String namePrefix,
+            int clientNum,
+            ClientRemotingProcessor clientRemotingProcessor,
+            RPCHook rpcHook,
+            ScheduledExecutorService scheduledExecutorService,
+            ObjectCreator<RemotingClient> remotingClientCreator
     ) {
         this.nameserverAccessConfig = nameserverAccessConfig;
         this.namePrefix = namePrefix;
@@ -124,11 +125,11 @@ public class MQClientAPIFactory implements StartAndShutdown {
         nettyClientConfig.setDisableCallbackExecutor(true);
 
         MQClientAPIExt mqClientAPIExt = new MQClientAPIExt(
-            clientConfig,
-            nettyClientConfig,
-            clientRemotingProcessor,
-            rpcHook,
-            remotingClientCreator
+                clientConfig,
+                nettyClientConfig,
+                clientRemotingProcessor,
+                rpcHook,
+                remotingClientCreator
         );
 
         if (StringUtils.isEmpty(nameserverAccessConfig.getNamesrvDomain())) {
@@ -136,10 +137,10 @@ public class MQClientAPIFactory implements StartAndShutdown {
         } else {
             mqClientAPIExt.fetchNameServerAddr();
             this.scheduledExecutorService.scheduleAtFixedRate(
-                mqClientAPIExt::fetchNameServerAddr,
-                Duration.ofSeconds(10).toMillis(),
-                Duration.ofMinutes(2).toMillis(),
-                TimeUnit.MILLISECONDS
+                    mqClientAPIExt::fetchNameServerAddr,
+                    Duration.ofSeconds(10).toMillis(),
+                    Duration.ofMinutes(2).toMillis(),
+                    TimeUnit.MILLISECONDS
             );
         }
 

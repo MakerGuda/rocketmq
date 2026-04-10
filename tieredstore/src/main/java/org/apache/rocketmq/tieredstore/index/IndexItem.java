@@ -44,8 +44,8 @@ public class IndexItem {
 
     public IndexItem(byte[] bytes) {
         if (bytes == null ||
-            bytes.length != INDEX_ITEM_SIZE &&
-                bytes.length != COMPACT_INDEX_ITEM_SIZE) {
+                bytes.length != INDEX_ITEM_SIZE &&
+                        bytes.length != COMPACT_INDEX_ITEM_SIZE) {
             throw new IllegalArgumentException("Byte array length not correct");
         }
 
@@ -102,13 +102,13 @@ public class IndexItem {
     @Override
     public String toString() {
         return "IndexItem{" +
-            "hashCode=" + hashCode +
-            ", topicId=" + topicId +
-            ", queueId=" + queueId +
-            ", offset=" + offset +
-            ", size=" + size +
-            ", timeDiff=" + timeDiff +
-            ", position=" + itemIndex +
-            '}';
+                "hashCode=" + hashCode +
+                ", topicId=" + topicId +
+                ", queueId=" + queueId +
+                ", offset=" + offset +
+                ", size=" + size +
+                ", timeDiff=" + timeDiff +
+                ", position=" + itemIndex +
+                '}';
     }
 }

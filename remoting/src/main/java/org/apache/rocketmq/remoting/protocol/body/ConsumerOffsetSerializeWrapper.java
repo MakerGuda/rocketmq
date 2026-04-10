@@ -17,14 +17,15 @@
 
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class ConsumerOffsetSerializeWrapper extends RemotingSerializable {
     private ConcurrentMap<String/* topic@group */, ConcurrentMap<Integer, Long>> offsetTable =
-        new ConcurrentHashMap<>(512);
+            new ConcurrentHashMap<>(512);
     private DataVersion dataVersion;
 
     public ConcurrentMap<String, ConcurrentMap<Integer, Long>> getOffsetTable() {

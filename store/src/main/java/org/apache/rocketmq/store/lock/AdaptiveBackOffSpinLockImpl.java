@@ -19,41 +19,28 @@ package org.apache.rocketmq.store.lock;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AdaptiveBackOffSpinLockImpl implements AdaptiveBackOffSpinLock {
-    private AdaptiveBackOffSpinLock adaptiveLock;
-    //state
-    private AtomicBoolean state = new AtomicBoolean(true);
-
     // Used to determine the switchover between a mutex lock and a spin lock
     private final static float SWAP_SPIN_LOCK_RATIO = 0.8f;
-
     // It is used to adjust the spin number K of the escape spin lock
     // When (retreat number / TPS) <= (1 / BASE_SWAP_ADAPTIVE_RATIO * SPIN_LOCK_ADAPTIVE_RATIO), K is decreased
     private final static int SPIN_LOCK_ADAPTIVE_RATIO = 4;
-
     // It is used to adjust the spin number K of the escape spin lock
     // When (retreat number / TPS) >= (1 / BASE_SWAP_ADAPTIVE_RATIO), K is increased
     private final static int BASE_SWAP_LOCK_RATIO = 320;
-
     private final static String BACK_OFF_SPIN_LOCK = "SpinLock";
-
     private final static String REENTRANT_LOCK = "ReentrantLock";
-
-    private Map<String, AdaptiveBackOffSpinLock> locks;
-
     private final List<AtomicInteger> tpsTable;
-
     private final List<Set<Thread>> threadTable;
-
+    private AdaptiveBackOffSpinLock adaptiveLock;
+    //state
+    private AtomicBoolean state = new AtomicBoolean(true);
+    private Map<String, AdaptiveBackOffSpinLock> locks;
     private int swapCriticalPoint;
 
     private AtomicInteger currentThreadNum = new AtomicInteger(0);
@@ -190,12 +177,12 @@ public class AdaptiveBackOffSpinLockImpl implements AdaptiveBackOffSpinLock {
         return tpsTable;
     }
 
-    public void setSwapCriticalPoint(int swapCriticalPoint) {
-        this.swapCriticalPoint = swapCriticalPoint;
-    }
-
     public int getSwapCriticalPoint() {
         return swapCriticalPoint;
+    }
+
+    public void setSwapCriticalPoint(int swapCriticalPoint) {
+        this.swapCriticalPoint = swapCriticalPoint;
     }
 
     public boolean isOpen() {

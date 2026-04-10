@@ -16,12 +16,7 @@
  */
 package org.apache.rocketmq.example.operation;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -47,10 +42,10 @@ public class Producer {
             for (int i = 0; i < Integer.parseInt(msgCount); i++) {
                 try {
                     Message msg = new Message(
-                        topic,
-                        tags,
-                        keys,
-                        ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET));
+                            topic,
+                            tags,
+                            keys,
+                            ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET));
                     SendResult sendResult = producer.send(msg);
                     System.out.printf("%-8d %s%n", i, sendResult);
                 } catch (Exception e) {

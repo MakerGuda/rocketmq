@@ -15,17 +15,7 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.store.rocksdb;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.collections.CollectionUtils;
@@ -40,58 +30,71 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.store.index.rocksdb.IndexRocksDBRecord;
 import org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord;
 import org.apache.rocketmq.store.transaction.TransRocksDBRecord;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.Slice;
-import org.rocksdb.WriteBatch;
-import static org.apache.rocketmq.common.MixAll.dealTimeToHourStamps;
-import static org.apache.rocketmq.common.MixAll.getHours;
-import static org.apache.rocketmq.common.MixAll.isHourTime;
+import org.rocksdb.*;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.rocketmq.common.MixAll.*;
 import static org.apache.rocketmq.store.index.rocksdb.IndexRocksDBRecord.KEY_SPLIT;
 import static org.apache.rocketmq.store.index.rocksdb.IndexRocksDBRecord.KEY_SPLIT_BYTES;
-import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.TIMER_ROCKSDB_DELETE;
-import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.TIMER_ROCKSDB_PUT;
-import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.TIMER_ROCKSDB_UPDATE;
+import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.*;
 
 public class MessageRocksDBStorage extends AbstractRocksDBStorage {
+    public static final byte[] TIMER_COLUMN_FAMILY = "timer".getBytes(StandardCharsets.UTF_8);
+    public static final byte[] TRANS_COLUMN_FAMILY = "trans".getBytes(StandardCharsets.UTF_8);
+    public static final byte[] SYS_TOPIC_SCAN_OFFSET_CHECK_POINT = "sys_topic_scan_offset_checkpoint".getBytes(StandardCharsets.UTF_8);
+    public static final byte[] TIMELINE_CHECK_POINT = "timeline_checkpoint".getBytes(StandardCharsets.UTF_8);
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private static final Logger logError = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
     private static final String ROCKSDB_MESSAGE_DIRECTORY = "rocksdbstore";
-
-    public static final byte[] TIMER_COLUMN_FAMILY = "timer".getBytes(StandardCharsets.UTF_8);
-    public static final byte[] TRANS_COLUMN_FAMILY = "trans".getBytes(StandardCharsets.UTF_8);
     private static final byte[] LAST_OFFSET_PY = "lastOffsetPy".getBytes(StandardCharsets.UTF_8);
     private static final byte[] LAST_STORE_TIMESTAMP = "lastStoreTimeStamp".getBytes(StandardCharsets.UTF_8);
     private static final byte[] END_SUFFIX_BYTES = new byte[512];
+    private static final Set<byte[]> COMMON_CHECK_POINT_KEY_SET_FOR_TIMER = new HashSet<>();
+    private static final byte[] DELETE_VAL_FLAG = new byte[]{(byte) 0xFF};
+    private static final int LAST_OFFSET_PY_LENGTH = LAST_OFFSET_PY.length;
+    private static final Cache<byte[], byte[]> DELETE_KEY_CACHE_FOR_TIMER = CacheBuilder.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(60, TimeUnit.MINUTES)
+            .build();
+
     static {
         Arrays.fill(END_SUFFIX_BYTES, (byte) 0xFF);
     }
-    private static final Set<byte[]> COMMON_CHECK_POINT_KEY_SET_FOR_TIMER = new HashSet<>();
-    public static final byte[] SYS_TOPIC_SCAN_OFFSET_CHECK_POINT = "sys_topic_scan_offset_checkpoint".getBytes(StandardCharsets.UTF_8);
-    public static final byte[] TIMELINE_CHECK_POINT = "timeline_checkpoint".getBytes(StandardCharsets.UTF_8);
+
     static {
         COMMON_CHECK_POINT_KEY_SET_FOR_TIMER.add(SYS_TOPIC_SCAN_OFFSET_CHECK_POINT);
         COMMON_CHECK_POINT_KEY_SET_FOR_TIMER.add(TIMELINE_CHECK_POINT);
     }
-    private static final byte[] DELETE_VAL_FLAG = new byte[] {(byte)0xFF};
-    private static final int LAST_OFFSET_PY_LENGTH = LAST_OFFSET_PY.length;
-
-    private volatile ColumnFamilyHandle timerCFHandle;
-    private volatile ColumnFamilyHandle transCFHandle;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private static final Cache<byte[], byte[]> DELETE_KEY_CACHE_FOR_TIMER = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(60, TimeUnit.MINUTES)
-        .build();
+    private volatile ColumnFamilyHandle timerCFHandle;
+    private volatile ColumnFamilyHandle transCFHandle;
 
     public MessageRocksDBStorage(MessageStoreConfig messageStoreConfig) {
         super(Paths.get(messageStoreConfig.getStorePathRootDir(), ROCKSDB_MESSAGE_DIRECTORY).toString());
         this.start();
+    }
+
+    private static Long getLastIndexTimeForIndex(String lastKey) {
+        if (StringUtils.isEmpty(lastKey)) {
+            return null;
+        }
+        try {
+            String[] split = lastKey.split(KEY_SPLIT);
+            if (split.length > 0) {
+                return Long.valueOf(split[0]);
+            }
+        } catch (Exception e) {
+            logError.error("MessageRocksDBStorage getLastIndexTimeForIndex error lastKey: {}, e: {}", lastKey, e.getMessage());
+        }
+        return null;
     }
 
     @Override
@@ -317,21 +320,6 @@ public class MessageRocksDBStorage extends AbstractRocksDBStorage {
         }
     }
 
-    private static Long getLastIndexTimeForIndex(String lastKey) {
-        if (StringUtils.isEmpty(lastKey)) {
-            return null;
-        }
-        try {
-            String[] split = lastKey.split(KEY_SPLIT);
-            if (split.length > 0) {
-                return Long.valueOf(split[0]);
-            }
-        } catch (Exception e) {
-            logError.error("MessageRocksDBStorage getLastIndexTimeForIndex error lastKey: {}, e: {}", lastKey, e.getMessage());
-        }
-        return null;
-    }
-
     public void writeRecordsForTimer(byte[] columnFamily, List<TimerRocksDBRecord> recordList) {
         ColumnFamilyHandle cfHandle = getColumnFamily(columnFamily);
         if (null == cfHandle || CollectionUtils.isEmpty(recordList)) {
@@ -380,8 +368,8 @@ public class MessageRocksDBStorage extends AbstractRocksDBStorage {
         }
         RocksIterator iterator = null;
         try (ReadOptions readOptions = new ReadOptions()
-            .setIterateLowerBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(lowerTime).array()))
-            .setIterateUpperBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(upperTime).array()))) {
+                .setIterateLowerBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(lowerTime).array()))
+                .setIterateUpperBound(new Slice(ByteBuffer.allocate(Long.BYTES).putLong(upperTime).array()))) {
             iterator = db.newIterator(cfHandle, readOptions);
             if (null == startKey || startKey.length == 0) {
                 iterator.seek(ByteBuffer.allocate(Long.BYTES).putLong(lowerTime).array());

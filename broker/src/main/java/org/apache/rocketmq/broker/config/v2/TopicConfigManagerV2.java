@@ -19,7 +19,6 @@ package org.apache.rocketmq.broker.config.v2;
 import com.alibaba.fastjson2.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.nio.charset.StandardCharsets;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.topic.TopicConfigManager;
 import org.apache.rocketmq.common.MixAll;
@@ -30,10 +29,12 @@ import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Key layout: [table-prefix, 1 byte][table-id, 2 bytes][record-type-prefix, 1 byte][topic-len, 2 bytes][topic-bytes]
  * Value layout: [serialization-type, 1 byte][topic-config-bytes]
- *
+ * <p>
  * Broker 子系统组件 <b>TopicConfigManagerV2</b>（Topic Config Manager V2）。
  * 继承关系：<code>TopicConfigManager</code>。
  */
@@ -53,7 +54,7 @@ public class TopicConfigManagerV2 extends TopicConfigManager {
     public boolean loadDataVersion() {
         try {
             ConfigHelper.loadDataVersion(configStorage, TableId.TOPIC)
-                .ifPresent(buf -> ConfigHelper.onDataVersionLoad(buf, dataVersion));
+                    .ifPresent(buf -> ConfigHelper.onDataVersionLoad(buf, dataVersion));
         } catch (RocksDBException e) {
             log.error("Failed to load data version of topic", e);
             return false;

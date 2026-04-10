@@ -17,11 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -32,22 +27,25 @@ import org.apache.rocketmq.common.BrokerIdentity;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.awaitility.Awaitility.await;
 
 @Ignore
 public class GetMetadataReverseIT extends ContainerIntegrationTestBase {
 
-    private static DefaultMQProducer producer;
-
     private static final String CONSUMER_GROUP = GetMetadataReverseIT.class.getSimpleName() + "_Consumer";
-
     private static final int MESSAGE_COUNT = 32;
-
+    private static DefaultMQProducer producer;
     private final Random random = new Random();
 
     public GetMetadataReverseIT() {
@@ -89,9 +87,9 @@ public class GetMetadataReverseIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId()));
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId()));
 
         DefaultMQPushConsumer pushConsumer = createPushConsumer(CONSUMER_GROUP);
         pushConsumer.subscribe(topic, "*");
@@ -184,9 +182,9 @@ public class GetMetadataReverseIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId()));
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId()));
 
         await().atMost(Duration.ofMinutes(1)).until(() -> receivedMsgCount.get() >= MESSAGE_COUNT);
 
@@ -256,9 +254,9 @@ public class GetMetadataReverseIT extends ContainerIntegrationTestBase {
 
         isolateBroker(master1With3Replicas);
         brokerContainer1.removeBroker(new BrokerIdentity(
-            master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
-            master1With3Replicas.getBrokerConfig().getBrokerName(),
-            master1With3Replicas.getBrokerConfig().getBrokerId()));
+                master1With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                master1With3Replicas.getBrokerConfig().getBrokerName(),
+                master1With3Replicas.getBrokerConfig().getBrokerId()));
 
         await().atMost(Duration.ofMinutes(1)).until(() -> receivedMsgCount.get() >= MESSAGE_COUNT);
 

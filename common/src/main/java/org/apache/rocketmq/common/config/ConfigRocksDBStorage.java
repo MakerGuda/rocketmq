@@ -16,6 +16,10 @@
  */
 package org.apache.rocketmq.common.config;
 
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
+import org.rocksdb.*;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -25,17 +29,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompressionType;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.WriteBatch;
 
 public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
     public static final Charset CHARSET = StandardCharsets.UTF_8;
@@ -57,6 +50,30 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
         this(dbPath, readOnly, null);
     }
 
+    public static ConfigRocksDBStorage getStore(String path, boolean readOnly, CompressionType compressionType) {
+        return ConcurrentHashMapUtils.computeIfAbsent(STORE_MAP, path,
+                k -> new ConfigRocksDBStorage(path, readOnly, compressionType));
+    }
+
+    public static ConfigRocksDBStorage getStore(String path, boolean readOnly) {
+        return getStore(path, readOnly, null);
+    }
+
+    public static void shutdown(String path) {
+        ConfigRocksDBStorage kvStore = STORE_MAP.remove(path);
+        if (kvStore != null) {
+            kvStore.shutdown();
+        }
+    }
+
+    public static void destroy(String path) {
+        ConfigRocksDBStorage kvStore = STORE_MAP.remove(path);
+        if (kvStore != null) {
+            kvStore.shutdown();
+            kvStore.destroy();
+        }
+    }
+
     protected void initOptions() {
         this.options = ConfigHelper.createConfigDBOptions();
         this.columnFamilyOptions = ConfigHelper.createConfigColumnFamilyOptions();
@@ -72,7 +89,7 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
             initOptions();
 
             List<byte[]> columnFamilyNames = new ArrayList<>(RocksDB.listColumnFamilies(
-                new Options(options, columnFamilyOptions), dbPath));
+                    new Options(options, columnFamilyOptions), dbPath));
             addIfNotExists(columnFamilyNames, RocksDB.DEFAULT_COLUMN_FAMILY);
 
             List<ColumnFamilyDescriptor> cfDescriptors = new ArrayList<>();
@@ -113,7 +130,6 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
     public void batchPutWithWal(final WriteBatch batch) throws RocksDBException {
         batchPut(this.ableWalWriteOptions, batch);
     }
-
 
     // operations with the specified cf
     public void put(String cf, final byte[] keyBytes, final int keyLen, final byte[] valueBytes) throws Exception {
@@ -171,7 +187,7 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
             synchronized (this) {
                 if (!columnFamilyNameHandleMap.containsKey(cf)) {
                     ColumnFamilyDescriptor columnFamilyDescriptor =
-                        new ColumnFamilyDescriptor(cf.getBytes(CHARSET), columnFamilyOptions);
+                            new ColumnFamilyDescriptor(cf.getBytes(CHARSET), columnFamilyOptions);
                     ColumnFamilyHandle columnFamilyHandle = db.createColumnFamily(columnFamilyDescriptor);
                     columnFamilyNameHandleMap.putIfAbsent(cf, columnFamilyHandle);
                     cfHandles.add(columnFamilyHandle);
@@ -184,30 +200,6 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
     public void addIfNotExists(List<byte[]> columnFamilyNames, byte[] byteArray) {
         if (columnFamilyNames.stream().noneMatch(array -> Arrays.equals(array, byteArray))) {
             columnFamilyNames.add(byteArray);
-        }
-    }
-
-    public static ConfigRocksDBStorage getStore(String path, boolean readOnly, CompressionType compressionType) {
-        return ConcurrentHashMapUtils.computeIfAbsent(STORE_MAP, path,
-            k -> new ConfigRocksDBStorage(path, readOnly, compressionType));
-    }
-
-    public static ConfigRocksDBStorage getStore(String path, boolean readOnly) {
-        return getStore(path, readOnly, null);
-    }
-
-    public static void shutdown(String path) {
-        ConfigRocksDBStorage kvStore = STORE_MAP.remove(path);
-        if (kvStore != null) {
-            kvStore.shutdown();
-        }
-    }
-
-    public static void destroy(String path) {
-        ConfigRocksDBStorage kvStore = STORE_MAP.remove(path);
-        if (kvStore != null) {
-            kvStore.shutdown();
-            kvStore.destroy();
         }
     }
 }

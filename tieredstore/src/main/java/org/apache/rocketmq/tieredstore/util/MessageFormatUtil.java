@@ -16,19 +16,18 @@
  */
 package org.apache.rocketmq.tieredstore.util;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.message.MessageDecoder;
 import org.apache.rocketmq.tieredstore.common.SelectBufferResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageFormatUtil {
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-    private static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
+public class MessageFormatUtil {
 
     public static final int MSG_ID_LENGTH = 8 + 8;
     public static final int MAGIC_CODE_POSITION = 4;
@@ -37,7 +36,6 @@ public class MessageFormatUtil {
     public static final int SYS_FLAG_OFFSET_POSITION = 36;
     public static final int STORE_TIMESTAMP_POSITION = 56;
     public static final int STORE_HOST_POSITION = 64;
-
     /**
      * item size:           int, 4 bytes
      * magic code:          int, 4 bytes
@@ -45,13 +43,13 @@ public class MessageFormatUtil {
      */
     public static final int COMMIT_LOG_CODA_SIZE = 4 + 8 + 4;
     public static final int BLANK_MAGIC_CODE = 0xBBCCDDEE ^ 1880681586 + 8;
-
     /**
      * commit log offset: long, 8 bytes
      * message size: int, 4 bytes
      * tag hash code: long, 8 bytes
      */
     public static final int CONSUME_QUEUE_UNIT_SIZE = 8 + 4 + 8;
+    private static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
 
     public static int getTotalSize(ByteBuffer message) {
         return message.getInt(message.position());
@@ -112,7 +110,7 @@ public class MessageFormatUtil {
         msgBuffer.rewind();
 
         List<SelectBufferResult> bufferResultList = new ArrayList<>(
-            cqBuffer.remaining() / CONSUME_QUEUE_UNIT_SIZE);
+                cqBuffer.remaining() / CONSUME_QUEUE_UNIT_SIZE);
 
         if (msgBuffer.remaining() == 0) {
             log.error("MessageFormatUtil split buffer error, msg buffer length is 0");
@@ -128,7 +126,7 @@ public class MessageFormatUtil {
             long firstCommitLogOffset = MessageFormatUtil.getCommitLogOffsetFromItem(cqBuffer);
 
             for (int position = cqBuffer.position(); position < cqBuffer.limit();
-                position += CONSUME_QUEUE_UNIT_SIZE) {
+                 position += CONSUME_QUEUE_UNIT_SIZE) {
 
                 cqBuffer.position(position);
                 long logOffset = MessageFormatUtil.getCommitLogOffsetFromItem(cqBuffer);
@@ -138,7 +136,7 @@ public class MessageFormatUtil {
                 int offset = (int) (logOffset - firstCommitLogOffset);
                 if (offset + bufferSize > msgBuffer.limit()) {
                     log.error("MessageFormatUtil split buffer error, message buffer offset exceeded limit. " +
-                        "Expect length: {}, Actual length: {}", offset + bufferSize, msgBuffer.limit());
+                            "Expect length: {}, Actual length: {}", offset + bufferSize, msgBuffer.limit());
                     break;
                 }
 
@@ -150,15 +148,15 @@ public class MessageFormatUtil {
                     magicCode = getMagicCode(msgBuffer);
                 }
                 if (magicCode != MessageDecoder.MESSAGE_MAGIC_CODE &&
-                    magicCode != MessageDecoder.MESSAGE_MAGIC_CODE_V2) {
+                        magicCode != MessageDecoder.MESSAGE_MAGIC_CODE_V2) {
                     log.error("MessageFormatUtil split buffer error, found unknown magic code. " +
-                        "Message offset: {}, wrong magic code: {}", offset, magicCode);
+                            "Message offset: {}, wrong magic code: {}", offset, magicCode);
                     continue;
                 }
 
                 if (bufferSize != getTotalSize(msgBuffer)) {
                     log.error("MessageFormatUtil split buffer error, message length not match. " +
-                        "CommitLog length: {}, buffer length: {}", getTotalSize(msgBuffer), bufferSize);
+                            "CommitLog length: {}, buffer length: {}", getTotalSize(msgBuffer), bufferSize);
                     continue;
                 }
 

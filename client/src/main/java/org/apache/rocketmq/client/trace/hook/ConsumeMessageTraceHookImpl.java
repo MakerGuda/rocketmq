@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.client.trace.hook;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
@@ -30,6 +27,10 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ConsumeMessageTraceHookImpl implements ConsumeMessageHook {
 

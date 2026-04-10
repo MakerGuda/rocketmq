@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.proxy.service.route;
 
-import java.util.List;
 import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.proxy.common.Address;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+
+import java.util.List;
 
 public class ClusterTopicRouteService extends TopicRouteService {
 
@@ -36,7 +37,7 @@ public class ClusterTopicRouteService extends TopicRouteService {
 
     @Override
     public ProxyTopicRouteData getTopicRouteForProxy(ProxyContext ctx, List<Address> requestHostAndPortList,
-        String topicName) throws Exception {
+                                                     String topicName) throws Exception {
         TopicRouteData topicRouteData = getAllMessageQueueView(ctx, topicName).getTopicRouteData();
         return new ProxyTopicRouteData(topicRouteData, requestHostAndPortList);
     }

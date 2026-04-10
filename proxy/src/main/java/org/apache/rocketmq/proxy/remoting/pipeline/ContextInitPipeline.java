@@ -36,10 +36,10 @@ public class ContextInitPipeline implements RequestPipeline {
         String clientId = RemotingHelper.getAttributeValue(AttributeKeys.CLIENT_ID_KEY, channel);
         Integer version = RemotingHelper.getAttributeValue(AttributeKeys.VERSION_KEY, channel);
         context.setAction(RemotingHelper.getRequestCodeDesc(request.getCode()))
-            .setProtocolType(ChannelProtocolType.REMOTING.getName())
-            .setChannel(channel)
-            .setLocalAddress(NetworkUtil.socketAddress2String(ctx.channel().localAddress()))
-            .setRemoteAddress(RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
+                .setProtocolType(ChannelProtocolType.REMOTING.getName())
+                .setChannel(channel)
+                .setLocalAddress(NetworkUtil.socketAddress2String(ctx.channel().localAddress()))
+                .setRemoteAddress(RemotingHelper.parseChannelRemoteAddr(ctx.channel()));
         if (languageCode != null) {
             context.setLanguage(languageCode.name());
         }

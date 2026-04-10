@@ -18,22 +18,6 @@ package org.apache.rocketmq.tieredstore.index;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.UtilAll;
@@ -48,13 +32,23 @@ import org.apache.rocketmq.tieredstore.util.MessageStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IndexStoreService extends ServiceThread implements IndexService {
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-    private static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
+public class IndexStoreService extends ServiceThread implements IndexService {
 
     public static final String FILE_DIRECTORY_NAME = "tiered_index_file";
     public static final String FILE_COMPACTED_DIRECTORY_NAME = "compacting";
-
+    private static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
     /**
      * File status in table example:
      * upload, upload, upload, sealed, sealed, unsealed
@@ -114,7 +108,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
 
         // delete compact file directory
         UtilAll.deleteFile(new File(Paths.get(storeConfig.getStorePathRootDir(),
-            FILE_DIRECTORY_NAME, FILE_COMPACTED_DIRECTORY_NAME).toString()));
+                FILE_DIRECTORY_NAME, FILE_COMPACTED_DIRECTORY_NAME).toString()));
 
         // recover local
         File dir = new File(Paths.get(storeConfig.getStorePathRootDir(), FILE_DIRECTORY_NAME).toString());
@@ -163,11 +157,11 @@ public class IndexStoreService extends ServiceThread implements IndexService {
             }
             timeStoreTable.put(indexFile.getTimestamp(), indexFile);
             log.info("IndexStoreService recover load remote file, timestamp: {}, end timestamp: {}",
-                indexFile.getTimestamp(), indexFile.getEndTimestamp());
+                    indexFile.getTimestamp(), indexFile.getEndTimestamp());
         }
 
         log.info("IndexStoreService recover finished, total: {}, cost: {}ms, directory: {}",
-            timeStoreTable.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS), dir.getAbsolutePath());
+                timeStoreTable.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS), dir.getAbsolutePath());
     }
 
     public void createNewIndexFile(long timestamp) {
@@ -175,7 +169,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
             this.readWriteLock.writeLock().lock();
             IndexFile indexFile = this.currentWriteFile;
             if (this.timeStoreTable.containsKey(timestamp) ||
-                indexFile != null && IndexFile.IndexStatusEnum.UNSEALED.equals(indexFile.getFileStatus())) {
+                    indexFile != null && IndexFile.IndexStatusEnum.UNSEALED.equals(indexFile.getFileStatus())) {
                 return;
             }
             IndexStoreFile newStoreFile = new IndexStoreFile(storeConfig, timestamp);
@@ -196,7 +190,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
 
     @Override
     public AppendResult putKey(
-        String topic, int topicId, int queueId, Set<String> keySet, long offset, int size, long timestamp) {
+            String topic, int topicId, int queueId, Set<String> keySet, long offset, int size, long timestamp) {
 
         if (StringUtils.isBlank(topic)) {
             return AppendResult.UNKNOWN_ERROR;
@@ -208,7 +202,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
 
         for (int i = 0; i < 3; i++) {
             AppendResult result = this.currentWriteFile.putKey(
-                topic, topicId, queueId, keySet, offset, size, timestamp);
+                    topic, topicId, queueId, keySet, offset, size, timestamp);
 
             if (AppendResult.SUCCESS.equals(result)) {
                 return AppendResult.SUCCESS;
@@ -219,13 +213,13 @@ public class IndexStoreService extends ServiceThread implements IndexService {
         }
 
         log.error("IndexStoreService put key three times return error, topic: {}, topicId: {}, " +
-            "queueId: {}, keySize: {}, timestamp: {}", topic, topicId, queueId, keySet.size(), timestamp);
+                "queueId: {}, keySize: {}, timestamp: {}", topic, topicId, queueId, keySet.size(), timestamp);
         return AppendResult.SUCCESS;
     }
 
     @Override
     public CompletableFuture<List<IndexItem>> queryAsync(
-        String topic, String key, int maxCount, long beginTime, long endTime) {
+            String topic, String key, int maxCount, long beginTime, long endTime) {
 
         if (beginTime > endTime) {
             return CompletableFuture.completedFuture(new ArrayList<>());
@@ -235,36 +229,36 @@ public class IndexStoreService extends ServiceThread implements IndexService {
         try {
             readWriteLock.readLock().lock();
             ConcurrentNavigableMap<Long, IndexFile> pendingMap =
-                this.timeStoreTable.subMap(beginTime, true, endTime, true);
+                    this.timeStoreTable.subMap(beginTime, true, endTime, true);
             List<CompletableFuture<Void>> futureList = new ArrayList<>(pendingMap.size());
             ConcurrentSkipListMap<String /* queueId-offset */, IndexItem> result = new ConcurrentSkipListMap<>();
 
             for (Map.Entry<Long, IndexFile> entry : pendingMap.descendingMap().entrySet()) {
                 CompletableFuture<Void> completableFuture = entry.getValue()
-                    .queryAsync(topic, key, maxCount, beginTime, endTime)
-                    .thenAccept(itemList -> itemList.forEach(indexItem -> {
-                        if (result.size() < maxCount) {
-                            result.put(String.format(
-                                "%d-%20d", indexItem.getQueueId(), indexItem.getOffset()), indexItem);
-                        }
-                    }));
+                        .queryAsync(topic, key, maxCount, beginTime, endTime)
+                        .thenAccept(itemList -> itemList.forEach(indexItem -> {
+                            if (result.size() < maxCount) {
+                                result.put(String.format(
+                                        "%d-%20d", indexItem.getQueueId(), indexItem.getOffset()), indexItem);
+                            }
+                        }));
                 futureList.add(completableFuture);
             }
 
             CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]))
-                .whenComplete((v, t) -> {
-                    // Try to return the query results as much as possible here
-                    // rather than directly throwing exceptions
-                    if (t != null) {
-                        log.error("IndexStoreService#queryAsync, topicId={}, key={}, maxCount={}, timestamp={}-{}",
-                            topic, key, maxCount, beginTime, endTime, t);
-                    }
-                    List<IndexItem> resultList = new ArrayList<>(result.values());
-                    future.complete(resultList.subList(0, Math.min(resultList.size(), maxCount)));
-                });
+                    .whenComplete((v, t) -> {
+                        // Try to return the query results as much as possible here
+                        // rather than directly throwing exceptions
+                        if (t != null) {
+                            log.error("IndexStoreService#queryAsync, topicId={}, key={}, maxCount={}, timestamp={}-{}",
+                                    topic, key, maxCount, beginTime, endTime, t);
+                        }
+                        List<IndexItem> resultList = new ArrayList<>(result.values());
+                        future.complete(resultList.subList(0, Math.min(resultList.size(), maxCount)));
+                    });
         } catch (Exception e) {
             log.error("IndexStoreService#queryAsync, topicId={}, key={}, maxCount={}, timestamp={}-{}",
-                topic, key, maxCount, beginTime, endTime, e);
+                    topic, key, maxCount, beginTime, endTime, e);
             future.completeExceptionally(e);
         } finally {
             readWriteLock.readLock().unlock();
@@ -278,7 +272,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
             readWriteLock.writeLock().lock();
             while (true) {
                 Map.Entry<Long, IndexFile> entry =
-                    this.timeStoreTable.higherEntry(this.compactTimestamp.get());
+                        this.timeStoreTable.higherEntry(this.compactTimestamp.get());
                 if (entry == null) {
                     break;
                 }
@@ -299,7 +293,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
     public boolean doCompactThenUploadFile(IndexFile indexFile) {
         if (IndexFile.IndexStatusEnum.UPLOAD.equals(indexFile.getFileStatus())) {
             log.error("IndexStoreService file status not correct, so skip, timestamp: {}, status: {}",
-                indexFile.getTimestamp(), indexFile.getFileStatus());
+                    indexFile.getTimestamp(), indexFile.getFileStatus());
             indexFile.destroy();
             return true;
         }
@@ -334,7 +328,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
             indexFile.destroy();
         } catch (Exception e) {
             log.error("IndexStoreService rolling file error, timestamp: {}, cost: {}ms",
-                indexFile.getTimestamp(), stopwatch.elapsed(TimeUnit.MILLISECONDS), e);
+                    indexFile.getTimestamp(), stopwatch.elapsed(TimeUnit.MILLISECONDS), e);
         } finally {
             readWriteLock.writeLock().unlock();
         }
@@ -347,14 +341,14 @@ public class IndexStoreService extends ServiceThread implements IndexService {
         try {
             flatAppendFile.destroyExpiredFile(expireTimestamp);
             timeStoreTable.entrySet().removeIf(entry ->
-                IndexFile.IndexStatusEnum.UPLOAD.equals(entry.getValue().getFileStatus()) &&
-                    (flatAppendFile.getFileSegmentList().isEmpty() ||
-                        entry.getKey() < flatAppendFile.getMinTimestamp()));
+                    IndexFile.IndexStatusEnum.UPLOAD.equals(entry.getValue().getFileStatus()) &&
+                            (flatAppendFile.getFileSegmentList().isEmpty() ||
+                                    entry.getKey() < flatAppendFile.getMinTimestamp()));
             int tableSize = (int) timeStoreTable.entrySet().stream()
-                .filter(entry -> IndexFile.IndexStatusEnum.UPLOAD.equals(entry.getValue().getFileStatus()))
-                .count();
+                    .filter(entry -> IndexFile.IndexStatusEnum.UPLOAD.equals(entry.getValue().getFileStatus()))
+                    .count();
             log.debug("IndexStoreService delete file, timestamp={}, remote={}, table={}, all={}",
-                expireTimestamp, flatAppendFile.getFileSegmentList().size(), tableSize, timeStoreTable.size());
+                    expireTimestamp, flatAppendFile.getFileSegmentList().size(), tableSize, timeStoreTable.size());
         } finally {
             readWriteLock.writeLock().unlock();
         }
@@ -394,7 +388,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
 
     protected IndexFile getNextSealedFile() {
         Map.Entry<Long, IndexFile> entry =
-            this.timeStoreTable.higherEntry(this.compactTimestamp.get());
+                this.timeStoreTable.higherEntry(this.compactTimestamp.get());
         if (entry != null && entry.getKey() < this.timeStoreTable.lastKey()) {
             return entry.getValue();
         }
@@ -424,7 +418,7 @@ public class IndexStoreService extends ServiceThread implements IndexService {
         while (!this.isStopped()) {
             try {
                 long expireTimestamp = System.currentTimeMillis()
-                    - TimeUnit.HOURS.toMillis(storeConfig.getTieredStoreFileReservedTime());
+                        - TimeUnit.HOURS.toMillis(storeConfig.getTieredStoreFileReservedTime());
                 this.destroyExpiredFile(expireTimestamp);
                 IndexFile indexFile = this.getNextSealedFile();
                 if (indexFile != null) {

@@ -16,7 +16,6 @@
  */
 package org.apache.rocketmq.proxy.service.relay;
 
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.service.channel.SimpleChannel;
@@ -30,6 +29,8 @@ import org.apache.rocketmq.remoting.protocol.body.ConsumerRunningInfo;
 import org.apache.rocketmq.remoting.protocol.header.ConsumeMessageDirectlyResultRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerRunningInfoRequestHeader;
 
+import java.util.concurrent.CompletableFuture;
+
 public class LocalProxyRelayService extends AbstractProxyRelayService {
 
     private final BrokerController brokerController;
@@ -41,7 +42,7 @@ public class LocalProxyRelayService extends AbstractProxyRelayService {
 
     @Override
     public CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> processGetConsumerRunningInfo(
-        ProxyContext context, RemotingCommand command, GetConsumerRunningInfoRequestHeader header) {
+            ProxyContext context, RemotingCommand command, GetConsumerRunningInfoRequestHeader header) {
         CompletableFuture<ProxyRelayResult<ConsumerRunningInfo>> future = new CompletableFuture<>();
         future.thenAccept(proxyOutResult -> {
             RemotingServer remotingServer = this.brokerController.getRemotingServer();
@@ -64,8 +65,8 @@ public class LocalProxyRelayService extends AbstractProxyRelayService {
 
     @Override
     public CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> processConsumeMessageDirectly(
-        ProxyContext context, RemotingCommand command,
-        ConsumeMessageDirectlyResultRequestHeader header) {
+            ProxyContext context, RemotingCommand command,
+            ConsumeMessageDirectlyResultRequestHeader header) {
         CompletableFuture<ProxyRelayResult<ConsumeMessageDirectlyResult>> future = new CompletableFuture<>();
         future.thenAccept(proxyOutResult -> {
             RemotingServer remotingServer = this.brokerController.getRemotingServer();

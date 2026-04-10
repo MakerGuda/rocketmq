@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.tieredstore.stream;
 
+import org.apache.rocketmq.tieredstore.common.FileSegmentType;
+import org.apache.rocketmq.tieredstore.util.MessageFormatUtil;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import org.apache.rocketmq.tieredstore.common.FileSegmentType;
-import org.apache.rocketmq.tieredstore.util.MessageFormatUtil;
 
 public class CommitLogInputStream extends FileSegmentInputStream {
 
@@ -29,15 +30,12 @@ public class CommitLogInputStream extends FileSegmentInputStream {
      * commitLogOffset is the real physical offset of the commitLog buffer which is being read
      */
     private final long startCommitLogOffset;
-
-    private long commitLogOffset;
-
     private final ByteBuffer codaBuffer;
-
+    private long commitLogOffset;
     private long markCommitLogOffset = -1;
 
     public CommitLogInputStream(FileSegmentType fileType, long startOffset,
-        List<ByteBuffer> uploadBufferList, ByteBuffer codaBuffer, int contentLength) {
+                                List<ByteBuffer> uploadBufferList, ByteBuffer codaBuffer, int contentLength) {
         super(fileType, uploadBufferList, contentLength);
         this.startCommitLogOffset = startOffset;
         this.commitLogOffset = startOffset;
@@ -91,7 +89,7 @@ public class CommitLogInputStream extends FileSegmentInputStream {
             readPosInCurBuffer = 0;
         }
         if (readPosInCurBuffer >= MessageFormatUtil.PHYSICAL_OFFSET_POSITION
-            && readPosInCurBuffer < MessageFormatUtil.SYS_FLAG_OFFSET_POSITION) {
+                && readPosInCurBuffer < MessageFormatUtil.SYS_FLAG_OFFSET_POSITION) {
             res = (int) ((commitLogOffset >> (8 * (MessageFormatUtil.SYS_FLAG_OFFSET_POSITION - readPosInCurBuffer - 1))) & 0xff);
             readPosInCurBuffer++;
         } else {

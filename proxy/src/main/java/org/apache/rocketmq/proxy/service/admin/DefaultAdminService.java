@@ -17,22 +17,23 @@
 
 package org.apache.rocketmq.proxy.service.admin;
 
-import java.time.Duration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import org.apache.rocketmq.client.impl.mqclient.MQClientAPIExt;
+import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.constant.PermName;
-import org.apache.rocketmq.remoting.protocol.route.BrokerData;
-import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.client.impl.mqclient.MQClientAPIExt;
-import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.proxy.service.route.TopicRouteHelper;
+import org.apache.rocketmq.remoting.protocol.route.BrokerData;
+import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class DefaultAdminService implements AdminService {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -58,7 +59,7 @@ public class DefaultAdminService implements AdminService {
 
     @Override
     public boolean createTopicOnTopicBrokerIfNotExist(String createTopic, String sampleTopic, int wQueueNum,
-        int rQueueNum, boolean examineTopic, int retryCheckCount) {
+                                                      int rQueueNum, boolean examineTopic, int retryCheckCount) {
         TopicRouteData curTopicRouteData = new TopicRouteData();
         try {
             curTopicRouteData = this.getTopicRouteDataDirectlyFromNameServer(createTopic);
@@ -83,7 +84,7 @@ public class DefaultAdminService implements AdminService {
 
         try {
             return this.createTopicOnBroker(createTopic, wQueueNum, rQueueNum, curTopicRouteData.getBrokerDatas(),
-                sampleTopicRouteData.getBrokerDatas(), examineTopic, retryCheckCount);
+                    sampleTopicRouteData.getBrokerDatas(), examineTopic, retryCheckCount);
         } catch (Exception e) {
             log.error("create topic {} failed.", createTopic, e);
         }
@@ -92,7 +93,7 @@ public class DefaultAdminService implements AdminService {
 
     @Override
     public boolean createTopicOnBroker(String topic, int wQueueNum, int rQueueNum, List<BrokerData> curBrokerDataList,
-        List<BrokerData> sampleBrokerDataList, boolean examineTopic, int retryCheckCount) throws Exception {
+                                       List<BrokerData> sampleBrokerDataList, boolean examineTopic, int retryCheckCount) throws Exception {
         Set<String> curBrokerAddr = new HashSet<>();
         if (curBrokerDataList != null) {
             for (BrokerData brokerData : curBrokerDataList) {

@@ -17,11 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.io.UnsupportedEncodingException;
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -29,28 +24,33 @@ import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.container.InnerSalveBrokerController;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.awaitility.Awaitility.await;
 
 @Ignore
 public class PushMultipleReplicasIT extends ContainerIntegrationTestBase {
-    private static DefaultMQProducer producer;
-
     private static final String TOPIC = PushMultipleReplicasIT.class.getSimpleName() + "_TOPIC";
     private static final String REDIRECT_TOPIC = PushMultipleReplicasIT.class.getSimpleName() + "_REDIRECT_TOPIC";
     private static final String CONSUMER_GROUP = PushMultipleReplicasIT.class.getSimpleName() + "_Consumer";
     private static final int MESSAGE_COUNT = 32;
+    private static DefaultMQProducer producer;
 
     public PushMultipleReplicasIT() throws UnsupportedEncodingException {
     }
 
     @BeforeClass
     public static void beforeClass() throws Throwable {
-        createTopicTo(master1With3Replicas, TOPIC,1, 1);
+        createTopicTo(master1With3Replicas, TOPIC, 1, 1);
         producer = createProducer(PushMultipleReplicasIT.class.getSimpleName() + "_PRODUCER");
         producer.setSendMsgTimeout(15 * 1000);
         producer.start();

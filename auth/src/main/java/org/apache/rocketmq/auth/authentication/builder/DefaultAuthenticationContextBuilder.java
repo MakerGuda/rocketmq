@@ -19,11 +19,6 @@ package org.apache.rocketmq.auth.authentication.builder;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
 import io.netty.channel.ChannelHandlerContext;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -38,6 +33,12 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.constant.CommonConstants;
 import org.apache.rocketmq.common.constant.GrpcConstants;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class DefaultAuthenticationContextBuilder implements AuthenticationContextBuilder<DefaultAuthenticationContext> {
 
@@ -113,7 +114,7 @@ public class DefaultAuthenticationContextBuilder implements AuthenticationContex
         SortedMap<String, String> map = new TreeMap<>();
         for (Map.Entry<String, String> entry : fields.entrySet()) {
             if (request.getVersion() <= MQVersion.Version.V4_9_3.ordinal() &&
-                MixAll.UNIQUE_MSG_QUERY_FLAG.equals(entry.getKey())) {
+                    MixAll.UNIQUE_MSG_QUERY_FLAG.equals(entry.getKey())) {
                 continue;
             }
             if (!SessionCredentials.SIGNATURE.equals(entry.getKey())) {

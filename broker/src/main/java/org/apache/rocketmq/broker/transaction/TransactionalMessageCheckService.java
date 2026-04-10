@@ -24,7 +24,7 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 /**
  * 后台服务线程 <b>TransactionalMessageCheckService</b>：继承 ServiceThread，以独立线程周期性或阻塞式完成专项任务。
- * 
+ * <p>
  * 继承关系：<code>ServiceThread</code>。
  */
 public class TransactionalMessageCheckService extends ServiceThread {

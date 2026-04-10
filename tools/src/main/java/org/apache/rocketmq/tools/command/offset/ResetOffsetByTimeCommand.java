@@ -17,8 +17,6 @@
 
 package org.apache.rocketmq.tools.command.offset;
 
-import java.util.Map;
-import java.util.Objects;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -30,6 +28,9 @@ import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.Map;
+import java.util.Objects;
 
 public class ResetOffsetByTimeCommand implements SubCommand {
 
@@ -101,7 +102,7 @@ public class ResetOffsetByTimeCommand implements SubCommand {
                 }
             } catch (NumberFormatException e) {
                 timestamp = Objects.requireNonNull(
-                    UtilAll.parseDate(timeStampStr, UtilAll.YYYY_MM_DD_HH_MM_SS_SSS)).getTime();
+                        UtilAll.parseDate(timeStampStr, UtilAll.YYYY_MM_DD_HH_MM_SS_SSS)).getTime();
             }
 
             boolean force = true;
@@ -133,11 +134,11 @@ public class ResetOffsetByTimeCommand implements SubCommand {
 
             if (brokerAddr != null && queueId >= 0) {
                 System.out.printf("start reset consumer offset by specified, " +
-                        "group[%s], topic[%s], queueId[%s], broker[%s], timestamp(string)[%s], timestamp(long)[%s]%n",
-                    group, topic, queueId, brokerAddr, timeStampStr, timestamp);
+                                "group[%s], topic[%s], queueId[%s], broker[%s], timestamp(string)[%s], timestamp(long)[%s]%n",
+                        group, topic, queueId, brokerAddr, timeStampStr, timestamp);
 
                 long resetOffset = null != offset ? offset :
-                    defaultMQAdminExt.searchOffset(brokerAddr, topic, queueId, timestamp, 3000);
+                        defaultMQAdminExt.searchOffset(brokerAddr, topic, queueId, timestamp, 3000);
 
                 System.out.printf("reset consumer offset to %d%n", resetOffset);
                 if (resetOffset > 0) {
@@ -159,16 +160,16 @@ public class ResetOffsetByTimeCommand implements SubCommand {
             }
 
             System.out.printf("start reset consumer offset by specified, " +
-                    "group[%s], topic[%s], force[%s], timestamp(string)[%s], timestamp(long)[%s]%n",
-                group, topic, force, timeStampStr, timestamp);
+                            "group[%s], topic[%s], force[%s], timestamp(string)[%s], timestamp(long)[%s]%n",
+                    group, topic, force, timeStampStr, timestamp);
 
             System.out.printf("%-40s  %-40s  %-40s%n", "#brokerName", "#queueId", "#offset");
 
             for (Map.Entry<MessageQueue, Long> entry : offsetTable.entrySet()) {
                 System.out.printf("%-40s  %-40d  %-40d%n",
-                    UtilAll.frontStringAtLeast(entry.getKey().getBrokerName(), 32),
-                    entry.getKey().getQueueId(),
-                    entry.getValue());
+                        UtilAll.frontStringAtLeast(entry.getKey().getBrokerName(), 32),
+                        entry.getKey().getQueueId(),
+                        entry.getValue());
             }
         } catch (Exception e) {
             throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);

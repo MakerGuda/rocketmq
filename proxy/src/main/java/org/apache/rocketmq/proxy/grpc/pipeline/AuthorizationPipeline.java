@@ -18,7 +18,6 @@ package org.apache.rocketmq.proxy.grpc.pipeline;
 
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
-import java.util.List;
 import org.apache.rocketmq.auth.authentication.exception.AuthenticationException;
 import org.apache.rocketmq.auth.authorization.AuthorizationEvaluator;
 import org.apache.rocketmq.auth.authorization.context.AuthorizationContext;
@@ -30,6 +29,8 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
+
+import java.util.List;
 
 public class AuthorizationPipeline implements RequestPipeline {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -51,7 +52,7 @@ public class AuthorizationPipeline implements RequestPipeline {
             authorizationEvaluator.evaluate(contexts);
         } catch (AuthorizationException | AuthenticationException ex) {
             throw ex;
-        }  catch (Throwable ex) {
+        } catch (Throwable ex) {
             LOGGER.error("authorize failed, request:{}", request, ex);
             throw ex;
         }

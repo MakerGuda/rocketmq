@@ -27,49 +27,22 @@ import java.nio.charset.StandardCharsets;
  */
 public class PopConsumerRecord {
 
-    public enum RetryType {
-
-        NORMAL_TOPIC(0),
-
-        RETRY_TOPIC_V1(1),
-
-        RETRY_TOPIC_V2(2);
-
-        private final int code;
-
-        RetryType(int code) {
-            this.code = code;
-        }
-
-        public int getCode() {
-            return code;
-        }
-    }
-
     @JSONField()
     private long popTime;
-
     @JSONField(ordinal = 1)
     private String groupId;
-
     @JSONField(ordinal = 2)
     private String topicId;
-
     @JSONField(ordinal = 3)
     private int queueId;
-
     @JSONField(ordinal = 4)
     private int retryFlag;
-
     @JSONField(ordinal = 5)
     private long invisibleTime;
-
     @JSONField(ordinal = 6)
     private long offset;
-
     @JSONField(ordinal = 7)
     private int attemptTimes;
-
     @JSONField(ordinal = 8)
     private String attemptId;
 
@@ -78,7 +51,7 @@ public class PopConsumerRecord {
     }
 
     public PopConsumerRecord(long popTime, String groupId, String topicId, int queueId,
-        int retryFlag, long invisibleTime, long offset, String attemptId) {
+                             int retryFlag, long invisibleTime, long offset, String attemptId) {
 
         this.popTime = popTime;
         this.groupId = groupId;
@@ -88,6 +61,10 @@ public class PopConsumerRecord {
         this.invisibleTime = invisibleTime;
         this.offset = offset;
         this.attemptId = attemptId;
+    }
+
+    public static PopConsumerRecord decode(byte[] body) {
+        return JSON.parseObject(body, PopConsumerRecord.class);
     }
 
     @JSONField(serialize = false)
@@ -119,10 +96,6 @@ public class PopConsumerRecord {
     @JSONField(serialize = false)
     public byte[] getValueBytes() {
         return JSON.toJSONBytes(this);
-    }
-
-    public static PopConsumerRecord decode(byte[] body) {
-        return JSON.parseObject(body, PopConsumerRecord.class);
     }
 
     public long getPopTime() {
@@ -200,15 +173,34 @@ public class PopConsumerRecord {
     @Override
     public String toString() {
         return "PopDeliveryRecord{" +
-            "popTime=" + popTime +
-            ", groupId='" + groupId + '\'' +
-            ", topicId='" + topicId + '\'' +
-            ", queueId=" + queueId +
-            ", retryFlag=" + retryFlag +
-            ", invisibleTime=" + invisibleTime +
-            ", offset=" + offset +
-            ", attemptTimes=" + attemptTimes +
-            ", attemptId='" + attemptId + '\'' +
-            '}';
+                "popTime=" + popTime +
+                ", groupId='" + groupId + '\'' +
+                ", topicId='" + topicId + '\'' +
+                ", queueId=" + queueId +
+                ", retryFlag=" + retryFlag +
+                ", invisibleTime=" + invisibleTime +
+                ", offset=" + offset +
+                ", attemptTimes=" + attemptTimes +
+                ", attemptId='" + attemptId + '\'' +
+                '}';
+    }
+
+    public enum RetryType {
+
+        NORMAL_TOPIC(0),
+
+        RETRY_TOPIC_V1(1),
+
+        RETRY_TOPIC_V2(2);
+
+        private final int code;
+
+        RetryType(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
     }
 }

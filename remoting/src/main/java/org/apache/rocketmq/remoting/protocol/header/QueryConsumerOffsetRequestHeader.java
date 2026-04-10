@@ -86,10 +86,10 @@ public class QueryConsumerOffsetRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .add("setZeroIfNotFound", setZeroIfNotFound)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .add("setZeroIfNotFound", setZeroIfNotFound)
+                .toString();
     }
 }

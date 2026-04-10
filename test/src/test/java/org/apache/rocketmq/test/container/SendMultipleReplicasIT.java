@@ -17,9 +17,6 @@
 
 package org.apache.rocketmq.test.container;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
@@ -34,14 +31,18 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @Ignore
 public class SendMultipleReplicasIT extends ContainerIntegrationTestBase {
-    private static DefaultMQProducer mqProducer;
     private static final String MSG = "Hello RocketMQ ";
     private static final byte[] MESSAGE_BODY = MSG.getBytes(StandardCharsets.UTF_8);
+    private static DefaultMQProducer mqProducer;
 
     public SendMultipleReplicasIT() {
     }
@@ -73,8 +74,8 @@ public class SendMultipleReplicasIT extends ContainerIntegrationTestBase {
     @Test
     public void sendMessage_Auto_Replicas_Success() throws Exception {
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
-                && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
+                .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
+                        && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
         // Broker with 3 replicas configured as 3-2-1 auto replicas mode
         Message msg = new Message(THREE_REPLICAS_TOPIC, MESSAGE_BODY);
         SendResult sendResult = mqProducer.send(msg);
@@ -84,9 +85,9 @@ public class SendMultipleReplicasIT extends ContainerIntegrationTestBase {
         removeSlaveBroker(1, brokerContainer2, master1With3Replicas);
         removeSlaveBroker(2, brokerContainer3, master1With3Replicas);
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() ->
-                ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 0
-                    && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 1);
+                .until(() ->
+                        ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 0
+                                && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 1);
 
         master1With3Replicas.getMessageStoreConfig().setEnableAutoInSyncReplicas(true);
         List<MessageQueue> mqList = mqProducer.getDefaultMQProducerImpl().fetchPublishMessageQueues(THREE_REPLICAS_TOPIC);
@@ -107,24 +108,24 @@ public class SendMultipleReplicasIT extends ContainerIntegrationTestBase {
         createAndAddSlave(1, brokerContainer2, master1With3Replicas);
         createAndAddSlave(2, brokerContainer3, master1With3Replicas);
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
-                && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
+                .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
+                        && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
     }
 
     @Test
     public void sendMessage_Auto_Replicas_Failed()
-        throws Exception {
+            throws Exception {
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
-                && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
+                .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
+                        && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
         // Broker with 3 replicas configured as 3-2-1 auto replicas mode
         // Remove two slave broker
         removeSlaveBroker(1, brokerContainer2, master1With3Replicas);
         removeSlaveBroker(2, brokerContainer3, master1With3Replicas);
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() ->
-                ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 0
-                    && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 1);
+                .until(() ->
+                        ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 0
+                                && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 1);
 
         // Disable the auto mode
         master1With3Replicas.getMessageStoreConfig().setEnableAutoInSyncReplicas(false);
@@ -152,7 +153,7 @@ public class SendMultipleReplicasIT extends ContainerIntegrationTestBase {
         createAndAddSlave(1, brokerContainer2, master1With3Replicas);
         createAndAddSlave(2, brokerContainer3, master1With3Replicas);
         await().atMost(100, TimeUnit.SECONDS)
-            .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
-                && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
+                .until(() -> ((DefaultMessageStore) master1With3Replicas.getMessageStore()).getHaService().getConnectionCount().get() == 2
+                        && master1With3Replicas.getMessageStore().getAliveReplicaNumInGroup() == 3);
     }
 }

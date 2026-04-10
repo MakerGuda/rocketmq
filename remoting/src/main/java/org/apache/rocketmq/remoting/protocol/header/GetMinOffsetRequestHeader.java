@@ -65,8 +65,8 @@ public class GetMinOffsetRequestHeader extends TopicQueueRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("topic", topic)
-            .add("queueId", queueId)
-            .toString();
+                .add("topic", topic)
+                .add("queueId", queueId)
+                .toString();
     }
 }

@@ -18,8 +18,6 @@
 package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.rocketmq.acl.common.AclException;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -40,9 +38,11 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class AbstractRemotingActivity implements NettyRequestProcessor {
     protected final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
-    protected final MessagingProcessor messagingProcessor;
     protected static final String BROKER_NAME_FIELD = "bname";
     protected static final String BROKER_NAME_FIELD_FOR_SEND_MESSAGE_V2 = "n";
     @SuppressWarnings("DoubleBraceInitialization")
@@ -54,6 +54,7 @@ public abstract class AbstractRemotingActivity implements NettyRequestProcessor 
             put(ProxyExceptionCode.TRANSACTION_DATA_NOT_FOUND, ResponseCode.SUCCESS);
         }
     };
+    protected final MessagingProcessor messagingProcessor;
     protected final RequestPipeline requestPipeline;
 
     public AbstractRemotingActivity(RequestPipeline requestPipeline, MessagingProcessor messagingProcessor) {
@@ -62,18 +63,18 @@ public abstract class AbstractRemotingActivity implements NettyRequestProcessor 
     }
 
     protected RemotingCommand request(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context, long timeoutMillis) throws Exception {
+                                      ProxyContext context, long timeoutMillis) throws Exception {
         String brokerName;
         if (request.getCode() == RequestCode.SEND_MESSAGE_V2 || request.getCode() == RequestCode.SEND_BATCH_MESSAGE) {
             if (request.getExtFields().get(BROKER_NAME_FIELD_FOR_SEND_MESSAGE_V2) == null) {
                 return RemotingCommand.buildErrorResponse(ResponseCode.VERSION_NOT_SUPPORTED,
-                    "Request doesn't have field bname");
+                        "Request doesn't have field bname");
             }
             brokerName = request.getExtFields().get(BROKER_NAME_FIELD_FOR_SEND_MESSAGE_V2);
         } else {
             if (request.getExtFields().get(BROKER_NAME_FIELD) == null) {
                 return RemotingCommand.buildErrorResponse(ResponseCode.VERSION_NOT_SUPPORTED,
-                    "Request doesn't have field bname");
+                        "Request doesn't have field bname");
             }
             brokerName = request.getExtFields().get(BROKER_NAME_FIELD);
         }
@@ -82,11 +83,11 @@ public abstract class AbstractRemotingActivity implements NettyRequestProcessor 
             return null;
         }
         messagingProcessor.request(context, brokerName, request, timeoutMillis)
-            .thenAccept(r -> writeResponse(ctx, context, request, r))
-            .exceptionally(t -> {
-                writeErrResponse(ctx, context, request, t);
-                return null;
-            });
+                .thenAccept(r -> writeResponse(ctx, context, request, r))
+                .exceptionally(t -> {
+                    writeErrResponse(ctx, context, request, t);
+                    return null;
+                });
         return null;
     }
 
@@ -112,22 +113,22 @@ public abstract class AbstractRemotingActivity implements NettyRequestProcessor 
     }
 
     protected abstract RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception;
+                                                       ProxyContext context) throws Exception;
 
     protected ProxyContext createContext() {
         return ProxyContext.create();
     }
 
     protected void writeErrResponse(ChannelHandlerContext ctx, final ProxyContext context,
-        final RemotingCommand request, Throwable t) {
+                                    final RemotingCommand request, Throwable t) {
         t = ExceptionUtils.getRealException(t);
         if (t instanceof ProxyException) {
             ProxyException e = (ProxyException) t;
             writeResponse(ctx, context, request,
-                RemotingCommand.createResponseCommand(
-                    PROXY_EXCEPTION_RESPONSE_CODE_MAP.getOrDefault(e.getCode(), ResponseCode.SYSTEM_ERROR),
-                    e.getMessage()),
-                t);
+                    RemotingCommand.createResponseCommand(
+                            PROXY_EXCEPTION_RESPONSE_CODE_MAP.getOrDefault(e.getCode(), ResponseCode.SYSTEM_ERROR),
+                            e.getMessage()),
+                    t);
         } else if (t instanceof MQClientException) {
             MQClientException e = (MQClientException) t;
             writeResponse(ctx, context, request, RemotingCommand.createResponseCommand(e.getResponseCode(), e.getErrorMessage()), t);
@@ -138,17 +139,17 @@ public abstract class AbstractRemotingActivity implements NettyRequestProcessor 
             writeResponse(ctx, context, request, RemotingCommand.createResponseCommand(ResponseCode.NO_PERMISSION, t.getMessage()), t);
         } else {
             writeResponse(ctx, context, request,
-                RemotingCommand.createResponseCommand(ResponseCode.SYSTEM_ERROR, t.getMessage()), t);
+                    RemotingCommand.createResponseCommand(ResponseCode.SYSTEM_ERROR, t.getMessage()), t);
         }
     }
 
     protected void writeResponse(ChannelHandlerContext ctx, final ProxyContext context,
-        final RemotingCommand request, RemotingCommand response) {
+                                 final RemotingCommand request, RemotingCommand response) {
         writeResponse(ctx, context, request, response, null);
     }
 
     protected void writeResponse(ChannelHandlerContext ctx, final ProxyContext context,
-        final RemotingCommand request, RemotingCommand response, Throwable t) {
+                                 final RemotingCommand request, RemotingCommand response, Throwable t) {
         if (request.isOnewayRPC()) {
             return;
         }

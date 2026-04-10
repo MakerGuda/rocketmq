@@ -28,38 +28,30 @@ import java.util.concurrent.TimeUnit;
 
 public class BrokerConfig extends BrokerIdentity {
 
+    private static final int PROCESSOR_NUMBER = Runtime.getRuntime().availableProcessors();
     private String brokerConfigPath = null;
-
     private String rocketmqHome = MixAll.ROCKETMQ_HOME_DIR;
     @ImportantField
     private String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY, System.getenv(MixAll.NAMESRV_ADDR_ENV));
-
     /**
      * Listen port for single broker
      */
     @ImportantField
     private int listenPort = 6888;
-
     @ImportantField
     private String brokerIP1 = NetworkUtil.getLocalAddress();
     private String brokerIP2 = NetworkUtil.getLocalAddress();
-
     @ImportantField
     private boolean recoverConcurrently = false;
-
     private int brokerPermission = PermName.PERM_READ | PermName.PERM_WRITE;
     private int defaultTopicQueueNums = 8;
     @ImportantField
     private boolean autoCreateTopicEnable = true;
-
     private boolean clusterTopicEnable = true;
-
     private boolean brokerTopicEnable = true;
     @ImportantField
     private boolean autoCreateSubscriptionGroup = true;
     private String messageStorePlugIn = "";
-
-    private static final int PROCESSOR_NUMBER = Runtime.getRuntime().availableProcessors();
     @ImportantField
     private String msgTraceTopicName = TopicValidator.RMQ_SYS_TRACE_TOPIC;
     @ImportantField
@@ -344,7 +336,7 @@ public class BrokerConfig extends BrokerIdentity {
 
     /**
      * Whether to lock quorum replicas.
-     *
+     * <p>
      * True: need to lock quorum replicas succeed. False: only need to lock one replica succeed.
      */
     private boolean lockInStrictMode = false;
@@ -417,7 +409,7 @@ public class BrokerConfig extends BrokerIdentity {
     private boolean usePIDColdCtrStrategy = true;
     private long cgColdReadThreshold = 3 * 1024 * 1024;
     private long globalColdReadThreshold = 100 * 1024 * 1024;
-    
+
     /**
      * The interval to fetch namesrv addr, default value is 10 second
      */
@@ -1311,16 +1303,16 @@ public class BrokerConfig extends BrokerIdentity {
         return msgTraceTopicName;
     }
 
+    public void setMsgTraceTopicName(String msgTraceTopicName) {
+        this.msgTraceTopicName = msgTraceTopicName;
+    }
+
     public long getWaitTimeMillsInAdminBrokerQueue() {
         return waitTimeMillsInAdminBrokerQueue;
     }
 
     public void setWaitTimeMillsInAdminBrokerQueue(long waitTimeMillsInAdminBrokerQueue) {
         this.waitTimeMillsInAdminBrokerQueue = waitTimeMillsInAdminBrokerQueue;
-    }
-
-    public void setMsgTraceTopicName(String msgTraceTopicName) {
-        this.msgTraceTopicName = msgTraceTopicName;
     }
 
     public boolean isTraceTopicEnable() {
@@ -1983,11 +1975,11 @@ public class BrokerConfig extends BrokerIdentity {
     public void setUseStaticSubscription(boolean useStaticSubscription) {
         this.useStaticSubscription = useStaticSubscription;
     }
-    
+
     public long getFetchNamesrvAddrInterval() {
         return fetchNamesrvAddrInterval;
     }
-    
+
     public void setFetchNamesrvAddrInterval(final long fetchNamesrvAddrInterval) {
         this.fetchNamesrvAddrInterval = fetchNamesrvAddrInterval;
     }

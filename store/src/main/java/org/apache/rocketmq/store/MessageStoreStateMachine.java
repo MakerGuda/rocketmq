@@ -23,10 +23,60 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 public class MessageStoreStateMachine {
     protected final Logger log;
-
+    private final long startTimestamp;
     private MessageStoreState currentState;
     private long lastStateChangeTimestamp;
-    private final long startTimestamp;
+
+    public MessageStoreStateMachine(Logger log) {
+        this.log = log == null ? LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME) : log;
+        this.currentState = MessageStoreState.INIT;
+        this.startTimestamp = System.currentTimeMillis();
+        this.lastStateChangeTimestamp = startTimestamp;
+        logStateChange(null, currentState, true);
+    }
+
+    public void transitTo(MessageStoreState newState) {
+        transitTo(newState, true);
+    }
+
+    public void transitTo(MessageStoreState newState, boolean success) {
+        if (!newState.isAfter(currentState)) {
+            throw new IllegalStateException(
+                    String.format("Invalid state transition from %s to %s. Can only move forward.",
+                            currentState, newState)
+            );
+        }
+
+        logStateChange(currentState, newState, success);
+        if (success) {
+            this.currentState = newState;
+            this.lastStateChangeTimestamp = System.currentTimeMillis();
+        }
+    }
+
+    private void logStateChange(MessageStoreState fromState, MessageStoreState toState, boolean success) {
+        if (fromState == null && success) {
+            log.info("MessageStoreState initialized, state={}", toState);
+        } else if (success) {
+            log.info("MessageStoreState transition from {} to {}; Time in previous state={}ms, Total time={}ms",
+                    fromState, toState, getCurrentStateRunningTimeMs(), getTotalRunningTimeMs());
+        } else {
+            log.warn("MessageStoreState transition from {} to {} failed; Time in previous state={}ms, Total "
+                    + "time={}ms", fromState, toState, getCurrentStateRunningTimeMs(), getTotalRunningTimeMs());
+        }
+    }
+
+    public MessageStoreState getCurrentState() {
+        return currentState;
+    }
+
+    public long getTotalRunningTimeMs() {
+        return System.currentTimeMillis() - startTimestamp;
+    }
+
+    public long getCurrentStateRunningTimeMs() {
+        return System.currentTimeMillis() - lastStateChangeTimestamp;
+    }
 
     public enum MessageStoreState {
         INIT(0),
@@ -64,57 +114,5 @@ public class MessageStoreStateMachine {
         public boolean isAfter(MessageStoreState storeState) {
             return this.order > storeState.order;
         }
-    }
-
-
-    public MessageStoreStateMachine(Logger log) {
-        this.log = log == null ? LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME) : log;
-        this.currentState = MessageStoreState.INIT;
-        this.startTimestamp = System.currentTimeMillis();
-        this.lastStateChangeTimestamp = startTimestamp;
-        logStateChange(null, currentState, true);
-    }
-
-    public void transitTo(MessageStoreState newState) {
-        transitTo(newState, true);
-    }
-
-    public void transitTo(MessageStoreState newState, boolean success) {
-        if (!newState.isAfter(currentState)) {
-            throw new IllegalStateException(
-                String.format("Invalid state transition from %s to %s. Can only move forward.",
-                    currentState, newState)
-            );
-        }
-
-        logStateChange(currentState, newState, success);
-        if (success) {
-            this.currentState = newState;
-            this.lastStateChangeTimestamp = System.currentTimeMillis();
-        }
-    }
-
-    private void logStateChange(MessageStoreState fromState, MessageStoreState toState, boolean success) {
-        if (fromState == null && success) {
-            log.info("MessageStoreState initialized, state={}", toState);
-        } else if (success) {
-            log.info("MessageStoreState transition from {} to {}; Time in previous state={}ms, Total time={}ms",
-                fromState, toState, getCurrentStateRunningTimeMs(), getTotalRunningTimeMs());
-        } else {
-            log.warn("MessageStoreState transition from {} to {} failed; Time in previous state={}ms, Total "
-                + "time={}ms", fromState, toState, getCurrentStateRunningTimeMs(), getTotalRunningTimeMs());
-        }
-    }
-
-    public MessageStoreState getCurrentState() {
-        return currentState;
-    }
-
-    public long getTotalRunningTimeMs() {
-        return System.currentTimeMillis() - startTimestamp;
-    }
-
-    public long getCurrentStateRunningTimeMs() {
-        return System.currentTimeMillis() - lastStateChangeTimestamp;
     }
 }

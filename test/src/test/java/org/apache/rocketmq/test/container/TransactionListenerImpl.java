@@ -26,7 +26,6 @@ public class TransactionListenerImpl implements TransactionListener {
     private boolean shouldReturnUnknownState = false;
 
 
-
     public TransactionListenerImpl(boolean shouldReturnUnknownState) {
         this.shouldReturnUnknownState = shouldReturnUnknownState;
     }

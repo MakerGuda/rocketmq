@@ -46,8 +46,8 @@ public class AddAndRemoveBrokerIT extends ContainerIntegrationTestBase {
 
     @Test
     public void addBrokerTest()
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException,
-        RemotingConnectException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException,
+            RemotingConnectException {
         String remark = null;
         int code = 0;
         try {
@@ -62,14 +62,14 @@ public class AddAndRemoveBrokerIT extends ContainerIntegrationTestBase {
 
     @Test
     public void removeBrokerTest()
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+            throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
 
         boolean exceptionCaught = false;
 
         try {
             defaultMQAdminExt.removeBrokerFromContainer(brokerContainer1.getBrokerContainerAddr(),
-                master3With3Replicas.getBrokerConfig().getBrokerClusterName(),
-                master3With3Replicas.getBrokerConfig().getBrokerName(), 1);
+                    master3With3Replicas.getBrokerConfig().getBrokerClusterName(),
+                    master3With3Replicas.getBrokerConfig().getBrokerName(), 1);
         } catch (MQBrokerException e) {
             exceptionCaught = true;
         }

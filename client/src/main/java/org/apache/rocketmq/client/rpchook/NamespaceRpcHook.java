@@ -40,7 +40,7 @@ public class NamespaceRpcHook implements RPCHook {
 
     @Override
     public void doAfterResponse(String remoteAddr, RemotingCommand request,
-        RemotingCommand response) {
+                                RemotingCommand response) {
 
     }
 }

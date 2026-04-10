@@ -16,14 +16,14 @@
  */
 package org.apache.rocketmq.broker.config.v1;
 
+import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
-
 /**
  * 序列化包装类型 <b>RocksDBOffsetSerializeWrapper</b>，用于网络传输或落盘时的结构封装。
- * 
+ * <p>
  * 继承关系：<code>RemotingSerializable</code>。
  */
 public class RocksDBOffsetSerializeWrapper extends RemotingSerializable {

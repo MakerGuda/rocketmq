@@ -33,14 +33,14 @@ public enum BoundaryType {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public static BoundaryType getType(String name) {
         if (BoundaryType.UPPER.getName().equalsIgnoreCase(name)) {
             return UPPER;
         }
         return LOWER;
+    }
+
+    public String getName() {
+        return name;
     }
 }

@@ -16,14 +16,15 @@
  */
 package org.apache.rocketmq.proxy.auth;
 
+import org.apache.rocketmq.auth.authentication.model.Subject;
+import org.apache.rocketmq.auth.authorization.model.Acl;
+import org.apache.rocketmq.auth.authorization.provider.AuthorizationMetadataProvider;
+import org.apache.rocketmq.auth.config.AuthConfig;
+import org.apache.rocketmq.proxy.service.metadata.MetadataService;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import org.apache.rocketmq.auth.authentication.model.Subject;
-import org.apache.rocketmq.auth.authorization.provider.AuthorizationMetadataProvider;
-import org.apache.rocketmq.auth.authorization.model.Acl;
-import org.apache.rocketmq.auth.config.AuthConfig;
-import org.apache.rocketmq.proxy.service.metadata.MetadataService;
 
 public class ProxyAuthorizationMetadataProvider implements AuthorizationMetadataProvider {
 

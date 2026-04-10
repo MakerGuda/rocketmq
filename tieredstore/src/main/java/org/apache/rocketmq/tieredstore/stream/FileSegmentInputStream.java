@@ -17,12 +17,13 @@
 
 package org.apache.rocketmq.tieredstore.stream;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.rocketmq.tieredstore.common.FileSegmentType;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 
 public class FileSegmentInputStream extends InputStream {
 
@@ -67,7 +68,7 @@ public class FileSegmentInputStream extends InputStream {
     private int markReadPosInCurBuffer = -1;
 
     public FileSegmentInputStream(
-        FileSegmentType fileType, List<ByteBuffer> bufferList, int contentLength) {
+            FileSegmentType fileType, List<ByteBuffer> bufferList, int contentLength) {
         this.fileType = fileType;
         this.contentLength = contentLength;
         this.bufferList = bufferList;
@@ -196,4 +197,3 @@ public class FileSegmentInputStream extends InputStream {
         return len;
     }
 }
-

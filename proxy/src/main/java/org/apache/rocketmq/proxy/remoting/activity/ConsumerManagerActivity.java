@@ -19,16 +19,14 @@ package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.broker.client.ClientChannelInfo;
 import org.apache.rocketmq.broker.client.ConsumerGroupInfo;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.proxy.common.ProxyContext;
+import org.apache.rocketmq.proxy.processor.MessagingProcessor;
+import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
+import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.remoting.protocol.body.Connection;
@@ -39,10 +37,9 @@ import org.apache.rocketmq.remoting.protocol.header.GetConsumerConnectionListReq
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerListByGroupRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerListByGroupResponseBody;
 import org.apache.rocketmq.remoting.protocol.header.GetConsumerListByGroupResponseHeader;
-import org.apache.rocketmq.proxy.common.ProxyContext;
-import org.apache.rocketmq.proxy.processor.MessagingProcessor;
-import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.time.Duration;
+import java.util.*;
 
 public class ConsumerManagerActivity extends AbstractRemotingActivity {
     public ConsumerManagerActivity(RequestPipeline requestPipeline, MessagingProcessor messagingProcessor) {
@@ -51,7 +48,7 @@ public class ConsumerManagerActivity extends AbstractRemotingActivity {
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         switch (request.getCode()) {
             case RequestCode.GET_CONSUMER_LIST_BY_GROUP: {
                 return getConsumerListByGroup(ctx, request, context);
@@ -80,7 +77,7 @@ public class ConsumerManagerActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand getConsumerListByGroup(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                                     ProxyContext context) throws Exception {
         RemotingCommand response = RemotingCommand.createResponseCommand(GetConsumerListByGroupResponseHeader.class);
         GetConsumerListByGroupRequestHeader header = (GetConsumerListByGroupRequestHeader) request.decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
         ConsumerGroupInfo consumerGroupInfo = messagingProcessor.getConsumerGroupInfo(context, header.getConsumerGroup());
@@ -93,7 +90,7 @@ public class ConsumerManagerActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand getConsumerConnectionList(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                                        ProxyContext context) throws Exception {
         RemotingCommand response = RemotingCommand.createResponseCommand(GetConsumerConnectionListRequestHeader.class);
         GetConsumerConnectionListRequestHeader header = (GetConsumerConnectionListRequestHeader) request.decodeCommandCustomHeader(GetConsumerConnectionListRequestHeader.class);
         ConsumerGroupInfo consumerGroupInfo = messagingProcessor.getConsumerGroupInfo(context, header.getConsumerGroup());
@@ -130,7 +127,7 @@ public class ConsumerManagerActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand lockBatchMQ(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                          ProxyContext context) throws Exception {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         LockBatchRequestBody requestBody = LockBatchRequestBody.decode(request.getBody(), LockBatchRequestBody.class);
         Set<MessageQueue> mqSet = requestBody.getMqSet();
@@ -142,16 +139,16 @@ public class ConsumerManagerActivity extends AbstractRemotingActivity {
 
         String brokerName = new ArrayList<>(mqSet).get(0).getBrokerName();
         messagingProcessor.request(context, brokerName, request, Duration.ofSeconds(3).toMillis())
-            .thenAccept(r -> writeResponse(ctx, context, request, r))
-            .exceptionally(t -> {
-                writeErrResponse(ctx, context, request, t);
-                return null;
-            });
+                .thenAccept(r -> writeResponse(ctx, context, request, r))
+                .exceptionally(t -> {
+                    writeErrResponse(ctx, context, request, t);
+                    return null;
+                });
         return null;
     }
 
     protected RemotingCommand unlockBatchMQ(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                            ProxyContext context) throws Exception {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         UnlockBatchRequestBody requestBody = UnlockBatchRequestBody.decode(request.getBody(), UnlockBatchRequestBody.class);
         Set<MessageQueue> mqSet = requestBody.getMqSet();
@@ -163,11 +160,11 @@ public class ConsumerManagerActivity extends AbstractRemotingActivity {
 
         String brokerName = new ArrayList<>(mqSet).get(0).getBrokerName();
         messagingProcessor.request(context, brokerName, request, Duration.ofSeconds(3).toMillis())
-            .thenAccept(r -> writeResponse(ctx, context, request, r))
-            .exceptionally(t -> {
-                writeErrResponse(ctx, context, request, t);
-                return null;
-            });
+                .thenAccept(r -> writeResponse(ctx, context, request, r))
+                .exceptionally(t -> {
+                    writeErrResponse(ctx, context, request, t);
+                    return null;
+                });
         return null;
     }
 }

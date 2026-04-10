@@ -31,9 +31,8 @@ import java.nio.ByteBuffer;
 import static java.lang.String.format;
 
 public class StoreUtil {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
-
     public static final long TOTAL_PHYSICAL_MEMORY_SIZE = getTotalPhysicalMemorySize();
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
     @SuppressWarnings("restriction")
     public static long getTotalPhysicalMemorySize() {

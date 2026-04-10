@@ -16,11 +16,11 @@
  */
 package org.apache.rocketmq.common.statistics;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Statistics Item
@@ -151,7 +151,7 @@ public class StatisticsItem {
         }
 
         if (!statKind.equals(item.statKind) || !statObject.equals(item.statObject) || !Arrays.equals(itemNames,
-            item.itemNames)) {
+                item.itemNames)) {
             throw new IllegalArgumentException("StatisticsItem's kind, key and itemNames must be exactly the same");
         }
 

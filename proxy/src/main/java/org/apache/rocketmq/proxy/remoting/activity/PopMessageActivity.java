@@ -18,22 +18,23 @@
 package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.time.Duration;
-import org.apache.rocketmq.remoting.protocol.header.PopMessageRequestHeader;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+import org.apache.rocketmq.remoting.protocol.header.PopMessageRequestHeader;
+
+import java.time.Duration;
 
 public class PopMessageActivity extends AbstractRemotingActivity {
     public PopMessageActivity(RequestPipeline requestPipeline,
-        MessagingProcessor messagingProcessor) {
+                              MessagingProcessor messagingProcessor) {
         super(requestPipeline, messagingProcessor);
     }
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         PopMessageRequestHeader popMessageRequestHeader = (PopMessageRequestHeader) request.decodeCommandCustomHeader(PopMessageRequestHeader.class);
         long timeoutMillis = popMessageRequestHeader.getPollTime();
         return request(ctx, request, context, timeoutMillis + Duration.ofSeconds(10).toMillis());

@@ -22,6 +22,22 @@ public class CheckRocksdbCqWriteResult {
 
     int checkStatus;
 
+    public String getCheckResult() {
+        return checkResult;
+    }
+
+    public void setCheckResult(String checkResult) {
+        this.checkResult = checkResult;
+    }
+
+    public int getCheckStatus() {
+        return checkStatus;
+    }
+
+    public void setCheckStatus(int checkStatus) {
+        this.checkStatus = checkStatus;
+    }
+
     public enum CheckStatus {
         CHECK_OK(0),
         CHECK_NOT_OK(1),
@@ -37,21 +53,5 @@ public class CheckRocksdbCqWriteResult {
         public int getValue() {
             return value;
         }
-    }
-
-    public String getCheckResult() {
-        return checkResult;
-    }
-
-    public void setCheckResult(String checkResult) {
-        this.checkResult = checkResult;
-    }
-
-    public int getCheckStatus() {
-        return checkStatus;
-    }
-
-    public void setCheckStatus(int checkStatus) {
-        this.checkStatus = checkStatus;
     }
 }

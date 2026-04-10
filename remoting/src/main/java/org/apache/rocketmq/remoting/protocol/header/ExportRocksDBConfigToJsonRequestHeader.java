@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.remoting.protocol.header;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.common.action.RocketMQAction;
@@ -27,9 +25,35 @@ import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RocketMQAction(value = RequestCode.EXPORT_ROCKSDB_CONFIG_TO_JSON, resource = ResourceType.CLUSTER, action = Action.GET)
 public class ExportRocksDBConfigToJsonRequestHeader implements CommandCustomHeader {
     private static final String CONFIG_TYPE_SEPARATOR = ";";
+    @CFNotNull
+    private String configType;
+
+    @Override
+    public void checkFields() throws RemotingCommandException {
+
+    }
+
+    public List<ConfigType> fetchConfigType() {
+        return ConfigType.fromString(configType);
+    }
+
+    public void updateConfigType(List<ConfigType> configType) {
+        this.configType = ConfigType.toString(configType);
+    }
+
+    public String getConfigType() {
+        return configType;
+    }
+
+    public void setConfigType(String configType) {
+        this.configType = configType;
+    }
 
     public enum ConfigType {
         TOPICS("topics"),
@@ -73,29 +97,5 @@ public class ExportRocksDBConfigToJsonRequestHeader implements CommandCustomHead
         public String getTypeName() {
             return typeName;
         }
-    }
-
-    @CFNotNull
-    private String configType;
-
-    @Override
-    public void checkFields() throws RemotingCommandException {
-
-    }
-
-    public List<ConfigType> fetchConfigType() {
-        return ConfigType.fromString(configType);
-    }
-
-    public void updateConfigType(List<ConfigType> configType) {
-        this.configType = ConfigType.toString(configType);
-    }
-
-    public String getConfigType() {
-        return configType;
-    }
-
-    public void setConfigType(String configType) {
-        this.configType = configType;
     }
 }

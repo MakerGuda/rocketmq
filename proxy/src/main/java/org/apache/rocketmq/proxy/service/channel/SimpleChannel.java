@@ -18,22 +18,14 @@
 package org.apache.rocketmq.proxy.service.channel;
 
 import com.google.common.base.Strings;
-import io.netty.channel.AbstractChannel;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelId;
-import io.netty.channel.ChannelMetadata;
-import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.channel.DefaultChannelPromise;
-import io.netty.channel.EventLoop;
+import io.netty.channel.*;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 /**
  * SimpleChannel is used to handle writeAndFlush situation in processor
@@ -73,16 +65,6 @@ public class SimpleChannel extends AbstractChannel {
         this(null, remoteAddress, localAddress);
     }
 
-    @Override
-    protected AbstractUnsafe newUnsafe() {
-        return null;
-    }
-
-    @Override
-    protected boolean isCompatible(EventLoop loop) {
-        return false;
-    }
-
     private static SocketAddress parseSocketAddress(String address) {
         if (Strings.isNullOrEmpty(address)) {
             return null;
@@ -94,6 +76,16 @@ public class SimpleChannel extends AbstractChannel {
         }
 
         return null;
+    }
+
+    @Override
+    protected AbstractUnsafe newUnsafe() {
+        return null;
+    }
+
+    @Override
+    protected boolean isCompatible(EventLoop loop) {
+        return false;
     }
 
     @Override

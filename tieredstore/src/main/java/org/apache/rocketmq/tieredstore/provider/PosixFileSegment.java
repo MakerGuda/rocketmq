@@ -21,14 +21,6 @@ import com.google.common.base.Supplier;
 import com.google.common.io.ByteStreams;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.Paths;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.tieredstore.MessageStoreConfig;
 import org.apache.rocketmq.tieredstore.MessageStoreExecutor;
@@ -39,10 +31,16 @@ import org.apache.rocketmq.tieredstore.util.MessageStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.rocketmq.tieredstore.metrics.TieredStoreMetricsConstant.LABEL_FILE_TYPE;
-import static org.apache.rocketmq.tieredstore.metrics.TieredStoreMetricsConstant.LABEL_OPERATION;
-import static org.apache.rocketmq.tieredstore.metrics.TieredStoreMetricsConstant.LABEL_PATH;
-import static org.apache.rocketmq.tieredstore.metrics.TieredStoreMetricsConstant.LABEL_SUCCESS;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.rocketmq.tieredstore.metrics.TieredStoreMetricsConstant.*;
 
 /**
  * this class is experimental and may change without notice.
@@ -60,19 +58,19 @@ public class PosixFileSegment extends FileSegment {
     private volatile FileChannel writeFileChannel;
 
     public PosixFileSegment(MessageStoreConfig storeConfig,
-        FileSegmentType fileType, String filePath, long baseOffset, MessageStoreExecutor executor) {
+                            FileSegmentType fileType, String filePath, long baseOffset, MessageStoreExecutor executor) {
 
         super(storeConfig, fileType, filePath, baseOffset, executor);
 
         // basePath
         String basePath = StringUtils.defaultString(storeConfig.getTieredStoreFilePath(),
-            StringUtils.appendIfMissing(storeConfig.getTieredStoreFilePath(), File.separator));
+                StringUtils.appendIfMissing(storeConfig.getTieredStoreFilePath(), File.separator));
 
         // fullPath: basePath/hash_cluster/broker/topic/queueId/fileType/baseOffset
         String clusterName = storeConfig.getBrokerClusterName();
         String clusterBasePath = String.format("%s_%s", MessageStoreUtil.getHash(clusterName), clusterName);
         fullPath = Paths.get(basePath, clusterBasePath, filePath,
-            fileType.toString(), MessageStoreUtil.offset2FileName(baseOffset)).toString();
+                fileType.toString(), MessageStoreUtil.offset2FileName(baseOffset)).toString();
         log.info("Constructing Posix FileSegment, filePath: {}", fullPath);
 
         this.createFile();
@@ -80,8 +78,8 @@ public class PosixFileSegment extends FileSegment {
 
     protected AttributesBuilder newAttributesBuilder() {
         return TieredStoreMetricsManager.newAttributesBuilder()
-            .put(LABEL_PATH, filePath)
-            .put(LABEL_FILE_TYPE, fileType.name().toLowerCase());
+                .put(LABEL_PATH, filePath)
+                .put(LABEL_FILE_TYPE, fileType.name().toLowerCase());
     }
 
     @Override
@@ -168,7 +166,7 @@ public class PosixFileSegment extends FileSegment {
     public CompletableFuture<ByteBuffer> read0(long position, int length) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         AttributesBuilder attributesBuilder = newAttributesBuilder()
-            .put(LABEL_OPERATION, OPERATION_POSIX_READ);
+                .put(LABEL_OPERATION, OPERATION_POSIX_READ);
 
         return CompletableFuture.supplyAsync((Supplier<ByteBuffer>) () -> {
             ByteBuffer byteBuffer = ByteBuffer.allocate(length);
@@ -183,8 +181,8 @@ public class PosixFileSegment extends FileSegment {
                 TieredStoreMetricsManager.providerRpcLatency.record(costTime, attributesBuilder.build());
 
                 Attributes metricsAttributes = newAttributesBuilder()
-                    .put(LABEL_OPERATION, OPERATION_POSIX_READ)
-                    .build();
+                        .put(LABEL_OPERATION, OPERATION_POSIX_READ)
+                        .build();
                 int downloadedBytes = byteBuffer.remaining();
                 TieredStoreMetricsManager.downloadBytes.record(downloadedBytes, metricsAttributes);
             } catch (IOException e) {
@@ -199,11 +197,11 @@ public class PosixFileSegment extends FileSegment {
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public CompletableFuture<Boolean> commit0(
-        FileSegmentInputStream inputStream, long position, int length, boolean append) {
+            FileSegmentInputStream inputStream, long position, int length, boolean append) {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         AttributesBuilder attributesBuilder = newAttributesBuilder()
-            .put(LABEL_OPERATION, OPERATION_POSIX_WRITE);
+                .put(LABEL_OPERATION, OPERATION_POSIX_WRITE);
 
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -219,8 +217,8 @@ public class PosixFileSegment extends FileSegment {
                 TieredStoreMetricsManager.providerRpcLatency.record(costTime, attributesBuilder.build());
 
                 Attributes metricsAttributes = newAttributesBuilder()
-                    .put(LABEL_OPERATION, OPERATION_POSIX_WRITE)
-                    .build();
+                        .put(LABEL_OPERATION, OPERATION_POSIX_WRITE)
+                        .build();
                 TieredStoreMetricsManager.uploadBytes.record(length, metricsAttributes);
             } catch (Exception e) {
                 long costTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);

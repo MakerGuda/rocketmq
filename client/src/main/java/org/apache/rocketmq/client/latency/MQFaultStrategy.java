@@ -28,40 +28,24 @@ public class MQFaultStrategy {
     private volatile boolean startDetectorEnable;
     private long[] latencyMax = {50L, 100L, 550L, 1800L, 3000L, 5000L, 15000L};
     private long[] notAvailableDuration = {0L, 0L, 2000L, 5000L, 6000L, 10000L, 30000L};
-
-    public static class BrokerFilter implements QueueFilter {
-        private String lastBrokerName;
-
-        public void setLastBrokerName(String lastBrokerName) {
-            this.lastBrokerName = lastBrokerName;
-        }
-
-        @Override public boolean filter(MessageQueue mq) {
-            if (lastBrokerName != null) {
-                return !mq.getBrokerName().equals(lastBrokerName);
-            }
-            return true;
-        }
-    }
-
     private ThreadLocal<BrokerFilter> threadBrokerFilter = new ThreadLocal<BrokerFilter>() {
-        @Override protected BrokerFilter initialValue() {
+        @Override
+        protected BrokerFilter initialValue() {
             return new BrokerFilter();
         }
     };
-
     private QueueFilter reachableFilter = new QueueFilter() {
-        @Override public boolean filter(MessageQueue mq) {
+        @Override
+        public boolean filter(MessageQueue mq) {
             return latencyFaultTolerance.isReachable(mq.getBrokerName());
         }
     };
-
     private QueueFilter availableFilter = new QueueFilter() {
-        @Override public boolean filter(MessageQueue mq) {
+        @Override
+        public boolean filter(MessageQueue mq) {
             return latencyFaultTolerance.isAvailable(mq.getBrokerName());
         }
     };
-
 
     public MQFaultStrategy(ClientConfig cc, Resolver fetcher, ServiceDetector serviceDetector) {
         this.latencyFaultTolerance = new LatencyFaultToleranceImpl(fetcher, serviceDetector);
@@ -70,6 +54,7 @@ public class MQFaultStrategy {
         this.setStartDetectorEnable(cc.isStartDetectorEnable());
         this.setSendLatencyFaultEnable(cc.isSendLatencyEnable());
     }
+
 
     // For unit test.
     public MQFaultStrategy(ClientConfig cc, LatencyFaultTolerance<String> tolerance) {
@@ -80,9 +65,12 @@ public class MQFaultStrategy {
         this.latencyFaultTolerance.setDetectTimeout(cc.getDetectTimeout());
     }
 
-
     public long[] getNotAvailableDuration() {
         return notAvailableDuration;
+    }
+
+    public void setNotAvailableDuration(final long[] notAvailableDuration) {
+        this.notAvailableDuration = notAvailableDuration;
     }
 
     public QueueFilter getAvailableFilter() {
@@ -95,10 +83,6 @@ public class MQFaultStrategy {
 
     public ThreadLocal<BrokerFilter> getThreadBrokerFilter() {
         return threadBrokerFilter;
-    }
-
-    public void setNotAvailableDuration(final long[] notAvailableDuration) {
-        this.notAvailableDuration = notAvailableDuration;
     }
 
     public long[] getLatencyMax() {
@@ -177,5 +161,21 @@ public class MQFaultStrategy {
         }
 
         return 0;
+    }
+
+    public static class BrokerFilter implements QueueFilter {
+        private String lastBrokerName;
+
+        public void setLastBrokerName(String lastBrokerName) {
+            this.lastBrokerName = lastBrokerName;
+        }
+
+        @Override
+        public boolean filter(MessageQueue mq) {
+            if (lastBrokerName != null) {
+                return !mq.getBrokerName().equals(lastBrokerName);
+            }
+            return true;
+        }
     }
 }

@@ -19,12 +19,6 @@ package org.apache.rocketmq.proxy.service.metadata;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.auth.authentication.model.Subject;
 import org.apache.rocketmq.auth.authentication.model.User;
 import org.apache.rocketmq.auth.authorization.model.Acl;
@@ -49,30 +43,28 @@ import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.remoting.protocol.statictopic.TopicConfigAndQueueMapping;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 public class ClusterMetadataService extends AbstractStartAndShutdown implements MetadataService {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
+    protected final static TopicConfigAndQueueMapping EMPTY_TOPIC_CONFIG = new TopicConfigAndQueueMapping();
+    protected final static SubscriptionGroupConfig EMPTY_SUBSCRIPTION_GROUP_CONFIG = new SubscriptionGroupConfig();
+    protected final static User EMPTY_USER = new User();
+    protected final static Acl EMPTY_ACL = new Acl();
     private static final long DEFAULT_TIMEOUT = 3000;
-
+    protected final ThreadPoolExecutor cacheRefreshExecutor;
+    protected final LoadingCache<String, TopicConfigAndQueueMapping> topicConfigCache;
+    protected final LoadingCache<String, SubscriptionGroupConfig> subscriptionGroupConfigCache;
+    protected final LoadingCache<String, User> userCache;
+    protected final LoadingCache<String, Acl> aclCache;
+    protected final Random random = new Random();
     private final TopicRouteService topicRouteService;
     private final MQClientAPIFactory mqClientAPIFactory;
-
-    protected final ThreadPoolExecutor cacheRefreshExecutor;
-
-    protected final LoadingCache<String, TopicConfigAndQueueMapping> topicConfigCache;
-    protected final static TopicConfigAndQueueMapping EMPTY_TOPIC_CONFIG = new TopicConfigAndQueueMapping();
-
-    protected final LoadingCache<String, SubscriptionGroupConfig> subscriptionGroupConfigCache;
-    protected final static SubscriptionGroupConfig EMPTY_SUBSCRIPTION_GROUP_CONFIG = new SubscriptionGroupConfig();
-
-    protected final LoadingCache<String, User> userCache;
-
-    protected final static User EMPTY_USER = new User();
-
-    protected final LoadingCache<String, Acl> aclCache;
-
-    protected final static Acl EMPTY_ACL = new Acl();
-
-    protected final Random random = new Random();
 
 
     public ClusterMetadataService(TopicRouteService topicRouteService, MQClientAPIFactory mqClientAPIFactory) {
@@ -81,33 +73,33 @@ public class ClusterMetadataService extends AbstractStartAndShutdown implements 
 
         ProxyConfig config = ConfigurationManager.getProxyConfig();
         this.cacheRefreshExecutor = ThreadPoolMonitor.createAndMonitor(
-            config.getMetadataThreadPoolNums(),
-            config.getMetadataThreadPoolNums(),
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            "MetadataCacheRefresh",
-            config.getMetadataThreadPoolQueueCapacity()
+                config.getMetadataThreadPoolNums(),
+                config.getMetadataThreadPoolNums(),
+                1000 * 60,
+                TimeUnit.MILLISECONDS,
+                "MetadataCacheRefresh",
+                config.getMetadataThreadPoolQueueCapacity()
         );
         this.topicConfigCache = CacheBuilder.newBuilder()
-            .maximumSize(config.getTopicConfigCacheMaxNum())
-            .expireAfterAccess(config.getTopicConfigCacheExpiredSeconds(), TimeUnit.SECONDS)
-            .refreshAfterWrite(config.getTopicConfigCacheRefreshSeconds(), TimeUnit.SECONDS)
-            .build(new ClusterTopicConfigCacheLoader());
+                .maximumSize(config.getTopicConfigCacheMaxNum())
+                .expireAfterAccess(config.getTopicConfigCacheExpiredSeconds(), TimeUnit.SECONDS)
+                .refreshAfterWrite(config.getTopicConfigCacheRefreshSeconds(), TimeUnit.SECONDS)
+                .build(new ClusterTopicConfigCacheLoader());
         this.subscriptionGroupConfigCache = CacheBuilder.newBuilder()
-            .maximumSize(config.getSubscriptionGroupConfigCacheMaxNum())
-            .expireAfterAccess(config.getSubscriptionGroupConfigCacheExpiredSeconds(), TimeUnit.SECONDS)
-            .refreshAfterWrite(config.getSubscriptionGroupConfigCacheRefreshSeconds(), TimeUnit.SECONDS)
-            .build(new ClusterSubscriptionGroupConfigCacheLoader());
+                .maximumSize(config.getSubscriptionGroupConfigCacheMaxNum())
+                .expireAfterAccess(config.getSubscriptionGroupConfigCacheExpiredSeconds(), TimeUnit.SECONDS)
+                .refreshAfterWrite(config.getSubscriptionGroupConfigCacheRefreshSeconds(), TimeUnit.SECONDS)
+                .build(new ClusterSubscriptionGroupConfigCacheLoader());
         this.userCache = CacheBuilder.newBuilder()
-            .maximumSize(config.getUserCacheMaxNum())
-            .expireAfterAccess(config.getUserCacheExpiredSeconds(), TimeUnit.SECONDS)
-            .refreshAfterWrite(config.getUserCacheRefreshSeconds(), TimeUnit.SECONDS)
-            .build(new ClusterUserCacheLoader());
+                .maximumSize(config.getUserCacheMaxNum())
+                .expireAfterAccess(config.getUserCacheExpiredSeconds(), TimeUnit.SECONDS)
+                .refreshAfterWrite(config.getUserCacheRefreshSeconds(), TimeUnit.SECONDS)
+                .build(new ClusterUserCacheLoader());
         this.aclCache = CacheBuilder.newBuilder()
-            .maximumSize(config.getAclCacheMaxNum())
-            .expireAfterAccess(config.getAclCacheExpiredSeconds(), TimeUnit.SECONDS)
-            .refreshAfterWrite(config.getAclCacheRefreshSeconds(), TimeUnit.SECONDS)
-            .build(new ClusterAclCacheLoader());
+                .maximumSize(config.getAclCacheMaxNum())
+                .expireAfterAccess(config.getAclCacheExpiredSeconds(), TimeUnit.SECONDS)
+                .refreshAfterWrite(config.getAclCacheRefreshSeconds(), TimeUnit.SECONDS)
+                .build(new ClusterAclCacheLoader());
 
         this.init();
     }
@@ -172,6 +164,19 @@ public class ClusterMetadataService extends AbstractStartAndShutdown implements 
             result.completeExceptionally(e);
         }
         return result;
+    }
+
+    protected Optional<BrokerData> findOneBroker(String topic) throws Exception {
+        try {
+            List<BrokerData> brokerDatas = topicRouteService.getAllMessageQueueView(ProxyContext.createForInner(this.getClass()), topic).getTopicRouteData().getBrokerDatas();
+            int skipNum = random.nextInt(brokerDatas.size());
+            return brokerDatas.stream().skip(skipNum).findFirst();
+        } catch (Exception e) {
+            if (TopicRouteHelper.isTopicNotExistError(e)) {
+                return Optional.empty();
+            }
+            throw e;
+        }
     }
 
     protected class ClusterSubscriptionGroupConfigCacheLoader extends AbstractCacheLoader<String, SubscriptionGroupConfig> {
@@ -273,19 +278,6 @@ public class ClusterMetadataService extends AbstractStartAndShutdown implements 
         @Override
         protected void onErr(String key, Exception e) {
             log.error("load acl failed. subject:{}", key, e);
-        }
-    }
-
-    protected Optional<BrokerData> findOneBroker(String topic) throws Exception {
-        try {
-            List<BrokerData> brokerDatas = topicRouteService.getAllMessageQueueView(ProxyContext.createForInner(this.getClass()), topic).getTopicRouteData().getBrokerDatas();
-            int skipNum = random.nextInt(brokerDatas.size());
-            return brokerDatas.stream().skip(skipNum).findFirst();
-        } catch (Exception e) {
-            if (TopicRouteHelper.isTopicNotExistError(e)) {
-                return Optional.empty();
-            }
-            throw e;
         }
     }
 }

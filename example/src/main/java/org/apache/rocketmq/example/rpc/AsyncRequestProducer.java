@@ -21,9 +21,9 @@ import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.RequestCallback;
 import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.remoting.common.RemotingHelper;
 
 public class AsyncRequestProducer {
     private static final Logger log = LoggerFactory.getLogger(AsyncRequestProducer.class);
@@ -38,8 +38,8 @@ public class AsyncRequestProducer {
 
         try {
             Message msg = new Message(topic,
-                "",
-                "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
+                    "",
+                    "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
 
             long begin = System.currentTimeMillis();
             producer.request(msg, new RequestCallback() {
@@ -57,7 +57,7 @@ public class AsyncRequestProducer {
         } catch (Exception e) {
             log.warn("", e);
         }
-         /* shutdown after your request callback is finished */
+        /* shutdown after your request callback is finished */
 //        producer.shutdown();
     }
 }

@@ -16,19 +16,16 @@
  */
 package org.apache.rocketmq.client.trace.hook;
 
-import java.util.ArrayList;
 import org.apache.rocketmq.client.hook.EndTransactionContext;
 import org.apache.rocketmq.client.hook.EndTransactionHook;
-import org.apache.rocketmq.client.trace.AsyncTraceDispatcher;
-import org.apache.rocketmq.client.trace.TraceBean;
-import org.apache.rocketmq.client.trace.TraceContext;
-import org.apache.rocketmq.client.trace.TraceDispatcher;
-import org.apache.rocketmq.client.trace.TraceType;
+import org.apache.rocketmq.client.trace.*;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageType;
 import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
+
+import java.util.ArrayList;
 
 public class EndTransactionTraceHookImpl implements EndTransactionHook {
 
@@ -62,7 +59,7 @@ public class EndTransactionTraceHookImpl implements EndTransactionHook {
         traceBean.setKeys(context.getMessage().getKeys());
         traceBean.setStoreHost(context.getBrokerAddr());
         traceBean.setMsgType(MessageType.Trans_msg_Commit);
-        traceBean.setClientHost(((AsyncTraceDispatcher)localDispatcher).getHostProducer().getMqClientFactory().getClientId());
+        traceBean.setClientHost(((AsyncTraceDispatcher) localDispatcher).getHostProducer().getMqClientFactory().getClientId());
         traceBean.setMsgId(context.getMsgId());
         traceBean.setTransactionState(context.getTransactionState());
         traceBean.setTransactionId(context.getTransactionId());

@@ -32,21 +32,21 @@ import java.util.function.Function;
 public class SparseConsumeQueue extends BatchConsumeQueue {
 
     public SparseConsumeQueue(
-        final String topic,
-        final int queueId,
-        final String storePath,
-        final int mappedFileSize,
-        final MessageStore defaultMessageStore) {
+            final String topic,
+            final int queueId,
+            final String storePath,
+            final int mappedFileSize,
+            final MessageStore defaultMessageStore) {
         super(topic, queueId, storePath, mappedFileSize, defaultMessageStore);
     }
 
     public SparseConsumeQueue(
-        final String topic,
-        final int queueId,
-        final String storePath,
-        final int mappedFileSize,
-        final MessageStore defaultMessageStore,
-        final String subfolder) {
+            final String topic,
+            final int queueId,
+            final String storePath,
+            final int mappedFileSize,
+            final MessageStore defaultMessageStore,
+            final String subfolder) {
         super(topic, queueId, storePath, mappedFileSize, defaultMessageStore, subfolder);
     }
 
@@ -77,7 +77,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
                         this.maxMsgPhyOffsetInCommitLog = offset;
                     } else {
                         log.info("Recover current batch consume queue file over, " + "file:{} offset:{} size:{} msgBaseOffset:{} batchSize:{} mappedFileOffset:{}",
-                            mappedFile.getFileName(), offset, size, msgBaseOffset, batchSize, mappedFileOffset);
+                                mappedFile.getFileName(), offset, size, msgBaseOffset, batchSize, mappedFileOffset);
 
                         if (mappedFileOffset != mappedFileSize) {
                             mappedFile.setWrotePosition(mappedFileOffset);
@@ -121,6 +121,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
     /**
      * Gets SelectMappedBufferResult by batch-message offset, if not found will return the next valid offset buffer
      * Node: the caller is responsible for the release of SelectMappedBufferResult
+     *
      * @param msgOffset
      * @return SelectMappedBufferResult
      */
@@ -209,7 +210,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
             }
 
             if (null != tmpMinMsgOffset && tmpMinMsgOffset.getMsgOffset() <= msgOffset
-                && null != tmpMaxMsgOffset && msgOffset <= tmpMaxMsgOffset.getMsgOffset()) {
+                    && null != tmpMaxMsgOffset && msgOffset <= tmpMaxMsgOffset.getMsgOffset()) {
                 targetBcq = mappedFile;
                 break;
             }
@@ -237,7 +238,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
             }
         } catch (Exception e) {
             log.error("Failed caching offset and time on BCQ [Topic: {}, QueueId: {}, File: {}]",
-                this.topic, this.queueId, file);
+                    this.topic, this.queueId, file);
         }
     }
 
@@ -259,7 +260,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
             this.byteBufferItem.putLong(0);
             this.byteBufferItem.putLong(0);
             this.byteBufferItem.putLong(0);
-            this.byteBufferItem.putShort((short)0);
+            this.byteBufferItem.putShort((short) 0);
             this.byteBufferItem.putInt(INVALID_POS);
             this.byteBufferItem.putInt(0); // 4 bytes reserved
 
@@ -300,7 +301,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
             return true;
         }
         if (mappedFileQueue.getLastMappedFile().getWrotePosition() + BatchConsumeQueue.CQ_STORE_UNIT_SIZE
-            > mappedFileQueue.getMappedFileSize()) {
+                > mappedFileQueue.getMappedFileSize()) {
             return true;
         }
 
@@ -310,7 +311,7 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
     public boolean containsOffsetFile(final long physicalOffset) {
         String fileName = UtilAll.offset2FileName(physicalOffset);
         return mappedFileQueue.getMappedFiles().stream()
-            .anyMatch(mf -> Objects.equals(mf.getFile().getName(), fileName));
+                .anyMatch(mf -> Objects.equals(mf.getFile().getName(), fileName));
     }
 
     public long getMaxPhyOffsetInLog() {
@@ -374,9 +375,9 @@ public class SparseConsumeQueue extends BatchConsumeQueue {
 
     public long getMaxMsgOffsetFromFile(String simpleFileName) {
         MappedFile mappedFile = mappedFileQueue.getMappedFiles().stream()
-            .filter(m -> Objects.equals(m.getFile().getName(), simpleFileName))
-            .findFirst()
-            .orElse(null);
+                .filter(m -> Objects.equals(m.getFile().getName(), simpleFileName))
+                .findFirst()
+                .orElse(null);
 
         if (mappedFile == null) {
             return -1;

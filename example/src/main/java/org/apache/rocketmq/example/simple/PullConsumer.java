@@ -16,12 +16,6 @@
  */
 package org.apache.rocketmq.example.simple;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.client.consumer.PullResult;
 import org.apache.rocketmq.client.consumer.store.ReadOffsetType;
@@ -31,6 +25,12 @@ import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SuppressWarnings("deprecation")
 public class PullConsumer {
@@ -132,7 +132,7 @@ public class PullConsumer {
 
                 public void incPullTPS(String topic, int pullSize) {
                     consumer.getDefaultMQPullConsumerImpl().getRebalanceImpl().getmQClientFactory()
-                        .getConsumerStatsManager().incPullTPS(consumer.getConsumerGroup(), topic, pullSize);
+                            .getConsumerStatsManager().incPullTPS(consumer.getConsumerGroup(), topic, pullSize);
                 }
             });
 

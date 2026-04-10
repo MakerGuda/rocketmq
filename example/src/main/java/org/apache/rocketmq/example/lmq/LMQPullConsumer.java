@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.example.lmq;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
 import org.apache.rocketmq.client.consumer.PullCallback;
 import org.apache.rocketmq.client.consumer.PullResult;
@@ -27,6 +24,10 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
 @SuppressWarnings("deprecation")
 public class LMQPullConsumer {
@@ -49,7 +50,7 @@ public class LMQPullConsumer {
 
         // use parent topic to fill up broker addr table
         consumer.getDefaultMQPullConsumerImpl().getRebalanceImpl().getmQClientFactory()
-            .updateTopicRouteInfoFromNameServer(TOPIC);
+                .updateTopicRouteInfoFromNameServer(TOPIC);
 
         final MessageQueue lmq = new MessageQueue(LMQ_TOPIC, BROKER_NAME, (int) MixAll.LMQ_QUEUE_ID);
         long offset = consumer.minOffset(lmq);

@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.auth.authentication.strategy;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authentication.context.AuthenticationContext;
 import org.apache.rocketmq.auth.authentication.exception.AuthenticationException;
@@ -26,6 +23,10 @@ import org.apache.rocketmq.auth.authentication.factory.AuthenticationFactory;
 import org.apache.rocketmq.auth.authentication.provider.AuthenticationProvider;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.utils.ExceptionUtils;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Supplier;
 
 public abstract class AbstractAuthenticationStrategy implements AuthenticationStrategy {
 

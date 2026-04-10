@@ -1,7 +1,7 @@
 name: Rerun workflow
 on:
   workflow_run:
-    workflows: ["Build and Run Tests by Maven" , "Build and Run Tests by Bazel"]
+    workflows: [ "Build and Run Tests by Maven" , "Build and Run Tests by Bazel" ]
     types:
       - completed
 
@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: rerun ${{  github.event.workflow_run.id }}
         env:
-          GH_REPO:  ${{ github.repository }}
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh run watch ${{ github.event.workflow_run.id }} > /dev/null 2>&1

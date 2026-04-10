@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.auth.authorization.manager;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authentication.enums.SubjectType;
@@ -28,16 +26,15 @@ import org.apache.rocketmq.auth.authentication.provider.AuthenticationMetadataPr
 import org.apache.rocketmq.auth.authorization.enums.PolicyType;
 import org.apache.rocketmq.auth.authorization.exception.AuthorizationException;
 import org.apache.rocketmq.auth.authorization.factory.AuthorizationFactory;
-import org.apache.rocketmq.auth.authorization.model.Acl;
-import org.apache.rocketmq.auth.authorization.model.Environment;
-import org.apache.rocketmq.auth.authorization.model.Policy;
-import org.apache.rocketmq.auth.authorization.model.PolicyEntry;
-import org.apache.rocketmq.auth.authorization.model.Resource;
+import org.apache.rocketmq.auth.authorization.model.*;
 import org.apache.rocketmq.auth.authorization.provider.AuthorizationMetadataProvider;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.common.utils.ExceptionUtils;
 import org.apache.rocketmq.common.utils.IPAddressUtils;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataManager {
 
@@ -48,6 +45,14 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
     public AuthorizationMetadataManagerImpl(AuthConfig authConfig) {
         this.authorizationMetadataProvider = AuthorizationFactory.getMetadataProvider(authConfig);
         this.authenticationMetadataProvider = AuthenticationFactory.getMetadataProvider(authConfig);
+    }
+
+    private static void initAcl(Acl acl) {
+        acl.getPolicies().forEach(policy -> {
+            if (policy.getPolicyType() == null) {
+                policy.setPolicyType(PolicyType.CUSTOM);
+            }
+        });
     }
 
     @Override
@@ -201,14 +206,6 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
     @Override
     public CompletableFuture<List<Acl>> listAcl(String subjectFilter, String resourceFilter) {
         return this.getAuthorizationMetadataProvider().listAcl(subjectFilter, resourceFilter);
-    }
-
-    private static void initAcl(Acl acl) {
-        acl.getPolicies().forEach(policy -> {
-            if (policy.getPolicyType() == null) {
-                policy.setPolicyType(PolicyType.CUSTOM);
-            }
-        });
     }
 
     private void validate(Acl acl) {

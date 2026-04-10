@@ -22,6 +22,7 @@ import io.openmessaging.MessagingAccessPoint;
 import io.openmessaging.OMS;
 import io.openmessaging.producer.Producer;
 import io.openmessaging.producer.SendResult;
+
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
@@ -33,7 +34,7 @@ public class SimpleProducer {
     public static void main(String[] args) {
         // You need to set the environment variable OMS_RMQ_DIRECT_NAME_SRV=true
         final MessagingAccessPoint messagingAccessPoint =
-            OMS.getMessagingAccessPoint(URL);
+                OMS.getMessagingAccessPoint(URL);
 
         final Producer producer = messagingAccessPoint.createProducer();
 
@@ -54,7 +55,7 @@ public class SimpleProducer {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         {
             final Future<SendResult> result = producer.sendAsync(producer.createBytesMessage(QUEUE,
-                "OMS_HELLO_BODY".getBytes(StandardCharsets.UTF_8)));
+                    "OMS_HELLO_BODY".getBytes(StandardCharsets.UTF_8)));
             result.addListener(future -> {
                 if (future.getThrowable() != null) {
                     System.out.printf("Send async message Failed, error: %s%n", future.getThrowable().getMessage());

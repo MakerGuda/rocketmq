@@ -17,11 +17,6 @@
 package org.apache.rocketmq.example.lmq;
 
 import com.google.common.collect.Lists;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -33,6 +28,11 @@ import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 public class LMQPushConsumer {
     public static final String CLUSTER_NAME = "DefaultCluster";
@@ -81,7 +81,7 @@ public class LMQPushConsumer {
         consumer.getDefaultMQPushConsumerImpl().getmQClientFactory().getTopicRouteTable().put(LMQ_TOPIC, topicRouteData);
         // compensate for RebalanceImpl#topicSubscribeInfoTable
         consumer.getDefaultMQPushConsumerImpl().updateTopicSubscribeInfo(LMQ_TOPIC,
-            new HashSet<>(Arrays.asList(new MessageQueue(LMQ_TOPIC, BROKER_NAME, (int) MixAll.LMQ_QUEUE_ID))));
+                new HashSet<>(Arrays.asList(new MessageQueue(LMQ_TOPIC, BROKER_NAME, (int) MixAll.LMQ_QUEUE_ID))));
         // re-balance immediately to start pulling messages
         consumer.getDefaultMQPushConsumerImpl().getmQClientFactory().doRebalance();
 

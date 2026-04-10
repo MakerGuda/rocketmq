@@ -32,10 +32,6 @@ public enum StoreType {
         this.storeType = storeType;
     }
 
-    public String getStoreType() {
-        return storeType;
-    }
-
     /**
      * convert string to set of StoreType
      *
@@ -48,13 +44,17 @@ public enum StoreType {
         }
 
         return Arrays.stream(str.split(";"))
-            .map(String::trim)
-            .filter(s -> !s.isEmpty())
-            .map(s -> Arrays.stream(StoreType.values())
-                .filter(type -> type.getStoreType().equalsIgnoreCase(s))
-                .findFirst()
-                .orElse(null))
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> Arrays.stream(StoreType.values())
+                        .filter(type -> type.getStoreType().equalsIgnoreCase(s))
+                        .findFirst()
+                        .orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    public String getStoreType() {
+        return storeType;
     }
 }

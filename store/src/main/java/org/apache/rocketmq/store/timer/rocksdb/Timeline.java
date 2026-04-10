@@ -15,12 +15,7 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.store.timer.rocksdb;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+
 import com.conversantmedia.util.concurrent.DisruptorBlockingQueue;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -37,11 +32,17 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage;
 import org.apache.rocketmq.store.timer.TimerMessageStore;
 import org.apache.rocketmq.store.timer.TimerMetrics;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
 import static org.apache.rocketmq.common.message.MessageConst.PROPERTY_TIMER_ROLL_LABEL;
 import static org.apache.rocketmq.store.rocksdb.MessageRocksDBStorage.TIMER_COLUMN_FAMILY;
-import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.TIMER_ROCKSDB_DELETE;
-import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.TIMER_ROCKSDB_PUT;
-import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.TIMER_ROCKSDB_UPDATE;
+import static org.apache.rocketmq.store.timer.rocksdb.TimerRocksDBRecord.*;
 
 public class Timeline {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -50,7 +51,6 @@ public class Timeline {
     private static final int ORIGIN_CAPACITY = 100000;
     private static final int BATCH_SIZE = 1000, MAX_BATCH_SIZE_FROM_ROCKSDB = 8000;
     private static final int INITIAL = 0, RUNNING = 1, SHUTDOWN = 2;
-    private volatile int state = INITIAL;
     private final AtomicLong commitOffset = new AtomicLong(0);
     private final MessageStore messageStore;
     private final MessageStoreConfig storeConfig;
@@ -59,7 +59,7 @@ public class Timeline {
     private final TimerMessageRocksDBStore timerMessageRocksDBStore;
     private final long precisionMs;
     private final TimerMetrics timerMetrics;
-
+    private volatile int state = INITIAL;
     private TimelineIndexBuildService timelineIndexBuildService;
     private TimelineForwardService timelineForwardService;
     private TimelineRollService timelineRollService;
@@ -325,6 +325,7 @@ public class Timeline {
 
     private class TimelineForwardService extends ServiceThread {
         private final Logger log = Timeline.log;
+
         @Override
         public String getServiceName() {
             return getServiceThreadName() + this.getClass().getSimpleName();
@@ -366,6 +367,7 @@ public class Timeline {
 
     private class TimelineRollService extends ServiceThread {
         private final Logger log = Timeline.log;
+
         @Override
         public String getServiceName() {
             return getServiceThreadName() + this.getClass().getSimpleName();
@@ -413,10 +415,12 @@ public class Timeline {
     private class TimelineDeleteService extends ServiceThread {
         private final Logger log = Timeline.log;
         private long lastDeleteCheckPoint = 0L;
+
         @Override
         public String getServiceName() {
             return getServiceThreadName() + this.getClass().getSimpleName();
         }
+
         @Override
         public void run() {
             log.info(this.getServiceName() + " service start");

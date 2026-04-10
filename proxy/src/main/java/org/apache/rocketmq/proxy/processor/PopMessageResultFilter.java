@@ -22,12 +22,12 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
 public interface PopMessageResultFilter {
 
+    FilterResult filterMessage(ProxyContext ctx, String consumerGroup, SubscriptionData subscriptionData,
+                               MessageExt messageExt);
+
     enum FilterResult {
         TO_DLQ,
         NO_MATCH,
         MATCH
     }
-
-    FilterResult filterMessage(ProxyContext ctx, String consumerGroup, SubscriptionData subscriptionData,
-        MessageExt messageExt);
 }

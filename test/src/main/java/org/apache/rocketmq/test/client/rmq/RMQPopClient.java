@@ -17,8 +17,6 @@
 
 package org.apache.rocketmq.test.client.rmq;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.consumer.AckCallback;
 import org.apache.rocketmq.client.consumer.AckResult;
@@ -28,13 +26,12 @@ import org.apache.rocketmq.client.impl.ClientRemotingProcessor;
 import org.apache.rocketmq.client.impl.mqclient.MQClientAPIExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
-import org.apache.rocketmq.remoting.protocol.header.AckMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ChangeInvisibleTimeRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ExtraInfoUtil;
-import org.apache.rocketmq.remoting.protocol.header.NotificationRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PopMessageRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.*;
 import org.apache.rocketmq.test.clientinterface.MQConsumer;
 import org.apache.rocketmq.test.util.RandomUtil;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class RMQPopClient implements MQConsumer {
 
@@ -55,7 +52,7 @@ public class RMQPopClient implements MQConsumer {
         NettyClientConfig nettyClientConfig = new NettyClientConfig();
         nettyClientConfig.setUseTLS(useTLS);
         this.mqClientAPI = new MQClientAPIExt(
-            clientConfig, nettyClientConfig, new ClientRemotingProcessor(null), null);
+                clientConfig, nettyClientConfig, new ClientRemotingProcessor(null), null);
     }
 
     @Override
@@ -69,14 +66,14 @@ public class RMQPopClient implements MQConsumer {
     }
 
     public CompletableFuture<PopResult> popMessageAsync(String brokerAddr, MessageQueue mq, long invisibleTime,
-        int maxNums, String consumerGroup, long timeout, boolean poll, int initMode, boolean order,
-        String expressionType, String expression) {
+                                                        int maxNums, String consumerGroup, long timeout, boolean poll, int initMode, boolean order,
+                                                        String expressionType, String expression) {
         return popMessageAsync(brokerAddr, mq, invisibleTime, maxNums, consumerGroup, timeout, poll, initMode, order, expressionType, expression, null);
     }
 
     public CompletableFuture<PopResult> popMessageAsync(String brokerAddr, MessageQueue mq, long invisibleTime,
-        int maxNums, String consumerGroup, long timeout, boolean poll, int initMode, boolean order,
-        String expressionType, String expression, String attemptId) {
+                                                        int maxNums, String consumerGroup, long timeout, boolean poll, int initMode, boolean order,
+                                                        String expressionType, String expression, String attemptId) {
         PopMessageRequestHeader requestHeader = new PopMessageRequestHeader();
         requestHeader.setConsumerGroup(consumerGroup);
         requestHeader.setTopic(mq.getTopic());
@@ -113,7 +110,7 @@ public class RMQPopClient implements MQConsumer {
     }
 
     public CompletableFuture<AckResult> ackMessageAsync(
-        String brokerAddr, String topic, String consumerGroup, String extraInfo) {
+            String brokerAddr, String topic, String consumerGroup, String extraInfo) {
 
         String[] extraInfoStrs = ExtraInfoUtil.split(extraInfo);
         AckMessageRequestHeader requestHeader = new AckMessageRequestHeader();
@@ -142,7 +139,7 @@ public class RMQPopClient implements MQConsumer {
     }
 
     public CompletableFuture<AckResult> batchAckMessageAsync(String brokerAddr, String topic, String consumerGroup,
-        List<String> extraInfoList) {
+                                                             List<String> extraInfoList) {
         CompletableFuture<AckResult> future = new CompletableFuture<>();
         try {
             this.mqClientAPI.batchAckMessageAsync(brokerAddr, DEFAULT_TIMEOUT, new AckCallback() {
@@ -163,7 +160,7 @@ public class RMQPopClient implements MQConsumer {
     }
 
     public CompletableFuture<AckResult> changeInvisibleTimeAsync(String brokerAddr, String brokerName, String topic,
-        String consumerGroup, String extraInfo, long invisibleTime) {
+                                                                 String consumerGroup, String extraInfo, long invisibleTime) {
         String[] extraInfoStrs = ExtraInfoUtil.split(extraInfo);
         ChangeInvisibleTimeRequestHeader requestHeader = new ChangeInvisibleTimeRequestHeader();
         requestHeader.setTopic(ExtraInfoUtil.getRealTopic(extraInfoStrs, topic, consumerGroup));
@@ -193,12 +190,12 @@ public class RMQPopClient implements MQConsumer {
     }
 
     public CompletableFuture<Boolean> notification(String brokerAddr, String topic,
-        String consumerGroup, int queueId, long pollTime, long bornTime, long timeoutMillis) {
+                                                   String consumerGroup, int queueId, long pollTime, long bornTime, long timeoutMillis) {
         return notification(brokerAddr, topic, consumerGroup, queueId, null, null, pollTime, bornTime, timeoutMillis);
     }
 
     public CompletableFuture<Boolean> notification(String brokerAddr, String topic,
-        String consumerGroup, int queueId, Boolean order, String attemptId, long pollTime, long bornTime, long timeoutMillis) {
+                                                   String consumerGroup, int queueId, Boolean order, String attemptId, long pollTime, long bornTime, long timeoutMillis) {
         NotificationRequestHeader requestHeader = new NotificationRequestHeader();
         requestHeader.setConsumerGroup(consumerGroup);
         requestHeader.setTopic(topic);

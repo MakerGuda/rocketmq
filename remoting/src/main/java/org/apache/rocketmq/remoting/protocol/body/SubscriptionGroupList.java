@@ -16,16 +16,18 @@
  */
 package org.apache.rocketmq.remoting.protocol.body;
 
-import java.util.List;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
+
+import java.util.List;
 
 public class SubscriptionGroupList extends RemotingSerializable {
     @CFNotNull
     private List<SubscriptionGroupConfig> groupConfigList;
 
-    public SubscriptionGroupList() {}
+    public SubscriptionGroupList() {
+    }
 
     public SubscriptionGroupList(List<SubscriptionGroupConfig> groupConfigList) {
         this.groupConfigList = groupConfigList;

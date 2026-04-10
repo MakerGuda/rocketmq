@@ -27,7 +27,7 @@ public class PutMessageResult {
     }
 
     public PutMessageResult(PutMessageStatus putMessageStatus, AppendMessageResult appendMessageResult,
-        boolean remotePut) {
+                            boolean remotePut) {
         this.putMessageStatus = putMessageStatus;
         this.appendMessageResult = appendMessageResult;
         this.remotePut = remotePut;
@@ -36,7 +36,7 @@ public class PutMessageResult {
     public boolean isOk() {
         if (remotePut) {
             return putMessageStatus == PutMessageStatus.PUT_OK || putMessageStatus == PutMessageStatus.FLUSH_DISK_TIMEOUT
-                || putMessageStatus == PutMessageStatus.FLUSH_SLAVE_TIMEOUT || putMessageStatus == PutMessageStatus.SLAVE_NOT_AVAILABLE;
+                    || putMessageStatus == PutMessageStatus.FLUSH_SLAVE_TIMEOUT || putMessageStatus == PutMessageStatus.SLAVE_NOT_AVAILABLE;
         } else {
             return this.appendMessageResult != null && this.appendMessageResult.isOk();
         }
@@ -70,7 +70,7 @@ public class PutMessageResult {
     @Override
     public String toString() {
         return "PutMessageResult [putMessageStatus=" + putMessageStatus + ", appendMessageResult="
-            + appendMessageResult + ", remotePut=" + remotePut + "]";
+                + appendMessageResult + ", remotePut=" + remotePut + "]";
     }
 
 }

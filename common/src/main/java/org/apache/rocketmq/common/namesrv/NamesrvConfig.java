@@ -20,8 +20,9 @@
  */
 package org.apache.rocketmq.common.namesrv;
 
-import java.io.File;
 import org.apache.rocketmq.common.MixAll;
+
+import java.io.File;
 
 public class NamesrvConfig {
 
@@ -58,7 +59,7 @@ public class NamesrvConfig {
 
     /**
      * Support acting master or not.
-     *
+     * <p>
      * The slave can be an acting master when master node is down to support following operations:
      * 1. support lock/unlock message queue operation.
      * 2. support searchOffset, query maxOffset/minOffset operation.
@@ -84,7 +85,7 @@ public class NamesrvConfig {
 
     /**
      * If enable this flag, the topics that don't exist in broker registration payload will be deleted from name server.
-     *
+     * <p>
      * WARNING:
      * 1. Enable this flag and "enableSingleTopicRegister" of broker config meanwhile to avoid losing topic route info unexpectedly.
      * 2. This flag does not support static topic currently.

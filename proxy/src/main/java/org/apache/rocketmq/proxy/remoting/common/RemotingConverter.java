@@ -24,9 +24,8 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 public class RemotingConverter {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
-
     protected static final Object INSTANCE_CREATE_LOCK = new Object();
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     protected static volatile RemotingConverter instance;
 
     public static RemotingConverter getInstance() {

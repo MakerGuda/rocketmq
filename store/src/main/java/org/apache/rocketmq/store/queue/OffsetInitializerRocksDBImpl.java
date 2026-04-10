@@ -16,10 +16,10 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import org.apache.rocketmq.store.exception.ConsumeQueueException;
-import org.rocksdb.RocksDBException;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.store.exception.ConsumeQueueException;
+import org.rocksdb.RocksDBException;
 
 public class OffsetInitializerRocksDBImpl implements OffsetInitializer {
 

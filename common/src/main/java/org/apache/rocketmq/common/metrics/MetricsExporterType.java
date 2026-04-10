@@ -30,10 +30,6 @@ public enum MetricsExporterType {
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
-
     public static MetricsExporterType valueOf(int value) {
         switch (value) {
             case 1:
@@ -45,6 +41,10 @@ public enum MetricsExporterType {
             default:
                 return DISABLE;
         }
+    }
+
+    public int getValue() {
+        return value;
     }
 
     public boolean isEnable() {

@@ -29,11 +29,58 @@ public class RemoteChannel extends SimpleChannel implements ChannelExtendAttribu
 
     public RemoteChannel(String remoteProxyIp, String remoteAddress, String localAddress, ChannelProtocolType type, String extendAttribute) {
         super(null,
-            new RemoteChannelId(remoteProxyIp, remoteAddress, localAddress, type),
-            remoteAddress, localAddress);
+                new RemoteChannelId(remoteProxyIp, remoteAddress, localAddress, type),
+                remoteAddress, localAddress);
         this.type = type;
         this.remoteProxyIp = remoteProxyIp;
         this.extendAttribute = extendAttribute;
+    }
+
+    public static RemoteChannel decode(String data) {
+        return RemoteChannelSerializer.decodeFromJson(data);
+    }
+
+    public static RemoteChannel create(Channel channel) {
+        if (channel instanceof RemoteChannelConverter) {
+            return ((RemoteChannelConverter) channel).toRemoteChannel();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isWritable() {
+        return false;
+    }
+
+    public ChannelProtocolType getType() {
+        return type;
+    }
+
+    public String encode() {
+        return RemoteChannelSerializer.toJson(this);
+    }
+
+    public String getRemoteProxyIp() {
+        return remoteProxyIp;
+    }
+
+    public void setExtendAttribute(String extendAttribute) {
+        this.extendAttribute = extendAttribute;
+    }
+
+    @Override
+    public String getChannelExtendAttribute() {
+        return this.extendAttribute;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("channelId", id())
+                .add("type", type)
+                .add("remoteProxyIp", remoteProxyIp)
+                .add("extendAttribute", extendAttribute)
+                .toString();
     }
 
     public static class RemoteChannelId implements ChannelId {
@@ -62,55 +109,8 @@ public class RemoteChannel extends SimpleChannel implements ChannelExtendAttribu
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .toString();
+                    .add("id", id)
+                    .toString();
         }
-    }
-
-    @Override
-    public boolean isWritable() {
-        return false;
-    }
-
-    public ChannelProtocolType getType() {
-        return type;
-    }
-
-    public String encode() {
-        return RemoteChannelSerializer.toJson(this);
-    }
-
-    public static RemoteChannel decode(String data) {
-        return RemoteChannelSerializer.decodeFromJson(data);
-    }
-
-    public static RemoteChannel create(Channel channel) {
-        if (channel instanceof RemoteChannelConverter) {
-            return ((RemoteChannelConverter) channel).toRemoteChannel();
-        }
-        return null;
-    }
-
-    public String getRemoteProxyIp() {
-        return remoteProxyIp;
-    }
-
-    public void setExtendAttribute(String extendAttribute) {
-        this.extendAttribute = extendAttribute;
-    }
-
-    @Override
-    public String getChannelExtendAttribute() {
-        return this.extendAttribute;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("channelId", id())
-            .add("type", type)
-            .add("remoteProxyIp", remoteProxyIp)
-            .add("extendAttribute", extendAttribute)
-            .toString();
     }
 }

@@ -19,7 +19,6 @@ package org.apache.rocketmq.store;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import java.nio.ByteBuffer;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageDecoder;
@@ -31,14 +30,16 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+import java.nio.ByteBuffer;
+
 public class MessageExtEncoder {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+    private final int crc32ReservedLength;
     private ByteBuf byteBuf;
     // The maximum length of the message body.
     private int maxMessageBodySize;
     // The maximum length of the full message.
     private int maxMessageSize;
-    private final int crc32ReservedLength;
     private MessageStoreConfig messageStoreConfig;
 
     public MessageExtEncoder(final int maxMessageBodySize, final MessageStoreConfig messageStoreConfig) {
@@ -51,35 +52,35 @@ public class MessageExtEncoder {
         this.maxMessageBodySize = messageStoreConfig.getMaxMessageSize();
         //Reserve 64kb for encoding buffer outside body
         int maxMessageSize = Integer.MAX_VALUE - maxMessageBodySize >= 64 * 1024 ?
-            maxMessageBodySize + 64 * 1024 : Integer.MAX_VALUE;
+                maxMessageBodySize + 64 * 1024 : Integer.MAX_VALUE;
         byteBuf = alloc.directBuffer(maxMessageSize);
         this.maxMessageSize = maxMessageSize;
         this.crc32ReservedLength = messageStoreConfig.isEnabledAppendPropCRC() ? CommitLog.CRC32_RESERVED_LEN : 0;
     }
 
     public static int calMsgLength(MessageVersion messageVersion,
-        int sysFlag, int bodyLength, int topicLength, int propertiesLength) {
+                                   int sysFlag, int bodyLength, int topicLength, int propertiesLength) {
 
         int bornhostLength = (sysFlag & MessageSysFlag.BORNHOST_V6_FLAG) == 0 ? 8 : 20;
         int storehostAddressLength = (sysFlag & MessageSysFlag.STOREHOSTADDRESS_V6_FLAG) == 0 ? 8 : 20;
 
         return 4 //TOTALSIZE
-            + 4 //MAGICCODE
-            + 4 //BODYCRC
-            + 4 //QUEUEID
-            + 4 //FLAG
-            + 8 //QUEUEOFFSET
-            + 8 //PHYSICALOFFSET
-            + 4 //SYSFLAG
-            + 8 //BORNTIMESTAMP
-            + bornhostLength //BORNHOST
-            + 8 //STORETIMESTAMP
-            + storehostAddressLength //STOREHOSTADDRESS
-            + 4 //RECONSUMETIMES
-            + 8 //Prepared Transaction Offset
-            + 4 + (Math.max(bodyLength, 0)) //BODY
-            + messageVersion.getTopicLengthSize() + topicLength //TOPIC
-            + 2 + (Math.max(propertiesLength, 0)); //propertiesLength
+                + 4 //MAGICCODE
+                + 4 //BODYCRC
+                + 4 //QUEUEID
+                + 4 //FLAG
+                + 8 //QUEUEOFFSET
+                + 8 //PHYSICALOFFSET
+                + 4 //SYSFLAG
+                + 8 //BORNTIMESTAMP
+                + bornhostLength //BORNHOST
+                + 8 //STORETIMESTAMP
+                + storehostAddressLength //STOREHOSTADDRESS
+                + 4 //RECONSUMETIMES
+                + 8 //Prepared Transaction Offset
+                + 4 + (Math.max(bodyLength, 0)) //BODY
+                + messageVersion.getTopicLengthSize() + topicLength //TOPIC
+                + 2 + (Math.max(propertiesLength, 0)); //propertiesLength
     }
 
     public static int calMsgLengthNoProperties(MessageVersion messageVersion,
@@ -183,10 +184,10 @@ public class MessageExtEncoder {
          * Serialize message
          */
         final byte[] propertiesData =
-            msgInner.getPropertiesString() == null ? null : msgInner.getPropertiesString().getBytes(MessageDecoder.CHARSET_UTF8);
+                msgInner.getPropertiesString() == null ? null : msgInner.getPropertiesString().getBytes(MessageDecoder.CHARSET_UTF8);
 
         boolean needAppendLastPropertySeparator = crc32ReservedLength > 0 && propertiesData != null && propertiesData.length > 0
-            && propertiesData[propertiesData.length - 1] != MessageDecoder.PROPERTY_SEPARATOR;
+                && propertiesData[propertiesData.length - 1] != MessageDecoder.PROPERTY_SEPARATOR;
 
         final int propertiesLength = (propertiesData == null ? 0 : propertiesData.length) + (needAppendLastPropertySeparator ? 1 : 0) + crc32ReservedLength;
 
@@ -200,12 +201,12 @@ public class MessageExtEncoder {
 
         final int bodyLength = msgInner.getBody() == null ? 0 : msgInner.getBody().length;
         final int msgLen = calMsgLength(
-            msgInner.getVersion(), msgInner.getSysFlag(), bodyLength, topicLength, propertiesLength);
+                msgInner.getVersion(), msgInner.getSysFlag(), bodyLength, topicLength, propertiesLength);
 
         // Exceeds the maximum message body
         if (bodyLength > this.maxMessageBodySize) {
             CommitLog.log.warn("message body size exceeded, msg total size: " + msgLen + ", msg body size: " + bodyLength
-                + ", maxMessageSize: " + this.maxMessageBodySize);
+                    + ", maxMessageSize: " + this.maxMessageBodySize);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
 
@@ -214,7 +215,7 @@ public class MessageExtEncoder {
         // Exceeds the maximum message
         if (msgLen > this.maxMessageSize) {
             CommitLog.log.warn("message size exceeded, msg total size: " + msgLen + ", msg body size: " + bodyLength
-                + ", maxMessageSize: " + this.maxMessageSize);
+                    + ", maxMessageSize: " + this.maxMessageSize);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
 
@@ -320,7 +321,7 @@ public class MessageExtEncoder {
             // properties need to add crc32
             totalPropLen += crc32ReservedLength;
             final int msgLen = calMsgLength(
-                messageExtBatch.getVersion(), messageExtBatch.getSysFlag(), bodyLen, topicLength, totalPropLen);
+                    messageExtBatch.getVersion(), messageExtBatch.getSysFlag(), bodyLen, topicLength, totalPropLen);
 
             // 1 TOTALSIZE
             this.byteBuf.writeInt(msgLen);
@@ -394,7 +395,7 @@ public class MessageExtEncoder {
         this.maxMessageBodySize = newMaxMessageBodySize;
         //Reserve 64kb for encoding buffer outside body
         this.maxMessageSize = Integer.MAX_VALUE - newMaxMessageBodySize >= 64 * 1024 ?
-            this.maxMessageBodySize + 64 * 1024 : Integer.MAX_VALUE;
+                this.maxMessageBodySize + 64 * 1024 : Integer.MAX_VALUE;
         this.byteBuf.capacity(this.maxMessageSize);
     }
 

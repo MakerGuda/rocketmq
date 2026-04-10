@@ -18,15 +18,6 @@
 package org.apache.rocketmq.test.base;
 
 import com.google.common.truth.Truth;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -43,18 +34,22 @@ import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.test.util.MQAdminTestUtils;
 
-public class IntegrationTestBase {
-    public static Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+public class IntegrationTestBase {
     protected static final String SEP = File.separator;
     protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
     protected static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
     protected static final List<File> TMPE_FILES = new ArrayList<>();
     protected static final List<BrokerController> BROKER_CONTROLLERS = new ArrayList<>();
     protected static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
-    protected static int topicCreateTime = (int) TimeUnit.SECONDS.toSeconds(30);
-    public static volatile int commitLogSize = 1024 * 1024 * 100;
     protected static final int INDEX_NUM = 1000;
+    public static Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
+    public static volatile int commitLogSize = 1024 * 1024 * 100;
+    protected static int topicCreateTime = (int) TimeUnit.SECONDS.toSeconds(30);
 
     static {
 

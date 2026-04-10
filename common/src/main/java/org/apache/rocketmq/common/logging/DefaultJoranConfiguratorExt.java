@@ -17,13 +17,6 @@
 
 package org.apache.rocketmq.common.logging;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import org.apache.rocketmq.logging.ch.qos.logback.classic.ClassicConstants;
 import org.apache.rocketmq.logging.ch.qos.logback.classic.LoggerContext;
 import org.apache.rocketmq.logging.ch.qos.logback.classic.util.DefaultJoranConfigurator;
@@ -33,6 +26,14 @@ import org.apache.rocketmq.logging.ch.qos.logback.core.status.InfoStatus;
 import org.apache.rocketmq.logging.ch.qos.logback.core.status.StatusManager;
 import org.apache.rocketmq.logging.ch.qos.logback.core.util.Loader;
 import org.apache.rocketmq.logging.ch.qos.logback.core.util.OptionHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
 
@@ -87,7 +88,7 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
             configurator.doConfigure0(url);
         } else {
             throw new LogbackException(
-                "Unexpected filename extension of file [" + url + "]. Should be .xml");
+                    "Unexpected filename extension of file [" + url + "]. Should be .xml");
         }
     }
 

@@ -32,7 +32,7 @@ github:
     # Disable rebase button
     rebase: false
   protected_branches:
-    master: {}
+    master: { }
     develop:
       required_pull_request_reviews:
         dismiss_stale_reviews: true
@@ -46,8 +46,8 @@ github:
           - maven-compile (windows-latest, JDK-8)
           - maven-compile (macos-latest, JDK-8)
 notifications:
-  commits:      commits@rocketmq.apache.org
-  issues:       commits@rocketmq.apache.org
+  commits: commits@rocketmq.apache.org
+  issues: commits@rocketmq.apache.org
   pullrequests: commits@rocketmq.apache.org
-  jobs:         commits@rocketmq.apache.org
-  discussions:  dev@rocketmq.apache.org
+  jobs: commits@rocketmq.apache.org
+  discussions: dev@rocketmq.apache.org

@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.tieredstore.metadata;
 
-import java.util.function.Consumer;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 import org.apache.rocketmq.tieredstore.metadata.entity.FileSegmentMetadata;
 import org.apache.rocketmq.tieredstore.metadata.entity.QueueMetadata;
 import org.apache.rocketmq.tieredstore.metadata.entity.TopicMetadata;
+
+import java.util.function.Consumer;
 
 /**
  * Provides tiered metadata storage service to store metadata information of Topic, Queue, FileSegment, etc.

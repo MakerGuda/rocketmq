@@ -87,6 +87,8 @@ public enum MessageVersion {
     public abstract int getTopicLengthSize();
 
     public abstract int getTopicLength(java.nio.ByteBuffer buffer);
+
     public abstract int getTopicLength(java.nio.ByteBuffer buffer, int index);
+
     public abstract void putTopicLength(java.nio.ByteBuffer buffer, int topicLength);
 }

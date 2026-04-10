@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.broker;
 
-import java.util.Properties;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
+
+import java.util.Properties;
 
 /**
  * Broker 启动阶段的「配置聚合体」：将配置文件路径、原始 {@link java.util.Properties} 以及

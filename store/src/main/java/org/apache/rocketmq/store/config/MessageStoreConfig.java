@@ -16,13 +16,14 @@
  */
 package org.apache.rocketmq.store.config;
 
-import java.io.File;
 import org.apache.rocketmq.common.annotation.ImportantField;
 import org.apache.rocketmq.store.ConsumeQueue;
 import org.apache.rocketmq.store.StoreType;
 import org.apache.rocketmq.store.queue.BatchConsumeQueue;
 import org.rocksdb.CompressionType;
 import org.rocksdb.util.SizeUnit;
+
+import java.io.File;
 
 public class MessageStoreConfig {
 
@@ -262,7 +263,7 @@ public class MessageStoreConfig {
     /**
      * When true, use RandomAccessFile for writing instead of MappedByteBuffer. This can be useful for certain scenarios
      * where mmap is not desired.
-     *
+     * <p>
      * The configurations writeWithoutMmap and transientStorePoolEnable are mutually exclusive. When both are set to
      * true, only writeWithoutMmap will be effective.
      */
@@ -488,7 +489,7 @@ public class MessageStoreConfig {
      *     <li>xpress</li>
      *     <li>zstd</li>
      * </ul>
-     *
+     * <p>
      * LZ4 is the recommended one.
      */
     private String bottomMostCompressionTypeForConsumeQueueStore = CompressionType.ZSTD_COMPRESSION.getLibraryName();
@@ -511,6 +512,17 @@ public class MessageStoreConfig {
 
     // Shared byte buffer manager configuration
     private int sharedByteBufferNum = 16;
+    /**
+     * Spin number in the retreat strategy of spin lock
+     * Default is 1000
+     */
+    private int spinLockCollisionRetreatOptimalDegree = 1000;
+    /**
+     * Use AdaptiveBackOffLock
+     **/
+    private boolean useABSLock = false;
+    private boolean enableLogConsumeQueueRepeatedlyBuildWhenRecover = false;
+    private boolean appendTopicForTimerDeleteKey = false;
 
     public String getRocksdbCompressionType() {
         return rocksdbCompressionType;
@@ -519,21 +531,6 @@ public class MessageStoreConfig {
     public void setRocksdbCompressionType(String compressionType) {
         this.rocksdbCompressionType = compressionType;
     }
-
-    /**
-     * Spin number in the retreat strategy of spin lock
-     * Default is 1000
-     */
-    private int spinLockCollisionRetreatOptimalDegree = 1000;
-
-    /**
-     * Use AdaptiveBackOffLock
-     **/
-    private boolean useABSLock = false;
-
-    private boolean enableLogConsumeQueueRepeatedlyBuildWhenRecover = false;
-
-    private boolean appendTopicForTimerDeleteKey = false;
 
     public boolean isRocksdbCQDoubleWriteEnable() {
         return rocksdbCQDoubleWriteEnable;
@@ -596,12 +593,12 @@ public class MessageStoreConfig {
         return compactionMappedFileSize;
     }
 
-    public int getCompactionCqMappedFileSize() {
-        return compactionCqMappedFileSize;
-    }
-
     public void setCompactionMappedFileSize(int compactionMappedFileSize) {
         this.compactionMappedFileSize = compactionMappedFileSize;
+    }
+
+    public int getCompactionCqMappedFileSize() {
+        return compactionCqMappedFileSize;
     }
 
     public void setCompactionCqMappedFileSize(int compactionCqMappedFileSize) {
@@ -1713,6 +1710,10 @@ public class MessageStoreConfig {
         return timerRollWindowSlot;
     }
 
+    public void setTimerRollWindowSlot(final int timerRollWindowSlot) {
+        this.timerRollWindowSlot = timerRollWindowSlot;
+    }
+
     public int getTimerGetMessageThreadNum() {
         return timerGetMessageThreadNum;
     }
@@ -1818,12 +1819,12 @@ public class MessageStoreConfig {
         this.timerFlushIntervalMs = timerFlushIntervalMs;
     }
 
-    public void setTimerRollWindowSlot(final int timerRollWindowSlot) {
-        this.timerRollWindowSlot = timerRollWindowSlot;
-    }
-
     public int getTimerProgressLogIntervalMs() {
         return timerProgressLogIntervalMs;
+    }
+
+    public void setTimerProgressLogIntervalMs(final int timerProgressLogIntervalMs) {
+        this.timerProgressLogIntervalMs = timerProgressLogIntervalMs;
     }
 
     public int getTimerWheelSnapshotIntervalMs() {
@@ -1832,10 +1833,6 @@ public class MessageStoreConfig {
 
     public void setTimerWheelSnapshotIntervalMs(int timerWheelSnapshotIntervalMs) {
         this.timerWheelSnapshotIntervalMs = timerWheelSnapshotIntervalMs;
-    }
-
-    public void setTimerProgressLogIntervalMs(final int timerProgressLogIntervalMs) {
-        this.timerProgressLogIntervalMs = timerProgressLogIntervalMs;
     }
 
     public boolean isTimerInterceptDelayLevel() {
@@ -2030,12 +2027,12 @@ public class MessageStoreConfig {
         this.spinLockCollisionRetreatOptimalDegree = spinLockCollisionRetreatOptimalDegree;
     }
 
-    public void setUseABSLock(boolean useABSLock) {
-        this.useABSLock = useABSLock;
-    }
-
     public boolean getUseABSLock() {
         return useABSLock;
+    }
+
+    public void setUseABSLock(boolean useABSLock) {
+        this.useABSLock = useABSLock;
     }
 
     public String getCombineCQPreferCQType() {
@@ -2083,7 +2080,7 @@ public class MessageStoreConfig {
     }
 
     public void setEnableLogConsumeQueueRepeatedlyBuildWhenRecover(
-        boolean enableLogConsumeQueueRepeatedlyBuildWhenRecover) {
+            boolean enableLogConsumeQueueRepeatedlyBuildWhenRecover) {
         this.enableLogConsumeQueueRepeatedlyBuildWhenRecover = enableLogConsumeQueueRepeatedlyBuildWhenRecover;
     }
 

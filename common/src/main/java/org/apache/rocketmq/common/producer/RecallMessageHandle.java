@@ -34,6 +34,24 @@ public class RecallMessageHandle {
     private static final String SEPARATOR = " ";
     private static final String VERSION_1 = "v1";
 
+    public static RecallMessageHandle decodeHandle(String handle) throws DecoderException {
+        if (StringUtils.isEmpty(handle)) {
+            throw new DecoderException("recall handle is invalid");
+        }
+        String rawString;
+        try {
+            rawString =
+                    new String(Base64.getUrlDecoder().decode(handle.getBytes(UTF_8)), UTF_8);
+        } catch (IllegalArgumentException e) {
+            throw new DecoderException("recall handle is invalid");
+        }
+        String[] items = rawString.split(SEPARATOR);
+        if (!VERSION_1.equals(items[0]) || items.length < 5) {
+            throw new DecoderException("recall handle is invalid");
+        }
+        return new HandleV1(items[1], items[2], items[3], items[4]);
+    }
+
     public static class HandleV1 extends RecallMessageHandle {
         private String version;
         private String topic;
@@ -74,23 +92,5 @@ public class RecallMessageHandle {
         public String getVersion() {
             return version;
         }
-    }
-
-    public static RecallMessageHandle decodeHandle(String handle) throws DecoderException {
-        if (StringUtils.isEmpty(handle)) {
-            throw new DecoderException("recall handle is invalid");
-        }
-        String rawString;
-        try {
-            rawString =
-                new String(Base64.getUrlDecoder().decode(handle.getBytes(UTF_8)), UTF_8);
-        } catch (IllegalArgumentException e) {
-            throw new DecoderException("recall handle is invalid");
-        }
-        String[] items = rawString.split(SEPARATOR);
-        if (!VERSION_1.equals(items[0]) || items.length < 5) {
-            throw new DecoderException("recall handle is invalid");
-        }
-        return new HandleV1(items[1], items[2], items[3], items[4]);
     }
 }

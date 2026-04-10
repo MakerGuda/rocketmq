@@ -27,7 +27,7 @@ public class RMQSqlConsumer extends RMQNormalConsumer {
     private MessageSelector selector;
 
     public RMQSqlConsumer(String nsAddr, String topic, MessageSelector selector,
-        String consumerGroup, AbstractListener listener) {
+                          String consumerGroup, AbstractListener listener) {
         super(nsAddr, topic, "*", consumerGroup, listener);
         this.selector = selector;
     }

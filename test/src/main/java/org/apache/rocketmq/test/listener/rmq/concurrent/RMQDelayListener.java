@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.test.listener.rmq.concurrent;
 
-import java.nio.charset.StandardCharsets;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -27,6 +26,7 @@ import org.apache.rocketmq.test.util.RandomUtil;
 import org.apache.rocketmq.test.util.data.collect.DataCollector;
 import org.apache.rocketmq.test.util.data.collect.DataCollectorManager;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class RMQDelayListener extends AbstractListener implements MessageListene
 
     public RMQDelayListener() {
         msgDelayTimes = DataCollectorManager.getInstance()
-            .fetchDataCollector(RandomUtil.getStringByUUID());
+                .fetchDataCollector(RandomUtil.getStringByUUID());
     }
 
     public Collection<Object> getMsgDelayTimes() {
@@ -47,7 +47,7 @@ public class RMQDelayListener extends AbstractListener implements MessageListene
     }
 
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-        ConsumeConcurrentlyContext consumeConcurrentlyContext) {
+                                                    ConsumeConcurrentlyContext consumeConcurrentlyContext) {
         long recvTime = System.currentTimeMillis();
         for (MessageExt msg : msgs) {
             if (isDebug) {

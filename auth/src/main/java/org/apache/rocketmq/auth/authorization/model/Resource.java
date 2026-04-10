@@ -17,15 +17,16 @@
 package org.apache.rocketmq.auth.authorization.model;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.rocketmq.common.constant.CommonConstants;
+import org.apache.rocketmq.common.resource.ResourcePattern;
+import org.apache.rocketmq.common.resource.ResourceType;
+import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.common.resource.ResourceType;
-import org.apache.rocketmq.common.resource.ResourcePattern;
-import org.apache.rocketmq.common.constant.CommonConstants;
-import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
 
 public class Resource {
 
@@ -133,8 +134,8 @@ public class Resource {
             return false;
         Resource resource = (Resource) o;
         return resourceType == resource.resourceType
-            && Objects.equals(resourceName, resource.resourceName)
-            && resourcePattern == resource.resourcePattern;
+                && Objects.equals(resourceName, resource.resourceName)
+                && resourcePattern == resource.resourcePattern;
     }
 
     @Override

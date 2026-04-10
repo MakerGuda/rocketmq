@@ -30,10 +30,6 @@ public enum RequestSource {
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
-
     public static boolean isValid(Integer value) {
         return null != value && value >= -1 && value < RequestSource.values().length - 1;
     }
@@ -43,5 +39,9 @@ public enum RequestSource {
             return RequestSource.values()[value + 1];
         }
         return SDK;
+    }
+
+    public int getValue() {
+        return value;
     }
 }

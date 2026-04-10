@@ -16,8 +16,9 @@
  */
 package org.apache.rocketmq.proxy.common.utils;
 
-import java.util.Set;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
+import java.util.Set;
 
 public class FilterUtils {
     /**

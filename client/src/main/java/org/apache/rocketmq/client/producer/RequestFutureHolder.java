@@ -17,17 +17,6 @@
 
 package org.apache.rocketmq.client.producer;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.rocketmq.client.common.ClientErrorCode;
 import org.apache.rocketmq.client.exception.RequestTimeoutException;
 import org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl;
@@ -35,12 +24,25 @@ import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class RequestFutureHolder {
     private static final Logger log = LoggerFactory.getLogger(RequestFutureHolder.class);
     private static final RequestFutureHolder INSTANCE = new RequestFutureHolder();
-    private ConcurrentHashMap<String, RequestResponseFuture> requestFutureTable = new ConcurrentHashMap<>();
     private final Set<DefaultMQProducerImpl> producerSet = new HashSet<>();
+    private ConcurrentHashMap<String, RequestResponseFuture> requestFutureTable = new ConcurrentHashMap<>();
     private ScheduledExecutorService scheduledExecutorService = null;
+
+    private RequestFutureHolder() {
+    }
+
+    public static RequestFutureHolder getInstance() {
+        return INSTANCE;
+    }
 
     public ConcurrentHashMap<String, RequestResponseFuture> getRequestFutureTable() {
         return requestFutureTable;
@@ -97,11 +99,5 @@ public class RequestFutureHolder {
             this.scheduledExecutorService = null;
             executorService.shutdown();
         }
-    }
-
-    private RequestFutureHolder() {}
-
-    public static RequestFutureHolder getInstance() {
-        return INSTANCE;
     }
 }

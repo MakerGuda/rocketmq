@@ -23,7 +23,7 @@ import org.apache.rocketmq.common.constant.PermName;
 
 /**
  * <b>LmqTopicConfigManager</b>：继承 ConfigManager，负责对应元数据/配置的加载、内存维护与磁盘持久化。
- * 
+ * <p>
  * 继承关系：<code>TopicConfigManager</code>。
  */
 public class LmqTopicConfigManager extends TopicConfigManager {

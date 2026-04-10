@@ -32,16 +32,16 @@ public class NotificationResponseHeader implements CommandCustomHeader {
         return hasMsg;
     }
 
+    public void setHasMsg(boolean hasMsg) {
+        this.hasMsg = hasMsg;
+    }
+
     public boolean isPollingFull() {
         return pollingFull;
     }
 
     public void setPollingFull(boolean pollingFull) {
         this.pollingFull = pollingFull;
-    }
-
-    public void setHasMsg(boolean hasMsg) {
-        this.hasMsg = hasMsg;
     }
 
     @Override

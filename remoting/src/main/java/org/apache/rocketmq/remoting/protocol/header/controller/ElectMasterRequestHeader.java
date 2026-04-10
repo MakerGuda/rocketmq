@@ -71,7 +71,7 @@ public class ElectMasterRequestHeader implements CommandCustomHeader {
     }
 
     public static ElectMasterRequestHeader ofBrokerTrigger(String clusterName, String brokerName,
-        Long brokerId) {
+                                                           Long brokerId) {
         return new ElectMasterRequestHeader(clusterName, brokerName, brokerId);
     }
 

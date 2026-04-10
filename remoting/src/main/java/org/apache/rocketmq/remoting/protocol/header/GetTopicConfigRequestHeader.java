@@ -28,14 +28,13 @@ import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
 
 @RocketMQAction(value = RequestCode.GET_TOPIC_CONFIG, action = Action.GET)
 public class GetTopicConfigRequestHeader extends TopicRequestHeader {
-    @Override
-    public void checkFields() throws RemotingCommandException {
-    }
-
     @CFNotNull
     @RocketMQResource(ResourceType.TOPIC)
     private String topic;
 
+    @Override
+    public void checkFields() throws RemotingCommandException {
+    }
 
     /**
      * @return the topic

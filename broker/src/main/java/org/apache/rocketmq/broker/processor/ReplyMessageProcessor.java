@@ -20,8 +20,6 @@ package org.apache.rocketmq.broker.processor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.api.common.Attributes;
-import java.net.InetSocketAddress;
-import java.util.concurrent.ThreadLocalRandom;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.metrics.BrokerMetricsManager;
 import org.apache.rocketmq.broker.mqtrace.SendMessageContext;
@@ -29,12 +27,7 @@ import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -50,13 +43,14 @@ import org.apache.rocketmq.remoting.protocol.header.SendMessageResponseHeader;
 import org.apache.rocketmq.store.PutMessageResult;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_IS_SYSTEM;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_MESSAGE_TYPE;
-import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.LABEL_TOPIC;
+import java.net.InetSocketAddress;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.*;
 
 /**
  * Netty 请求处理器：处理与「Reply Message」相关的 Remoting 请求。
- * 
+ * <p>
  * 继承关系：<code>AbstractSendMessageProcessor</code>。
  */
 public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
@@ -68,7 +62,7 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
 
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                          RemotingCommand request) throws RemotingCommandException {
         SendMessageContext mqtraceContext = null;
         SendMessageRequestHeader requestHeader = parseRequestHeader(request);
         if (requestHeader == null) {
@@ -91,13 +85,13 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
         switch (request.getCode()) {
             case RequestCode.SEND_REPLY_MESSAGE_V2:
                 requestHeaderV2 =
-                    (SendMessageRequestHeaderV2) request
-                        .decodeCommandCustomHeader(SendMessageRequestHeaderV2.class);
+                        (SendMessageRequestHeaderV2) request
+                                .decodeCommandCustomHeader(SendMessageRequestHeaderV2.class);
             case RequestCode.SEND_REPLY_MESSAGE:
                 if (null == requestHeaderV2) {
                     requestHeader =
-                        (SendMessageRequestHeader) request
-                            .decodeCommandCustomHeader(SendMessageRequestHeader.class);
+                            (SendMessageRequestHeader) request
+                                    .decodeCommandCustomHeader(SendMessageRequestHeader.class);
                 } else {
                     requestHeader = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV1(requestHeaderV2);
                 }
@@ -108,9 +102,9 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
     }
 
     private RemotingCommand processReplyMessageRequest(final ChannelHandlerContext ctx,
-        final RemotingCommand request,
-        final SendMessageContext sendMessageContext,
-        final SendMessageRequestHeader requestHeader) {
+                                                       final RemotingCommand request,
+                                                       final SendMessageContext sendMessageContext,
+                                                       final SendMessageRequestHeader requestHeader) {
         final RemotingCommand response = RemotingCommand.createResponseCommand(SendMessageResponseHeader.class);
         final SendMessageResponseHeader responseHeader = (SendMessageResponseHeader) response.readCustomHeader();
 
@@ -166,12 +160,12 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
     }
 
     private PushReplyResult pushReplyMessage(final ChannelHandlerContext ctx,
-        final SendMessageRequestHeader requestHeader,
-        final Message msg) {
+                                             final SendMessageRequestHeader requestHeader,
+                                             final Message msg) {
         ReplyMessageRequestHeader replyMessageRequestHeader = new ReplyMessageRequestHeader();
-        InetSocketAddress bornAddress = (InetSocketAddress)(ctx.channel().remoteAddress());
+        InetSocketAddress bornAddress = (InetSocketAddress) (ctx.channel().remoteAddress());
         replyMessageRequestHeader.setBornHost(bornAddress.getAddress().getHostAddress() + ":" + bornAddress.getPort());
-        InetSocketAddress storeAddress = (InetSocketAddress)(this.getStoreHost());
+        InetSocketAddress storeAddress = (InetSocketAddress) (this.getStoreHost());
         replyMessageRequestHeader.setStoreHost(storeAddress.getAddress().getHostAddress() + ":" + storeAddress.getPort());
         replyMessageRequestHeader.setStoreTimestamp(System.currentTimeMillis());
         replyMessageRequestHeader.setProducerGroup(requestHeader.getProducerGroup());
@@ -231,7 +225,7 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
     }
 
     private void handlePushReplyResult(PushReplyResult pushReplyResult, final RemotingCommand response,
-        final SendMessageResponseHeader responseHeader, int queueIdInt) {
+                                       final SendMessageResponseHeader responseHeader, int queueIdInt) {
 
         if (!pushReplyResult.isPushOk()) {
             response.setCode(ResponseCode.SYSTEM_ERROR);
@@ -247,9 +241,9 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
     }
 
     private void handlePutMessageResult(PutMessageResult putMessageResult,
-        final RemotingCommand request, final MessageExt msg,
-        final SendMessageResponseHeader responseHeader, SendMessageContext sendMessageContext,
-        int queueIdInt, TopicMessageType messageType) {
+                                        final RemotingCommand request, final MessageExt msg,
+                                        final SendMessageResponseHeader responseHeader, SendMessageContext sendMessageContext,
+                                        int queueIdInt, TopicMessageType messageType) {
         if (putMessageResult == null) {
             log.warn("process reply message, store putMessage return null");
             return;
@@ -271,17 +265,17 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
                 break;
             case MESSAGE_ILLEGAL:
                 log.warn(
-                    "the message is illegal, maybe msg body or properties length not matched. msg body length limit {}B.",
-                    this.brokerController.getMessageStoreConfig().getMaxMessageSize());
+                        "the message is illegal, maybe msg body or properties length not matched. msg body length limit {}B.",
+                        this.brokerController.getMessageStoreConfig().getMaxMessageSize());
                 break;
             case PROPERTIES_SIZE_EXCEEDED:
                 log.warn(
-                    "the message is illegal, maybe msg properties length limit 32KB.");
+                        "the message is illegal, maybe msg properties length limit 32KB.");
                 break;
             case SERVICE_NOT_AVAILABLE:
                 log.warn(
-                    "service not available now. It may be caused by one of the following reasons: " +
-                        "the broker's disk is full, messages are put to the slave, message store has been shut down, etc.");
+                        "service not available now. It may be caused by one of the following reasons: " +
+                                "the broker's disk is full, messages are put to the slave, message store has been shut down, etc.");
                 break;
             case OS_PAGE_CACHE_BUSY:
                 log.warn("[PC_SYNCHRONIZED]broker busy, start flow control for a while");
@@ -299,15 +293,15 @@ public class ReplyMessageProcessor extends AbstractSendMessageProcessor {
         if (putOk) {
             this.brokerController.getBrokerStatsManager().incTopicPutNums(msg.getTopic(), putMessageResult.getAppendMessageResult().getMsgNum(), 1);
             this.brokerController.getBrokerStatsManager().incTopicPutSize(msg.getTopic(),
-                putMessageResult.getAppendMessageResult().getWroteBytes());
+                    putMessageResult.getAppendMessageResult().getWroteBytes());
             this.brokerController.getBrokerStatsManager().incBrokerPutNums(msg.getTopic(), putMessageResult.getAppendMessageResult().getMsgNum());
 
             if (!BrokerMetricsManager.isRetryOrDlqTopic(msg.getTopic())) {
                 Attributes attributes = this.brokerController.getBrokerMetricsManager().newAttributesBuilder()
-                    .put(LABEL_TOPIC, msg.getTopic())
-                    .put(LABEL_MESSAGE_TYPE, messageType.getMetricsValue())
-                    .put(LABEL_IS_SYSTEM, TopicValidator.isSystemTopic(msg.getTopic()))
-                    .build();
+                        .put(LABEL_TOPIC, msg.getTopic())
+                        .put(LABEL_MESSAGE_TYPE, messageType.getMetricsValue())
+                        .put(LABEL_IS_SYSTEM, TopicValidator.isSystemTopic(msg.getTopic()))
+                        .build();
                 this.brokerController.getBrokerMetricsManager().getMessagesInTotal().add(putMessageResult.getAppendMessageResult().getMsgNum(), attributes);
                 this.brokerController.getBrokerMetricsManager().getThroughputInTotal().add(putMessageResult.getAppendMessageResult().getWroteBytes(), attributes);
                 this.brokerController.getBrokerMetricsManager().getMessageSize().record(putMessageResult.getAppendMessageResult().getWroteBytes() / putMessageResult.getAppendMessageResult().getMsgNum(), attributes);

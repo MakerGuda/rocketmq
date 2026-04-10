@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.message;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -38,24 +33,15 @@ import org.apache.rocketmq.tools.admin.api.MessageTrack;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
 
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+
 public class QueryMsgByUniqueKeySubCommand implements SubCommand {
 
     private DefaultMQAdminExt defaultMQAdminExt;
-
-    private DefaultMQAdminExt createMQAdminExt(RPCHook rpcHook) throws SubCommandException {
-        if (this.defaultMQAdminExt != null) {
-            return defaultMQAdminExt;
-        } else {
-            defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
-            defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-            try {
-                defaultMQAdminExt.start();
-            } catch (Exception e) {
-                throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
-            }
-            return defaultMQAdminExt;
-        }
-    }
 
     public static void queryById(final DefaultMQAdminExt admin, final String clusterName, final String topic, final String msgId, final boolean showAll, final String startTime, final String endTime) throws MQClientException, InterruptedException, IOException {
         QueryResult queryResult = null;
@@ -98,7 +84,7 @@ public class QueryMsgByUniqueKeySubCommand implements SubCommand {
         System.out.printf(strFormat, "Store Host:", RemotingHelper.parseSocketAddressAddr(msg.getStoreHost()));
         System.out.printf(intFormat, "System Flag:", msg.getSysFlag());
         System.out.printf(strFormat, "Properties:",
-            msg.getProperties() != null ? msg.getProperties().toString() : "");
+                msg.getProperties() != null ? msg.getProperties().toString() : "");
         System.out.printf(strFormat, "Message Body Path:", bodyTmpFilePath);
 
         try {
@@ -135,6 +121,21 @@ public class QueryMsgByUniqueKeySubCommand implements SubCommand {
             if (dos != null) {
                 dos.close();
             }
+        }
+    }
+
+    private DefaultMQAdminExt createMQAdminExt(RPCHook rpcHook) throws SubCommandException {
+        if (this.defaultMQAdminExt != null) {
+            return defaultMQAdminExt;
+        } else {
+            defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
+            defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
+            try {
+                defaultMQAdminExt.start();
+            } catch (Exception e) {
+                throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
+            }
+            return defaultMQAdminExt;
         }
     }
 
@@ -208,7 +209,7 @@ public class QueryMsgByUniqueKeySubCommand implements SubCommand {
                 }
                 if (consumerRunningInfo != null && ConsumerRunningInfo.isPushType(consumerRunningInfo)) {
                     ConsumeMessageDirectlyResult result =
-                        defaultMQAdminExt.consumeMessageDirectly(consumerGroup, clientId, topic, msgId);
+                            defaultMQAdminExt.consumeMessageDirectly(consumerGroup, clientId, topic, msgId);
                     System.out.printf("%s", result);
                 } else {
                     System.out.printf("get consumer info failed or this %s client is not push consumer, not support direct push \n", clientId);

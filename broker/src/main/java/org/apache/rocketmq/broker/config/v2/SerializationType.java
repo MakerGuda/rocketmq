@@ -34,10 +34,6 @@ public enum SerializationType {
         this.value = value;
     }
 
-    public byte getValue() {
-        return value;
-    }
-
     public static SerializationType valueOf(byte value) {
         for (SerializationType type : SerializationType.values()) {
             if (type.getValue() == value) {
@@ -45,5 +41,9 @@ public enum SerializationType {
             }
         }
         return SerializationType.UNSPECIFIED;
+    }
+
+    public byte getValue() {
+        return value;
     }
 }

@@ -17,10 +17,11 @@
 
 package org.apache.rocketmq.common.utils;
 
+import org.apache.commons.codec.binary.Hex;
+
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import org.apache.commons.codec.binary.Hex;
 
 public class BinaryUtil {
     public static byte[] calculateMd5(byte[] binaryData) {
@@ -46,6 +47,7 @@ public class BinaryUtil {
 
     /**
      * Returns true if subject contains only bytes that are spec-compliant ASCII characters.
+     *
      * @param subject
      * @return
      */

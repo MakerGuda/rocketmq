@@ -31,7 +31,7 @@ public interface BrokerBootHook {
      * Code to execute before broker start.
      *
      * @param innerBrokerController inner broker to start
-     * @param properties broker properties
+     * @param properties            broker properties
      * @throws Exception when execute hook
      */
     void executeBeforeStart(InnerBrokerController innerBrokerController, Properties properties) throws Exception;
@@ -40,9 +40,8 @@ public interface BrokerBootHook {
      * Code to execute after broker start.
      *
      * @param innerBrokerController inner broker to start
-     * @param properties broker properties
+     * @param properties            broker properties
      * @throws Exception when execute hook
      */
     void executeAfterStart(InnerBrokerController innerBrokerController, Properties properties) throws Exception;
 }
-

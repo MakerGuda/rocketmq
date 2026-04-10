@@ -17,22 +17,19 @@
 
 package org.apache.rocketmq.proxy.service.transaction;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.utils.StartAndShutdown;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.proxy.config.ConfigurationManager;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.common.utils.StartAndShutdown;
-import org.apache.rocketmq.proxy.config.ConfigurationManager;
 
 public class TransactionDataManager implements StartAndShutdown {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -118,6 +115,27 @@ public class TransactionDataManager implements StartAndShutdown {
         }
     }
 
+    protected void waitTransactionDataClear() throws InterruptedException {
+        this.cleanExpireTransactionData();
+        long waitMs = Math.max(this.maxTransactionDataExpireTime.get() - System.currentTimeMillis(), 0);
+        waitMs = Math.min(waitMs, ConfigurationManager.getProxyConfig().getTransactionDataMaxWaitClearMillis());
+
+        if (waitMs > 0) {
+            TimeUnit.MILLISECONDS.sleep(waitMs);
+        }
+    }
+
+    @Override
+    public void shutdown() throws Exception {
+        this.transactionDataCleaner.shutdown();
+        this.waitTransactionDataClear();
+    }
+
+    @Override
+    public void start() throws Exception {
+        this.transactionDataCleaner.start();
+    }
+
     protected class TransactionDataCleaner extends ServiceThread {
 
         @Override
@@ -138,26 +156,5 @@ public class TransactionDataManager implements StartAndShutdown {
         protected void onWaitEnd() {
             cleanExpireTransactionData();
         }
-    }
-
-    protected void waitTransactionDataClear() throws InterruptedException {
-        this.cleanExpireTransactionData();
-        long waitMs = Math.max(this.maxTransactionDataExpireTime.get() - System.currentTimeMillis(), 0);
-        waitMs = Math.min(waitMs, ConfigurationManager.getProxyConfig().getTransactionDataMaxWaitClearMillis());
-
-        if (waitMs > 0) {
-            TimeUnit.MILLISECONDS.sleep(waitMs);
-        }
-    }
-
-    @Override
-    public void shutdown() throws Exception {
-        this.transactionDataCleaner.shutdown();
-        this.waitTransactionDataClear();
-    }
-
-    @Override
-    public void start() throws Exception {
-        this.transactionDataCleaner.start();
     }
 }

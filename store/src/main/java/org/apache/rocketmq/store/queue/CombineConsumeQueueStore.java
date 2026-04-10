@@ -19,20 +19,14 @@ package org.apache.rocketmq.store.queue;
 
 import com.alibaba.fastjson2.JSON;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.CheckRocksdbCqWriteResult;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.StoreType;
@@ -40,6 +34,13 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.store.exception.ConsumeQueueException;
 import org.apache.rocketmq.store.exception.StoreException;
 import org.rocksdb.RocksDBException;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -77,7 +78,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
         this.messageStore = messageStore;
         this.messageStoreConfig = messageStore.getMessageStoreConfig();
         extraSearchCommitLogFilesForRecovery =
-            new AtomicInteger(messageStoreConfig.getCombineCQMaxExtraSearchCommitLogFiles());
+                new AtomicInteger(messageStoreConfig.getCombineCQMaxExtraSearchCommitLogFiles());
 
         Set<StoreType> loadingConsumeQueueTypeSet = StoreType.fromString(messageStoreConfig.getCombineCQLoadingCQTypes());
         if (loadingConsumeQueueTypeSet.isEmpty()) {
@@ -105,19 +106,19 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
         assignOffsetStore = getInnerStoreByString(messageStoreConfig.getCombineAssignOffsetCQType());
         if (assignOffsetStore == null) {
             log.error("CombineConsumeQueueStore chooseAssignOffsetStore fail, config={}",
-                messageStoreConfig.getCombineAssignOffsetCQType());
+                    messageStoreConfig.getCombineAssignOffsetCQType());
             throw new IllegalArgumentException("CombineConsumeQueue chooseAssignOffsetStore fail");
         }
 
         currentReadStore = getInnerStoreByString(messageStoreConfig.getCombineCQPreferCQType());
         if (currentReadStore == null) {
             log.error("CombineConsumeQueueStore choosePreferCQ fail, config={}",
-                messageStoreConfig.getCombineCQPreferCQType());
+                    messageStoreConfig.getCombineCQPreferCQType());
             throw new IllegalArgumentException("CombineConsumeQueue choosePreferCQ fail");
         }
 
         log.info("CombineConsumeQueueStore init, consumeQueueStoreList={}, currentReadStore={}, assignOffsetStore={}",
-            innerConsumeQueueStoreList, currentReadStore.getClass().getSimpleName(), assignOffsetStore.getClass().getSimpleName());
+                innerConsumeQueueStoreList, currentReadStore.getClass().getSimpleName(), assignOffsetStore.getClass().getSimpleName());
     }
 
     @Override
@@ -142,7 +143,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
 
     @Override
     public boolean isMappedFileMatchedRecover(long phyOffset, long storeTimestamp,
-        boolean recoverNormally) throws RocksDBException {
+                                              boolean recoverNormally) throws RocksDBException {
         // make sure assignOffsetStore can be fully recovered
         if (!assignOffsetStore.isMappedFileMatchedRecover(phyOffset, storeTimestamp, recoverNormally)) {
             return false;
@@ -157,11 +158,11 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
                 // extraSearchCommitLogFilesForRecovery <= 0, only can read from assignOffsetStore
                 if (assignOffsetStore != currentReadStore) {
                     log.error("CombineConsumeQueueStore currentReadStore not satisfied readable conditions, assignOffsetStore={}, currentReadStore={}",
-                        assignOffsetStore.getClass().getSimpleName(), currentReadStore.getClass().getSimpleName());
+                            assignOffsetStore.getClass().getSimpleName(), currentReadStore.getClass().getSimpleName());
                     throw new IllegalArgumentException(store.getClass().getSimpleName() + " not satisfied readable conditions, only can read from " + assignOffsetStore.getClass().getSimpleName());
                 }
                 log.warn("CombineConsumeQueueStore can not recover all inner store, maybe some inner store start haven’t started before, store={}",
-                    store.getClass().getSimpleName());
+                        store.getClass().getSimpleName());
                 return true;
             } else {
                 return false;
@@ -195,8 +196,8 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
 
         if (!success && assignOffsetStore != currentReadStore) {
             log.error("CombineConsumeQueueStore currentReadStore not satisfied readable conditions, " +
-                    "checkAssignOffsetResult={}, assignOffsetStore={}, currentReadStore={}",
-                success, assignOffsetStore.getClass().getSimpleName(), currentReadStore.getClass().getSimpleName());
+                            "checkAssignOffsetResult={}, assignOffsetStore={}, currentReadStore={}",
+                    success, assignOffsetStore.getClass().getSimpleName(), currentReadStore.getClass().getSimpleName());
             throw new RuntimeException("CombineConsumeQueueStore currentReadStore not satisfied readable conditions");
         }
 
@@ -234,14 +235,14 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
 
                     if (maxOffset0 > 0) {
                         log.error("CombineConsumeQueueStore checkAssignOffsetStore fail, topic={}, queueId={}, maxOffsetInAssign={}, otherCQ={}, maxOffset0={}",
-                            topic, queueId, maxOffsetInAssign, abstractConsumeQueueStore.getClass().getSimpleName(), maxOffset0);
+                                topic, queueId, maxOffsetInAssign, abstractConsumeQueueStore.getClass().getSimpleName(), maxOffset0);
                         result = false;
                     }
 
                     if (initializeOffset) {
                         queue.initializeWithOffset(maxOffsetInAssign, minPhyOffset);
                         log.info("CombineConsumeQueueStore initialize offset in queue, topic={}, queueId={}, maxOffsetInAssign={}, otherCQ={}, maxOffset0={}, maxOffsetNew={}",
-                            topic, queueId, maxOffsetInAssign, abstractConsumeQueueStore.getClass().getSimpleName(), maxOffset0, queue.getMaxOffsetInQueue());
+                                topic, queueId, maxOffsetInAssign, abstractConsumeQueueStore.getClass().getSimpleName(), maxOffset0, queue.getMaxOffsetInQueue());
                     }
                 }
             }
@@ -367,7 +368,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
 
     @Override
     public long getOffsetInQueueByTime(String topic, int queueId, long timestamp,
-        BoundaryType boundaryType) throws RocksDBException {
+                                       BoundaryType boundaryType) throws RocksDBException {
         return currentReadStore.getOffsetInQueueByTime(topic, queueId, timestamp, boundaryType);
     }
 
@@ -410,7 +411,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
     }
 
     public CheckRocksdbCqWriteResult doCheckCqWriteProgress(String requestTopic, long checkStoreTime,
-        StoreType baseStoreType, StoreType compareStoreType) {
+                                                            StoreType baseStoreType, StoreType compareStoreType) {
         CheckRocksdbCqWriteResult result = new CheckRocksdbCqWriteResult();
         AbstractConsumeQueueStore baseStore = getInnerStoreByStoreType(baseStoreType);
         AbstractConsumeQueueStore compareStore = getInnerStoreByStoreType(compareStoreType);
@@ -441,7 +442,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
             // check all topic finish, success/all : 89/100, currentQueueNum: 110                    -> not ready
             boolean checkReady = successNum == checkSize;
             String checkResultString = checkReady ? String.format("all topic is ready, checkSize: %s, currentQueueNum: %s", checkSize, cqTable.size()) :
-                String.format("success/all : %s/%s, currentQueueNum: %s", successNum, checkSize, cqTable.size());
+                    String.format("success/all : %s/%s, currentQueueNum: %s", successNum, checkSize, cqTable.size());
             diffResult.append("check all topic finish, ").append(checkResultString);
             result.setCheckResult(diffResult.toString());
             result.setCheckStatus(checkReady ? CheckRocksdbCqWriteResult.CheckStatus.CHECK_OK.getValue() : CheckRocksdbCqWriteResult.CheckStatus.CHECK_NOT_OK.getValue());
@@ -454,8 +455,8 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
     }
 
     private boolean processConsumeQueuesForTopic(ConcurrentMap<Integer, ConsumeQueueInterface> queueMap, String topic,
-        AbstractConsumeQueueStore abstractConsumeQueueStore, StringBuilder diffResult, boolean printDetail,
-        long checkpointByStoreTime) {
+                                                 AbstractConsumeQueueStore abstractConsumeQueueStore, StringBuilder diffResult, boolean printDetail,
+                                                 long checkpointByStoreTime) {
         boolean processResult = true;
         for (Map.Entry<Integer, ConsumeQueueInterface> queueEntry : queueMap.entrySet()) {
             Integer queueId = queueEntry.getKey();
@@ -463,7 +464,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
             ConsumeQueueInterface compareCQ = abstractConsumeQueueStore.findOrCreateConsumeQueue(topic, queueId);
             if (printDetail) {
                 String format = String.format("[topic: %s, queue:  %s] \n  kvEarliest : %s |  kvLatest : %s \n fileEarliest: %s | fileEarliest: %s ",
-                    topic, queueId, compareCQ.getEarliestUnit(), compareCQ.getLatestUnit(), baseCQ.getEarliestUnit(), baseCQ.getLatestUnit());
+                        topic, queueId, compareCQ.getEarliestUnit(), compareCQ.getLatestUnit(), baseCQ.getEarliestUnit(), baseCQ.getLatestUnit());
                 diffResult.append(format).append("\n");
             }
 
@@ -498,7 +499,7 @@ public class CombineConsumeQueueStore implements ConsumeQueueStoreInterface {
                 Pair<CqUnit, Long> compareCqUnit = compareCQ.getCqUnitAndStoreTime(i);
                 if (baseCqUnit == null || compareCqUnit == null || !checkCqUnitEqual(compareCqUnit.getObject1(), baseCqUnit.getObject1())) {
                     log.error(String.format("[topic: %s, queue: %s, offset: %s] \n file : %s  \n  kv : %s \n",
-                        topic, queueId, i, compareCqUnit != null ? compareCqUnit.getObject1() : "null", baseCqUnit != null ? baseCqUnit.getObject1() : "null"));
+                            topic, queueId, i, compareCqUnit != null ? compareCqUnit.getObject1() : "null", baseCqUnit != null ? baseCqUnit.getObject1() : "null"));
                     processResult = false;
                     break;
                 }

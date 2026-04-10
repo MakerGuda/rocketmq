@@ -16,10 +16,11 @@
  */
 package org.apache.rocketmq.broker.pop.orderly;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.OrderedConsumptionLevel;
 import org.apache.rocketmq.store.GetMessageResult;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -32,7 +33,7 @@ import org.apache.rocketmq.store.GetMessageResult;
  * 2. Support message group-level ordered consumption (improve concurrency)
  * 3. Support custom ordered consumption strategies
  * </p>
- *
+ * <p>
  * 接口 <b>ConsumerOrderInfoManager</b>，约定 Broker 子系统与外部组件之间的协作契约。
  */
 public interface ConsumerOrderInfoManager {
@@ -53,8 +54,8 @@ public interface ConsumerOrderInfoManager {
      * @param getMessageResult   Return new result
      */
     void update(String attemptId, boolean isRetry, String topic, String group, int queueId,
-        long popTime, long invisibleTime, List<Long> msgQueueOffsetList,
-        StringBuilder orderInfoBuilder, GetMessageResult getMessageResult);
+                long popTime, long invisibleTime, List<Long> msgQueueOffsetList,
+                StringBuilder orderInfoBuilder, GetMessageResult getMessageResult);
 
     /**
      * Check whether the current POP request needs to be blocked
@@ -95,7 +96,7 @@ public interface ConsumerOrderInfoManager {
      * @param nextVisibleTime Next visible time
      */
     void updateNextVisibleTime(String topic, String group, int queueId, long queueOffset,
-        long popTime, long nextVisibleTime);
+                               long popTime, long nextVisibleTime);
 
     /**
      * Clear the blocking status of specified queue
@@ -140,5 +141,5 @@ public interface ConsumerOrderInfoManager {
      * Used to retrieve messages from cache
      */
     CompletableFuture<GetMessageResult> getAvailableMessageResult(String attemptId, long popTime, long invisibleTime, String groupId,
-        String topicId, int queueId, int batchSize, StringBuilder orderCountInfoBuilder);
+                                                                  String topicId, int queueId, int batchSize, StringBuilder orderCountInfoBuilder);
 }

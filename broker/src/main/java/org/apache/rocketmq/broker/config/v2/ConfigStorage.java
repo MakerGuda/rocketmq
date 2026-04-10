@@ -20,6 +20,13 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.buffer.PooledByteBufAllocatorMetric;
 import io.netty.util.internal.PlatformDependent;
+import org.apache.rocketmq.common.ServiceThread;
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.config.AbstractRocksDBStorage;
+import org.apache.rocketmq.common.config.ConfigHelper;
+import org.apache.rocketmq.store.config.MessageStoreConfig;
+import org.rocksdb.*;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -31,25 +38,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.apache.rocketmq.common.ServiceThread;
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.common.config.AbstractRocksDBStorage;
-import org.apache.rocketmq.common.config.ConfigHelper;
-import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.FlushOptions;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.Slice;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
 
 /**
  * https://book.tidb.io/session1/chapter3/tidb-kv-to-relation.html
- *
+ * <p>
  * Broker 子系统组件 <b>ConfigStorage</b>（Config Storage）。
  * 继承关系：<code>AbstractRocksDBStorage</code>。
  */
@@ -75,9 +67,9 @@ public class ConfigStorage extends AbstractRocksDBStorage {
         super(messageStoreConfig.getStorePathRootDir() + File.separator + "config" + File.separator + "rdb");
         this.messageStoreConfig = messageStoreConfig;
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-            .setDaemon(true)
-            .setNameFormat("config-storage-%d")
-            .build();
+                .setDaemon(true)
+                .setNameFormat("config-storage-%d")
+                .build();
         scheduledExecutorService = new ScheduledThreadPoolExecutor(1, threadFactory);
         writeOpsCounter = new AtomicInteger(0);
         this.flushSyncService = new FlushSyncService();
@@ -197,13 +189,10 @@ public class ConfigStorage extends AbstractRocksDBStorage {
      */
     class FlushSyncService extends ServiceThread {
 
-        private long lastSyncTime = 0;
-
         private static final long MAX_SYNC_INTERVAL_IN_MILLIS = 100;
-
         private final Stopwatch stopwatch = Stopwatch.createUnstarted();
-
         private final FlushOptions flushOptions = new FlushOptions();
+        private long lastSyncTime = 0;
 
         @Override
         public String getServiceName() {
@@ -227,7 +216,7 @@ public class ConfigStorage extends AbstractRocksDBStorage {
                 flushAndSyncWAL(true);
             } catch (Exception e) {
                 log.warn("{} raised an exception while performing flush-and-sync WAL on exit",
-                    this.getServiceName(), e);
+                        this.getServiceName(), e);
             }
             flushOptions.close();
             log.info("{} service end", this.getServiceName());

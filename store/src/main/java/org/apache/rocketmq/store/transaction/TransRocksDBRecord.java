@@ -15,17 +15,19 @@
  * limitations under the License.
  */
 package org.apache.rocketmq.store.transaction;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+
 public class TransRocksDBRecord {
-    private static final Logger logError = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
     public static final int VALUE_LENGTH = Integer.BYTES + Integer.BYTES;
+    private static final Logger logError = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
     private static final String KEY_SPLIT = "@";
     protected long offsetPy;
     private String topic;
@@ -51,23 +53,7 @@ public class TransRocksDBRecord {
         this.isOp = isOp;
     }
 
-    public TransRocksDBRecord() {}
-
-    public byte[] getKeyBytes() {
-        if (offsetPy < 0L || StringUtils.isEmpty(topic) || StringUtils.isEmpty(uniqKey)) {
-            return null;
-        }
-        byte[] keySuffixBytes = (KEY_SPLIT + topic + KEY_SPLIT + uniqKey).getBytes(StandardCharsets.UTF_8);
-        int keyLength = Long.BYTES + keySuffixBytes.length;
-        return ByteBuffer.allocate(keyLength).putLong(offsetPy).put(keySuffixBytes).array();
-    }
-
-    public byte[] getValueBytes() {
-        if (checkTimes < 0 || sizePy <= 0) {
-            logError.error("TransRocksDBRecord getValueBytes error, checkTimes: {}, sizePy: {}", checkTimes, sizePy);
-            return null;
-        }
-        return ByteBuffer.allocate(VALUE_LENGTH).putInt(checkTimes).putInt(sizePy).array();
+    public TransRocksDBRecord() {
     }
 
     public static TransRocksDBRecord decode(byte[] key, byte[] value) {
@@ -97,6 +83,23 @@ public class TransRocksDBRecord {
             return null;
         }
         return transRocksDBRecord;
+    }
+
+    public byte[] getKeyBytes() {
+        if (offsetPy < 0L || StringUtils.isEmpty(topic) || StringUtils.isEmpty(uniqKey)) {
+            return null;
+        }
+        byte[] keySuffixBytes = (KEY_SPLIT + topic + KEY_SPLIT + uniqKey).getBytes(StandardCharsets.UTF_8);
+        int keyLength = Long.BYTES + keySuffixBytes.length;
+        return ByteBuffer.allocate(keyLength).putLong(offsetPy).put(keySuffixBytes).array();
+    }
+
+    public byte[] getValueBytes() {
+        if (checkTimes < 0 || sizePy <= 0) {
+            logError.error("TransRocksDBRecord getValueBytes error, checkTimes: {}, sizePy: {}", checkTimes, sizePy);
+            return null;
+        }
+        return ByteBuffer.allocate(VALUE_LENGTH).putInt(checkTimes).putInt(sizePy).array();
     }
 
     public String getTopic() {

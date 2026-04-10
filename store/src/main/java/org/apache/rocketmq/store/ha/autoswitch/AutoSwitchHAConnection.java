@@ -17,12 +17,6 @@
 
 package org.apache.rocketmq.store.ha.autoswitch;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
-import java.util.List;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.NetworkUtil;
@@ -37,6 +31,13 @@ import org.apache.rocketmq.store.ha.HAConnection;
 import org.apache.rocketmq.store.ha.HAConnectionState;
 import org.apache.rocketmq.store.ha.io.AbstractHAReader;
 import org.apache.rocketmq.store.ha.io.HAWriter;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.List;
 
 public class AutoSwitchHAConnection implements HAConnection {
 
@@ -102,7 +103,7 @@ public class AutoSwitchHAConnection implements HAConnection {
     private volatile long lastTransferTimeMs = 0;
 
     public AutoSwitchHAConnection(AutoSwitchHAService haService, SocketChannel socketChannel,
-        EpochFileCache epochCache) throws IOException {
+                                  EpochFileCache epochCache) throws IOException {
         this.haService = haService;
         this.socketChannel = socketChannel;
         this.epochCache = epochCache;
@@ -237,7 +238,7 @@ public class AutoSwitchHAConnection implements HAConnection {
             haReader.registerHook(readSize -> {
                 if (readSize > 0) {
                     ReadSocketService.this.lastReadTimestamp =
-                        haService.getDefaultMessageStore().getSystemClock().now();
+                            haService.getDefaultMessageStore().getSystemClock().now();
                 }
             });
         }
@@ -332,7 +333,7 @@ public class AutoSwitchHAConnection implements HAConnection {
                                 byteBufferRead.position(readSocketPos);
                                 ReadSocketService.this.processPosition += AutoSwitchHAClient.HANDSHAKE_HEADER_SIZE;
                                 LOGGER.info("Receive slave handshake, slaveBrokerId:{}, isSyncFromLastFile:{}, isAsyncLearner:{}",
-                                    AutoSwitchHAConnection.this.slaveId, AutoSwitchHAConnection.this.isSyncFromLastFile, AutoSwitchHAConnection.this.isAsyncLearner);
+                                        AutoSwitchHAConnection.this.slaveId, AutoSwitchHAConnection.this.isSyncFromLastFile, AutoSwitchHAConnection.this.isAsyncLearner);
                                 break;
                             case TRANSFER:
                                 long slaveMaxOffset = byteBufferRead.getLong(readPosition + 4);
@@ -464,7 +465,7 @@ public class AutoSwitchHAConnection implements HAConnection {
                 flowMonitor.addByteCountTransferred(writeSize);
                 if (writeSize > 0) {
                     AbstractWriteSocketService.this.lastWriteTimestamp =
-                        haService.getDefaultMessageStore().getSystemClock().now();
+                            haService.getDefaultMessageStore().getSystemClock().now();
                 }
             });
         }
@@ -581,8 +582,8 @@ public class AutoSwitchHAConnection implements HAConnection {
                 if (size > canTransferMaxBytes) {
                     if (System.currentTimeMillis() - lastPrintTimestamp > 1000) {
                         LOGGER.warn("Trigger HA flow control, max transfer speed {}KB/s, current speed: {}KB/s",
-                            String.format("%.2f", flowMonitor.maxTransferByteInSecond() / 1024.0),
-                            String.format("%.2f", flowMonitor.getTransferredByteInSecond() / 1024.0));
+                                String.format("%.2f", flowMonitor.maxTransferByteInSecond() / 1024.0),
+                                String.format("%.2f", flowMonitor.getTransferredByteInSecond() / 1024.0));
                         lastPrintTimestamp = System.currentTimeMillis();
                     }
                     size = canTransferMaxBytes;
@@ -707,7 +708,7 @@ public class AutoSwitchHAConnection implements HAConnection {
                                 }
                                 changeTransferEpochToNext(epochEntry);
                                 LOGGER.info("Master transfer data to slave {}, from offset:{}, currentEpoch:{}",
-                                    AutoSwitchHAConnection.this.clientAddress, this.nextTransferFromWhere, epochEntry);
+                                        AutoSwitchHAConnection.this.clientAddress, this.nextTransferFromWhere, epochEntry);
                             }
                             transferToSlave();
                             break;

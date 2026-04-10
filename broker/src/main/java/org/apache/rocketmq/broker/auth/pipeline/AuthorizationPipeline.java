@@ -18,7 +18,6 @@
 package org.apache.rocketmq.broker.auth.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.util.List;
 import org.apache.rocketmq.auth.authentication.exception.AuthenticationException;
 import org.apache.rocketmq.auth.authorization.AuthorizationEvaluator;
 import org.apache.rocketmq.auth.authorization.context.AuthorizationContext;
@@ -32,6 +31,8 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
+
+import java.util.List;
 
 /**
  * 管线组件 <b>AuthorizationPipeline</b>，将鉴权/授权等步骤串联为可插拔的处理链。
@@ -56,7 +57,7 @@ public class AuthorizationPipeline implements RequestPipeline {
             evaluator.evaluate(contexts);
         } catch (AuthorizationException | AuthenticationException ex) {
             throw new AbortProcessException(ResponseCode.NO_PERMISSION, ex.getMessage());
-        }  catch (Throwable ex) {
+        } catch (Throwable ex) {
             LOGGER.error("authorization failed, request:{}", request, ex);
             throw ex;
         }

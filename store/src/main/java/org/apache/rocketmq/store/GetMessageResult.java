@@ -23,31 +23,23 @@ import java.util.List;
 
 public class GetMessageResult {
 
+    public static final GetMessageResult NO_MATCH_LOGIC_QUEUE =
+            new GetMessageResult(GetMessageStatus.NO_MATCHED_LOGIC_QUEUE, 0, 0, 0, Collections.emptyList(),
+                    Collections.emptyList(), Collections.emptyList());
     private final List<SelectMappedBufferResult> messageMapedList;
     private final List<ByteBuffer> messageBufferList;
     private final List<Long> messageQueueOffset;
-
     private GetMessageStatus status;
     private long nextBeginOffset;
     private long minOffset;
     private long maxOffset;
-
     private int bufferTotalSize = 0;
-
     private int messageCount = 0;
-
     private boolean suggestPullingFromSlave = false;
-
     private int msgCount4Commercial = 0;
     private int commercialSizePerMsg = 4 * 1024;
-
     private long coldDataSum = 0L;
-
     private int filterMessageCount;
-
-    public static final GetMessageResult NO_MATCH_LOGIC_QUEUE =
-        new GetMessageResult(GetMessageStatus.NO_MATCHED_LOGIC_QUEUE, 0, 0, 0, Collections.emptyList(),
-            Collections.emptyList(), Collections.emptyList());
 
     public GetMessageResult() {
         messageMapedList = new ArrayList<>(100);
@@ -62,7 +54,7 @@ public class GetMessageResult {
     }
 
     private GetMessageResult(GetMessageStatus status, long nextBeginOffset, long minOffset, long maxOffset,
-        List<SelectMappedBufferResult> messageMapedList, List<ByteBuffer> messageBufferList, List<Long> messageQueueOffset) {
+                             List<SelectMappedBufferResult> messageMapedList, List<ByteBuffer> messageBufferList, List<Long> messageQueueOffset) {
         this.status = status;
         this.nextBeginOffset = nextBeginOffset;
         this.minOffset = minOffset;
@@ -117,7 +109,7 @@ public class GetMessageResult {
         this.messageBufferList.add(mapedBuffer.getByteBuffer());
         this.bufferTotalSize += mapedBuffer.getSize();
         this.msgCount4Commercial += (int) Math.ceil(
-            mapedBuffer.getSize() /  (double)commercialSizePerMsg);
+                mapedBuffer.getSize() / (double) commercialSizePerMsg);
         this.messageCount++;
     }
 
@@ -126,7 +118,7 @@ public class GetMessageResult {
         this.messageBufferList.add(mapedBuffer.getByteBuffer());
         this.bufferTotalSize += mapedBuffer.getSize();
         this.msgCount4Commercial += (int) Math.ceil(
-            mapedBuffer.getSize() /  (double)commercialSizePerMsg);
+                mapedBuffer.getSize() / (double) commercialSizePerMsg);
         this.messageCount++;
         this.messageQueueOffset.add(queueOffset);
     }
@@ -190,7 +182,7 @@ public class GetMessageResult {
     @Override
     public String toString() {
         return "GetMessageResult [status=" + status + ", nextBeginOffset=" + nextBeginOffset + ", minOffset="
-            + minOffset + ", maxOffset=" + maxOffset + ", bufferTotalSize=" + bufferTotalSize + ", messageCount=" + messageCount
-            + ", filterMessageCount=" + filterMessageCount + ", suggestPullingFromSlave=" + suggestPullingFromSlave + "]";
+                + minOffset + ", maxOffset=" + maxOffset + ", bufferTotalSize=" + bufferTotalSize + ", messageCount=" + messageCount
+                + ", filterMessageCount=" + filterMessageCount + ", suggestPullingFromSlave=" + suggestPullingFromSlave + "]";
     }
 }

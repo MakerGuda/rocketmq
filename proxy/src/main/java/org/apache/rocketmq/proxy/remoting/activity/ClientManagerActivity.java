@@ -19,11 +19,7 @@ package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import org.apache.rocketmq.broker.client.ClientChannelInfo;
-import org.apache.rocketmq.broker.client.ConsumerGroupEvent;
-import org.apache.rocketmq.broker.client.ConsumerIdsChangeListener;
-import org.apache.rocketmq.broker.client.ProducerChangeListener;
-import org.apache.rocketmq.broker.client.ProducerGroupEvent;
+import org.apache.rocketmq.broker.client.*;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.remoting.channel.RemotingChannel;
@@ -48,7 +44,7 @@ public class ClientManagerActivity extends AbstractRemotingActivity {
     private final RemotingChannelManager remotingChannelManager;
 
     public ClientManagerActivity(RequestPipeline requestPipeline, MessagingProcessor messagingProcessor,
-        RemotingChannelManager manager) {
+                                 RemotingChannelManager manager) {
         super(requestPipeline, messagingProcessor);
         this.remotingChannelManager = manager;
         this.init();
@@ -61,7 +57,7 @@ public class ClientManagerActivity extends AbstractRemotingActivity {
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         switch (request.getCode()) {
             case RequestCode.HEART_BEAT:
                 return this.heartBeat(ctx, request, context);
@@ -76,27 +72,27 @@ public class ClientManagerActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand heartBeat(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) {
+                                        ProxyContext context) {
         HeartbeatData heartbeatData = HeartbeatData.decode(request.getBody(), HeartbeatData.class);
         String clientId = heartbeatData.getClientID();
 
         for (ProducerData data : heartbeatData.getProducerDataSet()) {
             ClientChannelInfo clientChannelInfo = new ClientChannelInfo(
-                this.remotingChannelManager.createProducerChannel(context, ctx.channel(), data.getGroupName(), clientId),
-                clientId, request.getLanguage(),
-                request.getVersion());
+                    this.remotingChannelManager.createProducerChannel(context, ctx.channel(), data.getGroupName(), clientId),
+                    clientId, request.getLanguage(),
+                    request.getVersion());
             setClientPropertiesToChannelAttr(clientChannelInfo);
             messagingProcessor.registerProducer(context, data.getGroupName(), clientChannelInfo);
         }
 
         for (ConsumerData data : heartbeatData.getConsumerDataSet()) {
             ClientChannelInfo clientChannelInfo = new ClientChannelInfo(
-                this.remotingChannelManager.createConsumerChannel(context, ctx.channel(), data.getGroupName(), clientId, data.getSubscriptionDataSet()),
-                clientId, request.getLanguage(),
-                request.getVersion());
+                    this.remotingChannelManager.createConsumerChannel(context, ctx.channel(), data.getGroupName(), clientId, data.getSubscriptionDataSet()),
+                    clientId, request.getLanguage(),
+                    request.getVersion());
             setClientPropertiesToChannelAttr(clientChannelInfo);
             messagingProcessor.registerConsumer(context, data.getGroupName(), clientChannelInfo, data.getConsumeType(),
-                data.getMessageModel(), data.getConsumeFromWhere(), data.getSubscriptionDataSet(), true);
+                    data.getMessageModel(), data.getConsumeFromWhere(), data.getSubscriptionDataSet(), true);
         }
 
         RemotingCommand response = RemotingCommand.createResponseCommand(null);
@@ -118,19 +114,19 @@ public class ClientManagerActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand unregisterClient(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws RemotingCommandException {
+                                               ProxyContext context) throws RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(UnregisterClientResponseHeader.class);
         final UnregisterClientRequestHeader requestHeader =
-            (UnregisterClientRequestHeader) request.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
+                (UnregisterClientRequestHeader) request.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
         final String producerGroup = requestHeader.getProducerGroup();
         if (producerGroup != null) {
             RemotingChannel channel = this.remotingChannelManager.removeProducerChannel(context, producerGroup, ctx.channel());
             if (channel != null) {
                 ClientChannelInfo clientChannelInfo = new ClientChannelInfo(
-                    channel,
-                    requestHeader.getClientID(),
-                    request.getLanguage(),
-                    request.getVersion());
+                        channel,
+                        requestHeader.getClientID(),
+                        request.getLanguage(),
+                        request.getVersion());
                 this.messagingProcessor.unRegisterProducer(context, producerGroup, clientChannelInfo);
             } else {
                 log.warn("unregister producer failed, channel not exist, may has been removed, producerGroup={}, channel={}", producerGroup, ctx.channel());
@@ -141,10 +137,10 @@ public class ClientManagerActivity extends AbstractRemotingActivity {
             RemotingChannel channel = this.remotingChannelManager.removeConsumerChannel(context, consumerGroup, ctx.channel());
             if (channel != null) {
                 ClientChannelInfo clientChannelInfo = new ClientChannelInfo(
-                    channel,
-                    requestHeader.getClientID(),
-                    request.getLanguage(),
-                    request.getVersion());
+                        channel,
+                        requestHeader.getClientID(),
+                        request.getLanguage(),
+                        request.getVersion());
                 this.messagingProcessor.unRegisterConsumer(context, consumerGroup, clientChannelInfo);
             } else {
                 log.warn("unregister consumer failed, channel not exist, may has been removed, consumerGroup={}, channel={}", consumerGroup, ctx.channel());
@@ -156,7 +152,7 @@ public class ClientManagerActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand checkClientConfig(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) {
+                                                ProxyContext context) {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         response.setCode(ResponseCode.SUCCESS);
         response.setRemark("");

@@ -41,7 +41,7 @@ public class RecallMessageActivity extends AbstractRemotingActivity {
 
     @Override
     public RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                           ProxyContext context) throws Exception {
         RecallMessageRequestHeader requestHeader = request.decodeCommandCustomHeader(RecallMessageRequestHeader.class);
         String topic = requestHeader.getTopic();
         if (ConfigurationManager.getProxyConfig().isEnableTopicMessageTypeCheck()) {

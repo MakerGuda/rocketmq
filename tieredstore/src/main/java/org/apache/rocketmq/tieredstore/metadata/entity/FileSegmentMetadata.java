@@ -17,6 +17,7 @@
 package org.apache.rocketmq.tieredstore.metadata.entity;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+
 import java.util.Objects;
 
 public class FileSegmentMetadata {
@@ -149,14 +150,14 @@ public class FileSegmentMetadata {
             return false;
         FileSegmentMetadata metadata = (FileSegmentMetadata) o;
         return size == metadata.size
-            && baseOffset == metadata.baseOffset
-            && status == metadata.status
-            && path.equals(metadata.path)
-            && type == metadata.type
-            && createTimestamp == metadata.createTimestamp
-            && beginTimestamp == metadata.beginTimestamp
-            && endTimestamp == metadata.endTimestamp
-            && sealTimestamp == metadata.sealTimestamp;
+                && baseOffset == metadata.baseOffset
+                && status == metadata.status
+                && path.equals(metadata.path)
+                && type == metadata.type
+                && createTimestamp == metadata.createTimestamp
+                && beginTimestamp == metadata.beginTimestamp
+                && endTimestamp == metadata.endTimestamp
+                && sealTimestamp == metadata.sealTimestamp;
     }
 
     @Override

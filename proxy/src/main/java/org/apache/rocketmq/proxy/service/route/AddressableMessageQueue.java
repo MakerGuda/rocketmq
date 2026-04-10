@@ -17,8 +17,9 @@
 package org.apache.rocketmq.proxy.service.route;
 
 import com.google.common.base.MoreObjects;
-import java.util.Objects;
 import org.apache.rocketmq.common.message.MessageQueue;
+
+import java.util.Objects;
 
 public class AddressableMessageQueue implements Comparable<AddressableMessageQueue> {
 
@@ -75,8 +76,8 @@ public class AddressableMessageQueue implements Comparable<AddressableMessageQue
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("messageQueue", messageQueue)
-            .add("brokerAddr", brokerAddr)
-            .toString();
+                .add("messageQueue", messageQueue)
+                .add("brokerAddr", brokerAddr)
+                .toString();
     }
 }

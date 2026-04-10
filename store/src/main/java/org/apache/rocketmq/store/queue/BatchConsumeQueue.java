@@ -17,12 +17,6 @@
 
 package org.apache.rocketmq.store.queue;
 
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.Pair;
@@ -35,17 +29,18 @@ import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.store.DispatchRequest;
-import org.apache.rocketmq.store.MappedFileQueue;
-import org.apache.rocketmq.store.MessageFilter;
-import org.apache.rocketmq.store.MessageStore;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
+import org.apache.rocketmq.store.*;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.logfile.MappedFile;
 
-public class BatchConsumeQueue implements ConsumeQueueInterface {
-    protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Function;
 
+public class BatchConsumeQueue implements ConsumeQueueInterface {
     /**
      * BatchConsumeQueue's store unit. Format:
      * <pre>
@@ -66,36 +61,33 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
     public static final int MSG_BASE_OFFSET_INDEX = 28;
     public static final int MSG_BATCH_SIZE_INDEX = 36;
     public static final int MSG_COMPACT_OFFSET_INDEX = 38;
-    private static final int MSG_COMPACT_OFFSET_LENGTH = 4;
     public static final int INVALID_POS = -1;
+    protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+    private static final int MSG_COMPACT_OFFSET_LENGTH = 4;
     protected final MappedFileQueue mappedFileQueue;
-    protected MessageStore messageStore;
-    protected ConsumeQueueStore consumeQueueStore;
     protected final String topic;
     protected final int queueId;
     protected final ByteBuffer byteBufferItem;
-
     protected final String storePath;
     protected final int mappedFileSize;
+    protected final int commitLogSize;
+    protected MessageStore messageStore;
+    protected ConsumeQueueStore consumeQueueStore;
     protected volatile long maxMsgPhyOffsetInCommitLog = -1;
-
     protected volatile long minLogicOffset = 0;
-
     protected volatile long maxOffsetInQueue = 0;
     protected volatile long minOffsetInQueue = -1;
-    protected final int commitLogSize;
-
     protected ConcurrentSkipListMap<Long, MappedFile> offsetCache = new ConcurrentSkipListMap<>();
     protected ConcurrentSkipListMap<Long, MappedFile> timeCache = new ConcurrentSkipListMap<>();
 
     public BatchConsumeQueue(
-        final String topic,
-        final int queueId,
-        final String storePath,
-        final int mappedFileSize,
-        final MessageStore messageStore,
-        final ConsumeQueueStore consumeQueueStore,
-        final String subfolder) {
+            final String topic,
+            final int queueId,
+            final String storePath,
+            final int mappedFileSize,
+            final MessageStore messageStore,
+            final ConsumeQueueStore consumeQueueStore,
+            final String subfolder) {
         this.storePath = storePath;
         this.mappedFileSize = mappedFileSize;
         this.messageStore = messageStore;
@@ -113,33 +105,88 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
         if (StringUtils.isBlank(subfolder)) {
             String queueDir = this.storePath + File.separator + topic + File.separator + queueId;
             this.mappedFileQueue = new MappedFileQueue(queueDir, mappedFileSize, null,
-                writeWithoutMmap);
+                    writeWithoutMmap);
         } else {
             String queueDir = this.storePath + File.separator + topic + File.separator + queueId + File.separator + subfolder;
             this.mappedFileQueue = new MappedFileQueue(queueDir, mappedFileSize, null,
-                writeWithoutMmap);
+                    writeWithoutMmap);
         }
 
         this.byteBufferItem = ByteBuffer.allocate(CQ_STORE_UNIT_SIZE);
     }
 
     public BatchConsumeQueue(
-        final String topic,
-        final int queueId,
-        final String storePath,
-        final int mappedFileSize,
-        final MessageStore messageStore,
-        final String subfolder) {
+            final String topic,
+            final int queueId,
+            final String storePath,
+            final int mappedFileSize,
+            final MessageStore messageStore,
+            final String subfolder) {
         this(topic, queueId, storePath, mappedFileSize, messageStore, (ConsumeQueueStore) messageStore.getQueueStore(), subfolder);
     }
 
     public BatchConsumeQueue(
-        final String topic,
-        final int queueId,
-        final String storePath,
-        final int mappedFileSize,
-        final MessageStore defaultMessageStore) {
+            final String topic,
+            final int queueId,
+            final String storePath,
+            final int mappedFileSize,
+            final MessageStore defaultMessageStore) {
         this(topic, queueId, storePath, mappedFileSize, defaultMessageStore, StringUtils.EMPTY);
+    }
+
+    private static int ceil(int pos) {
+        return (pos / CQ_STORE_UNIT_SIZE) * CQ_STORE_UNIT_SIZE;
+    }
+
+    /**
+     * Find the offset of which the value is equal or larger than the given targetValue.
+     * If there are many values equal to the target, then return the lowest offset if boundaryType is LOWER while
+     * return the highest offset if boundaryType is UPPER.
+     */
+    public static int binarySearchRight(ByteBuffer byteBuffer, int left, int right, final int unitSize,
+                                        final int unitShift, long targetValue, BoundaryType boundaryType) {
+        int mid = -1;
+        while (left <= right) {
+            mid = ceil((left + right) / 2);
+            long tmpValue = byteBuffer.getLong(mid + unitShift);
+            if (mid == right) {
+                //Means left and the right are the same
+                if (tmpValue >= targetValue) {
+                    return mid;
+                } else {
+                    return -1;
+                }
+            } else if (mid == left) {
+                //Means the left + unitSize = right
+                if (tmpValue >= targetValue) {
+                    return mid;
+                } else {
+                    left = mid + unitSize;
+                }
+            } else {
+                //mid is actually in the mid
+                switch (boundaryType) {
+                    case LOWER:
+                        if (tmpValue < targetValue) {
+                            left = mid + unitSize;
+                        } else {
+                            right = mid;
+                        }
+                        break;
+                    case UPPER:
+                        if (tmpValue <= targetValue) {
+                            left = mid;
+                        } else {
+                            right = mid - unitSize;
+                        }
+                        break;
+                    default:
+                        log.warn("Unknown boundary type");
+                        return -1;
+                }
+            }
+        }
+        return -1;
     }
 
     @Override
@@ -176,10 +223,10 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
         this.timeCache = newTimeCache;
 
         log.info("refreshCache for BCQ [Topic: {}, QueueId: {}]." +
-                "offsetCacheSize: {}, minCachedMsgOffset: {}, maxCachedMsgOffset: {}, " +
-                "timeCacheSize: {}, minCachedTime: {}, maxCachedTime: {}", this.topic, this.queueId,
-            this.offsetCache.size(), this.offsetCache.firstEntry(), this.offsetCache.lastEntry(),
-            this.timeCache.size(), this.timeCache.firstEntry(), this.timeCache.lastEntry());
+                        "offsetCacheSize: {}, minCachedMsgOffset: {}, maxCachedMsgOffset: {}, " +
+                        "timeCacheSize: {}, minCachedTime: {}, maxCachedTime: {}", this.topic, this.queueId,
+                this.offsetCache.size(), this.offsetCache.firstEntry(), this.offsetCache.lastEntry(),
+                this.timeCache.size(), this.timeCache.firstEntry(), this.timeCache.lastEntry());
     }
 
     protected void refreshCache() {
@@ -254,7 +301,7 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
                         this.maxMsgPhyOffsetInCommitLog = offset;
                     } else {
                         log.info("Recover current batch consume queue file over, file:{} offset:{} size:{} msgBaseOffset:{} batchSize:{} mappedFileOffset:{}",
-                            mappedFile.getFileName(), offset, size, msgBaseOffset, batchSize, mappedFileOffset);
+                                mappedFile.getFileName(), offset, size, msgBaseOffset, batchSize, mappedFileOffset);
                         break;
                     }
                 }
@@ -458,7 +505,7 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
         }
         reviseMaxAndMinOffsetInQueue();
         log.info("Truncate batch logic file topic={} queue={} oldMinOffset={} oldMaxOffset={} minOffset={} maxOffset={} maxPhyOffsetHere={} maxPhyOffsetThere={}",
-            topic, queueId, oldMinOffset, oldMaxOffset, minOffsetInQueue, maxOffsetInQueue, maxMsgPhyOffsetInCommitLog, phyOffset);
+                topic, queueId, oldMinOffset, oldMaxOffset, minOffsetInQueue, maxOffsetInQueue, maxMsgPhyOffsetInCommitLog, phyOffset);
     }
 
     @Override
@@ -512,7 +559,7 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
                  2. the pull process hold the cq reference, and release it just the moment
                  */
                 log.warn("Correct min offset found null cq file topic:{} queue:{} files:{} minOffset:{} maxOffset:{}",
-                    topic, queueId, this.mappedFileQueue.getMappedFiles().size(), minOffsetInQueue, maxOffsetInQueue);
+                        topic, queueId, this.mappedFileQueue.getMappedFiles().size(), minOffsetInQueue, maxOffsetInQueue);
             }
         }
         if (oldMinOffset != this.minOffsetInQueue) {
@@ -530,8 +577,8 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
         }
         for (int i = 0; i < maxRetries && canWrite; i++) {
             boolean result = this.putBatchMessagePositionInfo(request.getCommitLogOffset(),
-                request.getMsgSize(), request.getTagsCode(),
-                request.getStoreTimestamp(), request.getMsgBaseOffset(), request.getBatchSize());
+                    request.getMsgSize(), request.getTagsCode(),
+                    request.getStoreTimestamp(), request.getMsgBaseOffset(), request.getBatchSize());
             if (result) {
                 if (BrokerRole.SLAVE == this.messageStore.getMessageStoreConfig().getBrokerRole()) {
                     this.messageStore.getStoreCheckpoint().setPhysicMsgTimestamp(request.getStoreTimestamp());
@@ -541,7 +588,7 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
             } else {
                 // XXX: warn and notify me
                 log.warn("[NOTIFYME]put commit log position info to batch consume queue " + topic + ":" + queueId + " " + request.getCommitLogOffset()
-                    + " failed, retry " + i + " times");
+                        + " failed, retry " + i + " times");
 
                 try {
                     Thread.sleep(1000);
@@ -570,19 +617,19 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
 
     @Override
     public void increaseQueueOffset(QueueOffsetOperator queueOffsetOperator, MessageExtBrokerInner msg,
-        short messageNum) {
+                                    short messageNum) {
         String topicQueueKey = getTopic() + "-" + getQueueId();
         queueOffsetOperator.increaseBatchQueueOffset(topicQueueKey, messageNum);
     }
 
     public boolean putBatchMessagePositionInfo(final long offset, final int size, final long tagsCode,
-        final long storeTime,
-        final long msgBaseOffset, final short batchSize) {
+                                               final long storeTime,
+                                               final long msgBaseOffset, final short batchSize) {
 
         if (offset <= this.maxMsgPhyOffsetInCommitLog) {
             if (System.currentTimeMillis() % 1000 == 0) {
                 log.warn("Build batch consume queue repeatedly, maxMsgPhyOffsetInCommitLog:{} offset:{} Topic: {} QID: {}",
-                    maxMsgPhyOffsetInCommitLog, offset, this.topic, this.queueId);
+                        maxMsgPhyOffsetInCommitLog, offset, this.topic, this.queueId);
             }
             return true;
         }
@@ -639,12 +686,12 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
     }
 
     protected BatchOffsetIndex getBatchOffsetIndexByPos(MappedFile mappedFile, int pos, boolean getBatchSize,
-        boolean getStoreTime) {
+                                                        boolean getStoreTime) {
         SelectMappedBufferResult sbr = mappedFile.selectMappedBuffer(pos);
         try {
             return new BatchOffsetIndex(mappedFile, pos, sbr.getByteBuffer().getLong(MSG_BASE_OFFSET_INDEX),
-                getBatchSize ? sbr.getByteBuffer().getShort(MSG_BATCH_SIZE_INDEX) : 0,
-                getStoreTime ? sbr.getByteBuffer().getLong(MSG_STORE_TIME_OFFSET_INDEX) : 0);
+                    getBatchSize ? sbr.getByteBuffer().getShort(MSG_BATCH_SIZE_INDEX) : 0,
+                    getStoreTime ? sbr.getByteBuffer().getLong(MSG_STORE_TIME_OFFSET_INDEX) : 0);
         } finally {
             if (sbr != null) {
                 sbr.release();
@@ -660,13 +707,10 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
         return getBatchOffsetIndexByPos(mappedFile, pos, getBatchSize, getStoreTime);
     }
 
-    private static int ceil(int pos) {
-        return (pos / CQ_STORE_UNIT_SIZE) * CQ_STORE_UNIT_SIZE;
-    }
-
     /**
      * Gets SelectMappedBufferResult by batch-message offset
      * Node: the caller is responsible for the release of SelectMappedBufferResult
+     *
      * @param msgOffset
      * @return SelectMappedBufferResult
      */
@@ -870,62 +914,11 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
     }
 
     /**
-     * Find the offset of which the value is equal or larger than the given targetValue.
-     * If there are many values equal to the target, then return the lowest offset if boundaryType is LOWER while
-     * return the highest offset if boundaryType is UPPER.
-     */
-    public static int binarySearchRight(ByteBuffer byteBuffer, int left, int right, final int unitSize,
-        final int unitShift, long targetValue, BoundaryType boundaryType) {
-        int mid = -1;
-        while (left <= right) {
-            mid = ceil((left + right) / 2);
-            long tmpValue = byteBuffer.getLong(mid + unitShift);
-            if (mid == right) {
-                //Means left and the right are the same
-                if (tmpValue >= targetValue) {
-                    return mid;
-                } else {
-                    return -1;
-                }
-            } else if (mid == left) {
-                //Means the left + unitSize = right
-                if (tmpValue >= targetValue) {
-                    return mid;
-                } else {
-                    left = mid + unitSize;
-                }
-            } else {
-                //mid is actually in the mid
-                switch (boundaryType) {
-                    case LOWER:
-                        if (tmpValue < targetValue) {
-                            left = mid + unitSize;
-                        } else {
-                            right = mid;
-                        }
-                        break;
-                    case UPPER:
-                        if (tmpValue <= targetValue) {
-                            left = mid;
-                        } else {
-                            right = mid - unitSize;
-                        }
-                        break;
-                    default:
-                        log.warn("Unknown boundary type");
-                        return -1;
-                }
-            }
-        }
-        return -1;
-    }
-
-    /**
      * Here is vulnerable, the min value of the bytebuffer must be smaller or equal then the given value.
      * Otherwise, it may get -1
      */
     protected int binarySearch(ByteBuffer byteBuffer, int left, int right, final int unitSize, final int unitShift,
-        long targetValue) {
+                               long targetValue) {
         int maxRight = right;
         int mid = -1;
         while (left <= right) {
@@ -940,7 +933,7 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
                 if (mid == left) {
                     //the binary search is converging to the left, so maybe the one on the right of mid is the exactly correct one
                     if (mid + unitSize <= maxRight
-                        && byteBuffer.getLong(mid + unitSize + unitShift) <= targetValue) {
+                            && byteBuffer.getLong(mid + unitSize + unitShift) <= targetValue) {
                         return mid + unitSize;
                     } else {
                         return mid;
@@ -951,72 +944,6 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
             }
         }
         return -1;
-    }
-
-    static class BatchConsumeQueueIterator implements ReferredIterator<CqUnit> {
-        private SelectMappedBufferResult sbr;
-        private int relativePos = 0;
-
-        public BatchConsumeQueueIterator(SelectMappedBufferResult sbr) {
-            this.sbr = sbr;
-            if (sbr != null && sbr.getByteBuffer() != null) {
-                relativePos = sbr.getByteBuffer().position();
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (sbr == null || sbr.getByteBuffer() == null) {
-                return false;
-            }
-
-            return sbr.getByteBuffer().hasRemaining();
-        }
-
-        @Override
-        public CqUnit next() {
-            if (!hasNext()) {
-                return null;
-            }
-            ByteBuffer tmpBuffer = sbr.getByteBuffer().slice();
-            tmpBuffer.position(MSG_COMPACT_OFFSET_INDEX);
-            ByteBuffer compactOffsetStoreBuffer = tmpBuffer.slice();
-            compactOffsetStoreBuffer.limit(MSG_COMPACT_OFFSET_LENGTH);
-
-            int relativePos = sbr.getByteBuffer().position();
-            long offsetPy = sbr.getByteBuffer().getLong();
-            int sizePy = sbr.getByteBuffer().getInt();
-            long tagsCode = sbr.getByteBuffer().getLong(); //tagscode
-            sbr.getByteBuffer().getLong();//timestamp
-            long msgBaseOffset = sbr.getByteBuffer().getLong();
-            short batchSize = sbr.getByteBuffer().getShort();
-            int compactedOffset = sbr.getByteBuffer().getInt();
-            sbr.getByteBuffer().position(relativePos + CQ_STORE_UNIT_SIZE);
-
-            return new CqUnit(msgBaseOffset, offsetPy, sizePy, tagsCode, batchSize, compactedOffset, compactOffsetStoreBuffer);
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove");
-        }
-
-        @Override
-        public void release() {
-            if (sbr != null) {
-                sbr.release();
-                sbr = null;
-            }
-        }
-
-        @Override
-        public CqUnit nextAndRelease() {
-            try {
-                return next();
-            } finally {
-                release();
-            }
-        }
     }
 
     @Override
@@ -1199,5 +1126,71 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
     @Override
     public void initializeWithOffset(long offset, long minPhyOffset) {
         // not support now
+    }
+
+    static class BatchConsumeQueueIterator implements ReferredIterator<CqUnit> {
+        private SelectMappedBufferResult sbr;
+        private int relativePos = 0;
+
+        public BatchConsumeQueueIterator(SelectMappedBufferResult sbr) {
+            this.sbr = sbr;
+            if (sbr != null && sbr.getByteBuffer() != null) {
+                relativePos = sbr.getByteBuffer().position();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (sbr == null || sbr.getByteBuffer() == null) {
+                return false;
+            }
+
+            return sbr.getByteBuffer().hasRemaining();
+        }
+
+        @Override
+        public CqUnit next() {
+            if (!hasNext()) {
+                return null;
+            }
+            ByteBuffer tmpBuffer = sbr.getByteBuffer().slice();
+            tmpBuffer.position(MSG_COMPACT_OFFSET_INDEX);
+            ByteBuffer compactOffsetStoreBuffer = tmpBuffer.slice();
+            compactOffsetStoreBuffer.limit(MSG_COMPACT_OFFSET_LENGTH);
+
+            int relativePos = sbr.getByteBuffer().position();
+            long offsetPy = sbr.getByteBuffer().getLong();
+            int sizePy = sbr.getByteBuffer().getInt();
+            long tagsCode = sbr.getByteBuffer().getLong(); //tagscode
+            sbr.getByteBuffer().getLong();//timestamp
+            long msgBaseOffset = sbr.getByteBuffer().getLong();
+            short batchSize = sbr.getByteBuffer().getShort();
+            int compactedOffset = sbr.getByteBuffer().getInt();
+            sbr.getByteBuffer().position(relativePos + CQ_STORE_UNIT_SIZE);
+
+            return new CqUnit(msgBaseOffset, offsetPy, sizePy, tagsCode, batchSize, compactedOffset, compactOffsetStoreBuffer);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove");
+        }
+
+        @Override
+        public void release() {
+            if (sbr != null) {
+                sbr.release();
+                sbr = null;
+            }
+        }
+
+        @Override
+        public CqUnit nextAndRelease() {
+            try {
+                return next();
+            } finally {
+                release();
+            }
+        }
     }
 }

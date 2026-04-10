@@ -81,7 +81,7 @@ public class ExportMetadataCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook)
-        throws SubCommandException {
+            throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
 
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
@@ -90,7 +90,7 @@ public class ExportMetadataCommand implements SubCommand {
             defaultMQAdminExt.start();
 
             String filePath = !commandLine.hasOption('f') ? DEFAULT_FILE_PATH : commandLine.getOptionValue('f')
-                .trim();
+                                                                                .trim();
 
             boolean specialTopic = commandLine.hasOption('s');
 
@@ -100,13 +100,13 @@ public class ExportMetadataCommand implements SubCommand {
                 if (commandLine.hasOption('t')) {
                     filePath = filePath + "/topic.json";
                     TopicConfigSerializeWrapper topicConfigSerializeWrapper = defaultMQAdminExt.getUserTopicConfig(
-                        brokerAddr, specialTopic, 10000L);
+                            brokerAddr, specialTopic, 10000L);
                     MixAll.string2FileNotSafe(JSON.toJSONString(topicConfigSerializeWrapper, JSONWriter.Feature.PrettyFormat), filePath);
                     System.out.printf("export %s success", filePath);
                 } else if (commandLine.hasOption('g')) {
                     filePath = filePath + "/subscriptionGroup.json";
                     SubscriptionGroupWrapper subscriptionGroupWrapper = defaultMQAdminExt.getUserSubscriptionGroup(
-                        brokerAddr, 10000L);
+                            brokerAddr, 10000L);
                     MixAll.string2FileNotSafe(JSON.toJSONString(subscriptionGroupWrapper, JSONWriter.Feature.PrettyFormat), filePath);
                     System.out.printf("export %s success", filePath);
                 }
@@ -114,7 +114,7 @@ public class ExportMetadataCommand implements SubCommand {
                 String clusterName = commandLine.getOptionValue('c').trim();
 
                 Set<String> masterSet =
-                    CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
 
                 Map<String, TopicConfig> topicConfigMap = new HashMap<>();
                 Map<String, SubscriptionGroupConfig> subGroupConfigMap = new HashMap<>();
@@ -122,30 +122,30 @@ public class ExportMetadataCommand implements SubCommand {
 
                 for (String addr : masterSet) {
                     TopicConfigSerializeWrapper topicConfigSerializeWrapper = defaultMQAdminExt.getUserTopicConfig(
-                        addr, specialTopic, 10000L);
+                            addr, specialTopic, 10000L);
 
                     SubscriptionGroupWrapper subscriptionGroupWrapper = defaultMQAdminExt.getUserSubscriptionGroup(
-                        addr, 10000);
+                            addr, 10000);
 
                     for (Map.Entry<String, TopicConfig> entry : topicConfigSerializeWrapper.getTopicConfigTable()
-                        .entrySet()) {
+                            .entrySet()) {
                         TopicConfig topicConfig = topicConfigMap.get(entry.getKey());
                         if (null != topicConfig) {
                             entry.getValue().setWriteQueueNums(
-                                topicConfig.getWriteQueueNums() + entry.getValue().getWriteQueueNums());
+                                    topicConfig.getWriteQueueNums() + entry.getValue().getWriteQueueNums());
                             entry.getValue().setReadQueueNums(
-                                topicConfig.getReadQueueNums() + entry.getValue().getReadQueueNums());
+                                    topicConfig.getReadQueueNums() + entry.getValue().getReadQueueNums());
                         }
                         topicConfigMap.put(entry.getKey(), entry.getValue());
                     }
 
                     for (Map.Entry<String, SubscriptionGroupConfig> entry : subscriptionGroupWrapper.getSubscriptionGroupTable()
-                        .entrySet()) {
+                            .entrySet()) {
 
                         SubscriptionGroupConfig subscriptionGroupConfig = subGroupConfigMap.get(entry.getKey());
                         if (null != subscriptionGroupConfig) {
                             entry.getValue().setRetryQueueNums(
-                                subscriptionGroupConfig.getRetryQueueNums() + entry.getValue().getRetryQueueNums());
+                                    subscriptionGroupConfig.getRetryQueueNums() + entry.getValue().getRetryQueueNums());
                         }
                         subGroupConfigMap.put(entry.getKey(), entry.getValue());
                     }
@@ -178,4 +178,3 @@ public class ExportMetadataCommand implements SubCommand {
         }
     }
 }
-

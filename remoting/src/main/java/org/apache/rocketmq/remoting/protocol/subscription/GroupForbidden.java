@@ -24,8 +24,8 @@ import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
  */
 public class GroupForbidden extends RemotingSerializable {
 
-    private String  topic;
-    private String  group;
+    private String topic;
+    private String group;
     private Boolean readable;
 
     public String getTopic() {

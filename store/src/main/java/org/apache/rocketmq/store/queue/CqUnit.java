@@ -26,6 +26,8 @@ public class CqUnit {
     private final int size;
     private final long pos;
     private final short batchNum;
+    private final ByteBuffer nativeBuffer;
+    private final int compactedOffset;
     /**
      * Be careful, the tagsCode is reused as an address for extent file. To prevent accident mistake, we follow the
      * rules: 1. If the cqExtUnit is not null, make tagsCode == cqExtUnit.getTagsCode() 2. If the cqExtUnit is null, and
@@ -33,8 +35,6 @@ public class CqUnit {
      */
     private long tagsCode;
     private ConsumeQueueExt.CqExtUnit cqExtUnit;
-    private final ByteBuffer nativeBuffer;
-    private final int compactedOffset;
 
     public CqUnit(long queueOffset, long pos, int size, long tagsCode) {
         this(queueOffset, pos, size, tagsCode, (short) 1, 0, null);
@@ -63,6 +63,10 @@ public class CqUnit {
         return tagsCode;
     }
 
+    public void setTagsCode(long tagsCode) {
+        this.tagsCode = tagsCode;
+    }
+
     public Long getValidTagsCodeAsLong() {
         if (!isTagsCodeValid()) {
             return null;
@@ -80,10 +84,6 @@ public class CqUnit {
 
     public void setCqExtUnit(ConsumeQueueExt.CqExtUnit cqExtUnit) {
         this.cqExtUnit = cqExtUnit;
-    }
-
-    public void setTagsCode(long tagsCode) {
-        this.tagsCode = tagsCode;
     }
 
     public long getQueueOffset() {

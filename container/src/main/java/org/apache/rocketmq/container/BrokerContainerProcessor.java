@@ -18,12 +18,6 @@
 package org.apache.rocketmq.container;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
-import java.util.Properties;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.BrokerStartup;
@@ -45,12 +39,14 @@ import org.apache.rocketmq.remoting.protocol.header.GetBrokerConfigResponseHeade
 import org.apache.rocketmq.remoting.protocol.header.RemoveBrokerRequestHeader;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+
 public class BrokerContainerProcessor implements NettyRequestProcessor {
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     protected final BrokerContainer brokerContainer;
-    protected List<BrokerBootHook> brokerBootHookList;
-
     protected final Set<String> configBlackList = new HashSet<>();
+    protected List<BrokerBootHook> brokerBootHookList;
 
     public BrokerContainerProcessor(BrokerContainer brokerContainer) {
         this.brokerContainer = brokerContainer;
@@ -88,7 +84,7 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
     }
 
     protected synchronized RemotingCommand addBroker(ChannelHandlerContext ctx,
-        RemotingCommand request) throws Exception {
+                                                     RemotingCommand request) throws Exception {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final AddBrokerRequestHeader requestHeader = (AddBrokerRequestHeader) request.decodeCommandCustomHeader(AddBrokerRequestHeader.class);
 
@@ -151,8 +147,8 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
             }
 
             if (messageStoreConfig.getTotalReplicas() < messageStoreConfig.getInSyncReplicas()
-                || messageStoreConfig.getTotalReplicas() < messageStoreConfig.getMinInSyncReplicas()
-                || messageStoreConfig.getInSyncReplicas() < messageStoreConfig.getMinInSyncReplicas()) {
+                    || messageStoreConfig.getTotalReplicas() < messageStoreConfig.getMinInSyncReplicas()
+                    || messageStoreConfig.getInSyncReplicas() < messageStoreConfig.getMinInSyncReplicas()) {
                 response.setCode(ResponseCode.SYSTEM_ERROR);
                 response.setRemark("invalid replicas number");
                 return response;
@@ -160,11 +156,11 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
         }
 
         ConfigContext configContext = new ConfigContext.Builder().
-            brokerConfig(brokerConfig).
-            messageStoreConfig(messageStoreConfig).
-            authConfig(authConfig).
-            properties(brokerProperties).
-            build();
+                brokerConfig(brokerConfig).
+                messageStoreConfig(messageStoreConfig).
+                authConfig(authConfig).
+                properties(brokerProperties).
+                build();
 
         InnerBrokerController innerBrokerController;
         try {
@@ -191,10 +187,10 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
                 BrokerIdentity brokerIdentity;
                 if (messageStoreConfig.isEnableDLegerCommitLog()) {
                     brokerIdentity = new BrokerIdentity(brokerConfig.getBrokerClusterName(),
-                        brokerConfig.getBrokerName(), Integer.parseInt(messageStoreConfig.getdLegerSelfId().substring(1)));
+                            brokerConfig.getBrokerName(), Integer.parseInt(messageStoreConfig.getdLegerSelfId().substring(1)));
                 } else {
                     brokerIdentity = new BrokerIdentity(brokerConfig.getBrokerClusterName(),
-                        brokerConfig.getBrokerName(), brokerConfig.getBrokerId());
+                            brokerConfig.getBrokerName(), brokerConfig.getBrokerId());
                 }
                 this.brokerContainer.removeBroker(brokerIdentity);
                 innerBrokerController.shutdown();
@@ -213,7 +209,7 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
     }
 
     protected synchronized RemotingCommand removeBroker(ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                                        RemotingCommand request) throws RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final RemoveBrokerRequestHeader requestHeader = (RemoveBrokerRequestHeader) request.decodeCommandCustomHeader(RemoveBrokerRequestHeader.class);
 

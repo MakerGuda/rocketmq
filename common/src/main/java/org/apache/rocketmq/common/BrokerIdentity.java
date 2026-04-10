@@ -29,10 +29,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class BrokerIdentity {
-    private static final String DEFAULT_CLUSTER_NAME = "DefaultCluster";
-
+    // load it after the localHostName is initialized
+    public static final BrokerIdentity BROKER_CONTAINER_IDENTITY = new BrokerIdentity(true);
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
-
+    private static final String DEFAULT_CLUSTER_NAME = "DefaultCluster";
     private static String localHostName;
 
     static {
@@ -42,9 +42,6 @@ public class BrokerIdentity {
             LOGGER.error("Failed to obtain the host name", e);
         }
     }
-
-    // load it after the localHostName is initialized
-    public static final BrokerIdentity BROKER_CONTAINER_IDENTITY = new BrokerIdentity(true);
 
     @ImportantField
     private String brokerName = defaultBrokerName();
@@ -117,7 +114,7 @@ public class BrokerIdentity {
 
     public String getCanonicalName() {
         return isBrokerContainer ? "BrokerContainer" : String.format("%s_%s_%d", brokerClusterName, brokerName,
-            brokerId);
+                brokerId);
     }
 
     public String getIdentifier() {
@@ -137,18 +134,18 @@ public class BrokerIdentity {
         final BrokerIdentity identity = (BrokerIdentity) o;
 
         return new EqualsBuilder()
-            .append(brokerId, identity.brokerId)
-            .append(brokerName, identity.brokerName)
-            .append(brokerClusterName, identity.brokerClusterName)
-            .isEquals();
+                .append(brokerId, identity.brokerId)
+                .append(brokerName, identity.brokerName)
+                .append(brokerClusterName, identity.brokerClusterName)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-            .append(brokerName)
-            .append(brokerClusterName)
-            .append(brokerId)
-            .toHashCode();
+                .append(brokerName)
+                .append(brokerClusterName)
+                .append(brokerId)
+                .toHashCode();
     }
 }

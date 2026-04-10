@@ -27,7 +27,7 @@ import java.io.File;
  */
 public class BrokerPathConfigHelper {
     private static String brokerConfigPath = System.getProperty("user.home") + File.separator + "store"
-        + File.separator + "config" + File.separator + "broker.properties";
+            + File.separator + "config" + File.separator + "broker.properties";
 
     public static String getBrokerConfigPath() {
         return brokerConfigPath;
@@ -60,12 +60,15 @@ public class BrokerPathConfigHelper {
     public static String getSubscriptionGroupPath(final String rootDir) {
         return getConfigDir(rootDir) + "subscriptionGroup.json";
     }
+
     public static String getTimerCheckPath(final String rootDir) {
         return getConfigDir(rootDir) + "timercheck";
     }
+
     public static String getTimerMetricsPath(final String rootDir) {
         return getConfigDir(rootDir) + "timermetrics";
     }
+
     public static String getTransactionMetricsPath(final String rootDir) {
         return getConfigDir(rootDir) + "transactionMetrics";
     }

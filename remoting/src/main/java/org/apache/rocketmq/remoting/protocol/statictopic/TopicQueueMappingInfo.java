@@ -16,22 +16,22 @@
  */
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class TopicQueueMappingInfo extends RemotingSerializable {
     public static final int LEVEL_0 = 0;
-
+    //register to broker to construct the route
+    protected ConcurrentMap<Integer/*logicId*/, Integer/*physicalId*/> currIdMap = new ConcurrentHashMap<>();
     String topic; // redundant field
     String scope = MixAll.METADATA_SCOPE_GLOBAL;
     int totalQueues;
     String bname;  //identify the hosted broker name
     long epoch; //important to fence the old dirty data
     boolean dirty; //indicate if the data is dirty
-    //register to broker to construct the route
-    protected ConcurrentMap<Integer/*logicId*/, Integer/*physicalId*/> currIdMap = new ConcurrentHashMap<>();
 
     public TopicQueueMappingInfo() {
 
@@ -57,13 +57,24 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
         return totalQueues;
     }
 
+    public void setTotalQueues(int totalQueues) {
+        this.totalQueues = totalQueues;
+    }
 
     public String getBname() {
         return bname;
     }
 
+    public void setBname(String bname) {
+        this.bname = bname;
+    }
+
     public String getTopic() {
         return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public long getEpoch() {
@@ -74,20 +85,8 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
         this.epoch = epoch;
     }
 
-    public void setTotalQueues(int totalQueues) {
-        this.totalQueues = totalQueues;
-    }
-
     public ConcurrentMap<Integer, Integer> getCurrIdMap() {
         return currIdMap;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public void setBname(String bname) {
-        this.bname = bname;
     }
 
     public void setCurrIdMap(ConcurrentMap<Integer, Integer> currIdMap) {

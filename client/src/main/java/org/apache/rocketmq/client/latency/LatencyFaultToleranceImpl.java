@@ -17,38 +17,28 @@
 
 package org.apache.rocketmq.client.latency;
 
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.common.ThreadLocalIndex;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.util.*;
+import java.util.concurrent.*;
+
 public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> {
     private final static Logger log = LoggerFactory.getLogger(MQFaultStrategy.class);
     private final ConcurrentHashMap<String, FaultItem> faultItemTable = new ConcurrentHashMap<String, FaultItem>(16);
-    private int detectTimeout = 200;
-    private int detectInterval = 2000;
     private final ThreadLocalIndex whichItemWorst = new ThreadLocalIndex();
-
-    private volatile boolean startDetectorEnable = false;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
             return new Thread(r, "LatencyFaultToleranceScheduledThread");
         }
     });
-
     private final Resolver resolver;
-
     private final ServiceDetector serviceDetector;
+    private int detectTimeout = 200;
+    private int detectInterval = 2000;
+    private volatile boolean startDetectorEnable = false;
 
     public LatencyFaultToleranceImpl(Resolver resolver, ServiceDetector serviceDetector) {
         this.resolver = resolver;
@@ -154,6 +144,7 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
     public void setStartDetectorEnable(boolean startDetectorEnable) {
         this.startDetectorEnable = startDetectorEnable;
     }
+
     @Override
     public String pickOneAtLeast() {
         final Enumeration<FaultItem> elements = this.faultItemTable.elements();
@@ -237,10 +228,6 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
             return 0;
         }
 
-        public void setReachable(boolean reachableFlag) {
-            this.reachableFlag = reachableFlag;
-        }
-
         public void setCheckStamp(long checkStamp) {
             this.checkStamp = checkStamp;
         }
@@ -251,6 +238,10 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
 
         public boolean isReachable() {
             return reachableFlag;
+        }
+
+        public void setReachable(boolean reachableFlag) {
+            this.reachableFlag = reachableFlag;
         }
 
         @Override

@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.topic;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -37,6 +32,12 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.admin.MQAdminUtils;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class RemappingStaticTopicSubCommand implements SubCommand {
 
@@ -94,7 +95,7 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
             String mapFileName = commandLine.getOptionValue('f').trim();
             String mapData = MixAll.file2String(mapFileName);
             TopicRemappingDetailWrapper wrapper = TopicRemappingDetailWrapper.decode(mapData.getBytes(StandardCharsets.UTF_8),
-                TopicRemappingDetailWrapper.class);
+                    TopicRemappingDetailWrapper.class);
             //double check the config
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, wrapper.getBrokerConfigMap());
             TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(TopicQueueMappingUtils.getMappingDetailFromConfig(wrapper.getBrokerConfigMap().values())), false, true);
@@ -142,7 +143,7 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
             }
             String topic = commandLine.getOptionValue('t').trim();
 
-            ClusterInfo clusterInfo  = defaultMQAdminExt.examineBrokerClusterInfo();
+            ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
             if (clusterInfo == null
                     || clusterInfo.getClusterAddrTable().isEmpty()) {
                 throw new RuntimeException("The Cluster info is empty");
@@ -151,7 +152,7 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
             {
                 if (commandLine.hasOption("b")) {
                     String brokerStrs = commandLine.getOptionValue("b").trim();
-                    for (String broker: brokerStrs.split(",")) {
+                    for (String broker : brokerStrs.split(",")) {
                         targetBrokers.add(broker.trim());
                     }
                 } else if (commandLine.hasOption("c")) {
@@ -174,7 +175,7 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
                 }
             }
 
-            brokerConfigMap  = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
+            brokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             if (brokerConfigMap.isEmpty()) {
                 throw new RuntimeException("No topic route to do the remapping");
             }

@@ -19,19 +19,20 @@ package org.apache.rocketmq.auth.authentication.provider;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authentication.builder.AuthenticationContextBuilder;
 import org.apache.rocketmq.auth.authentication.builder.DefaultAuthenticationContextBuilder;
-import org.apache.rocketmq.auth.authentication.context.DefaultAuthenticationContext;
 import org.apache.rocketmq.auth.authentication.chain.DefaultAuthenticationHandler;
+import org.apache.rocketmq.auth.authentication.context.DefaultAuthenticationContext;
 import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.chain.HandlerChain;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public class DefaultAuthenticationProvider implements AuthenticationProvider<DefaultAuthenticationContext> {
 
@@ -50,7 +51,7 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider<Def
     @Override
     public CompletableFuture<Void> authenticate(DefaultAuthenticationContext context) {
         return this.newHandlerChain().handle(context)
-            .whenComplete((nil, ex) -> doAuditLog(context, ex));
+                .whenComplete((nil, ex) -> doAuditLog(context, ex));
     }
 
     @Override
@@ -65,7 +66,7 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider<Def
 
     protected HandlerChain<DefaultAuthenticationContext, CompletableFuture<Void>> newHandlerChain() {
         return HandlerChain.<DefaultAuthenticationContext, CompletableFuture<Void>>create()
-            .addNext(new DefaultAuthenticationHandler(this.authConfig, metadataService));
+                .addNext(new DefaultAuthenticationHandler(this.authConfig, metadataService));
     }
 
     protected void doAuditLog(DefaultAuthenticationContext context, Throwable ex) {

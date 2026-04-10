@@ -31,7 +31,7 @@ public class SubCommandException extends Exception {
     }
 
     /**
-     * @param msg Message.
+     * @param msg   Message.
      * @param cause Cause.
      */
     public SubCommandException(String msg, Throwable cause) {

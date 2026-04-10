@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class NettyLogger {
 
     private static AtomicBoolean nettyLoggerSeted = new AtomicBoolean(false);
-    
+
     private static InternalLogLevel nettyLogLevel = InternalLogLevel.ERROR;
 
     public static void initNettyLogger() {
@@ -50,9 +50,8 @@ public class NettyLogger {
 
     private static class NettyBridgeLogger implements io.netty.util.internal.logging.InternalLogger {
 
-        private Logger logger = null;
-
         private static final String EXCEPTION_MESSAGE = "Unexpected exception:";
+        private Logger logger = null;
 
         public NettyBridgeLogger(String name) {
             logger = LoggerFactory.getLogger(name);

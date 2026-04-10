@@ -55,12 +55,12 @@ public class GetNextBrokerIdResponseHeader implements CommandCustomHeader {
 
     }
 
-    public void setNextBrokerId(Long nextBrokerId) {
-        this.nextBrokerId = nextBrokerId;
-    }
-
     public Long getNextBrokerId() {
         return nextBrokerId;
+    }
+
+    public void setNextBrokerId(Long nextBrokerId) {
+        this.nextBrokerId = nextBrokerId;
     }
 
     public String getClusterName() {

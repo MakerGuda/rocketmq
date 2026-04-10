@@ -19,11 +19,12 @@ package org.apache.rocketmq.auth.authorization.provider;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Metadata;
 import io.netty.channel.ChannelHandlerContext;
+import org.apache.rocketmq.auth.config.AuthConfig;
+import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import org.apache.rocketmq.auth.config.AuthConfig;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
 public interface AuthorizationProvider<AuthorizationContext> {
 

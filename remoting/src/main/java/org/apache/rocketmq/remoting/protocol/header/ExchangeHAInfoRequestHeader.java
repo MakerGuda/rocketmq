@@ -25,7 +25,7 @@ import org.apache.rocketmq.remoting.annotation.CFNullable;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 
-@RocketMQAction(value = RequestCode.EXCHANGE_BROKER_HA_INFO,resource = ResourceType.CLUSTER, action = Action.UPDATE)
+@RocketMQAction(value = RequestCode.EXCHANGE_BROKER_HA_INFO, resource = ResourceType.CLUSTER, action = Action.UPDATE)
 public class ExchangeHAInfoRequestHeader implements CommandCustomHeader {
     @CFNullable
     public String masterHaAddress;
