@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-client</artifactId>
+            <artifactId>client</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

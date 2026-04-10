@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rocketmq-client</artifactId>
+            <artifactId>client</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
